@@ -24,8 +24,12 @@ import java.util.List;
 
 public class DeviceManagerService extends Service {
     private static final String TAG = "DeviceManagerService";
-    private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private static final List<Device> deviceList = new ArrayList<>();
+    private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
+    private CarHelper mCarHelper;
+    private UsbHostController mUsbHostController;
+    private DeviceListController mDeviceListController;
+    private AppController mAppController;
     private final IBinder binder = new DeviceListManager.Stub() {
 
         @Override
@@ -43,8 +47,8 @@ public class DeviceManagerService extends Service {
         @Override
         public void projectionScreen(int connectType, String serialNumber, String btMac) {
             Log.d(TAG, "projectionScreen() called with: connectType = [" + connectType + "], serialNumber = [" + serialNumber + "], btMac = [" + btMac + "]");
-            if(mAppController!=null){
-                mAppController.projectionScreen(connectType,serialNumber,btMac);
+            if (mAppController != null) {
+                mAppController.projectionScreen(connectType, serialNumber, btMac);
             }
         }
 
@@ -55,10 +59,6 @@ public class DeviceManagerService extends Service {
         }
 
     };
-    private CarHelper mCarHelper;
-    private UsbHostController mUsbHostController;
-    private DeviceListController mDeviceListController;
-    private AppController mAppController;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -87,17 +87,15 @@ public class DeviceManagerService extends Service {
 
         Log.i(TAG, "DeviceManagerService Thread == " + Thread.currentThread().getId());
 
-          mAppController = new AppController(this, mDeviceListController, mCarHelper);
+        mAppController = new AppController(this, mDeviceListController, mCarHelper);
         mAppController.setOnConnectListener(mOnConnectListeners);
         mAppController.setDeviceList(deviceList);
-
 
         mUsbHostController = new UsbHostController(this, mAppController, mUsbHelper, mOnConnectListeners);
         mUsbHostController.setCarHelper(mCarHelper);
         mUsbHostController.setDeviceList(deviceList);
 
         mAppController.setUsbHostController(mUsbHostController);
-        //new  LocationHelper(this, (byte) 0x01).start();
     }
 
     @Override

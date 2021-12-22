@@ -5,6 +5,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class DeviceInfo {
     public static final int ConnectType_None = 0;
@@ -62,9 +63,9 @@ public class DeviceInfo {
         Log.d(TAG, "match() called with: inputData = [" + inputData + "], conType = [" + conType + "]");
         if (SerialNumber == null || inputData == null) return false;
         if ((conType & ConnectType_USB) > ConnectType_None) {
-            return SerialNumber.equals(inputData);
+            return Objects.equals(SerialNumber, inputData);
         } else if ((conType & ConnectType_WIFI) > ConnectType_None) {
-            return BluetoothMac.equals(inputData);
+            return Objects.equals(BluetoothMac, inputData);
         } else {
             // discard this device if connect type is error
             return true;
@@ -73,9 +74,9 @@ public class DeviceInfo {
 
     public boolean match(DeviceInfo info) {
         if ((info.ConnectionType & ConnectType_USB) > ConnectType_None) {
-            return SerialNumber.equals(info.SerialNumber);
+            return Objects.equals(SerialNumber, info.SerialNumber);
         } else if ((info.ConnectionType & ConnectType_WIFI) > 0) {
-            return BluetoothMac.equals(info.BluetoothMac);
+            return Objects.equals(BluetoothMac, info.BluetoothMac);
         } else {
             // discard this device if connect type is error
             return true;

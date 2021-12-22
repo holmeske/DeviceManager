@@ -38,9 +38,9 @@ public class UsbHostController {
 
             UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
             if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(intent.getAction())) {
-                processAttachedDevice(device);
+                attach(device);
             } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(intent.getAction())) {
-                processDetachedDevice(device);
+                detach(device);
             }
         }
     };
@@ -76,13 +76,12 @@ public class UsbHostController {
     }
 
     private void connectFirstUsbDevice() {
-        Log.d(TAG, "isBoundIAapReceiverService: " + isBoundIAapReceiverService);
-        Log.d(TAG, "isGetCarServiceValue: " + isGetCarServiceValue);
+        Log.d(TAG, "isBoundIAapReceiverService = " + isBoundIAapReceiverService + ", isGetCarServiceValue = " + isGetCarServiceValue);
         if (isBoundIAapReceiverService && isGetCarServiceValue) {
             UsbDevice d = USBKt.firstUsbDevice(mContext);
             if (d != null) {
                 Log.d(TAG, "first attached device serial is  " + d.getSerialNumber());
-                processAttachedDevice(d);
+                attach(d);
             } else {
                 Log.d(TAG, "first attached device is null");
             }
@@ -118,7 +117,7 @@ public class UsbHostController {
                 Log.d(TAG, "list already contains the device, do not add");
             }
         } else {
-            deviceList.removeIf(d -> d.getSerial().equals(device.getSerial()));
+            deviceList.removeIf(d -> ObjectsCompat.equals(d.getSerial(), device.getSerial()));
         }
         for (int i = 0; i < deviceList.size(); i++) {
             Log.d(TAG, "device list " + i + " : " + deviceList.get(i));
@@ -138,12 +137,12 @@ public class UsbHostController {
         }
     }
 
-    public void processAttachedDevice(UsbDevice device) {
+    public void attach(UsbDevice device) {
         if (device == null) {
-            Log.d(TAG, "processAttachedDevice: device is null");
+            Log.d(TAG, "attached device is null");
             return;
         }
-        Log.d(TAG, "processAttachedDevice() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
+        Log.d(TAG, "attach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
         if (!mAppController.isSwitchingState()) {
             noticeExternal(device, true);
         }
@@ -180,17 +179,18 @@ public class UsbHostController {
                     }
                 }
             } else {
+                Log.d(TAG, "isDeviceAoapPossible = false , isDeviceCarPlayPossible = false");
                 mAppController.setCurrentDevice(null);
             }
         }
     }
 
-    public void processDetachedDevice(UsbDevice device) {
+    public void detach(UsbDevice device) {
         if (device == null) {
-            Log.d(TAG, "processDetachedDevice: device is null");
+            Log.d(TAG, "detached device is null");
             return;
         }
-        Log.d(TAG, "processDetachedDevice() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
+        Log.d(TAG, "detach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
         if (!mAppController.isPreParingState()) {
             if (mAndroidAutoList.contains(device.getSerialNumber())) {
                 noticeExternal(device, false);
@@ -201,18 +201,10 @@ public class UsbHostController {
             if (mAppController.isPreParingState()) {
                 mAppController.updateSwitchingState();
             } else {
-                if (mAppController.sessionNotExist()) {
-                    mAppController.updateIdleState();
-                } else {
-                    if (mAndroidAutoList.contains(device.getSerialNumber())) {
-                        if (mAppController.isPresentAndroidAuto()) {
-                            mAppController.updateUsbAvailableDevice(device.getSerialNumber(), "", false);
-                            mAppController.stopAndroidAuto();
-                        }
-                    } else if (mCarPlayList.contains(device.getSerialNumber())) {
-                        if (mAppController.isPresentCarPlay()) {
-                            mAppController.stopCarPlay();
-                        }
+                if (mAndroidAutoList.contains(device.getSerialNumber())) {
+                    if (mAppController.isPresentAndroidAuto()) {
+                        mAppController.updateUsbAvailableDevice(device.getSerialNumber(), "", false);
+                        mAppController.stopAndroidAuto();
                     }
                 }
             }

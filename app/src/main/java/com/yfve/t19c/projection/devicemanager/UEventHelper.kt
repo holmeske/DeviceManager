@@ -28,7 +28,7 @@ class UsbHelper {
     // 注册成功后，一旦udev返回的事件中包含"DEVPATH=/devices/platform/usb/usb1/1-1"，就调用下面的回调，把这个事件提供给应用
     private val uEventObserver = object : UEventObserver() {
         override fun onUEvent(uEvent: UEvent?) {
-            Log.d(TAG, "onUEvent() called with: uEvent = $uEvent")
+            //Log.d(TAG, "onUEvent() called with: uEvent = $uEvent")
             val action = uEvent?.get("ACTION") ?: return
             val devPath = uEvent.get("DEVPATH") ?: return
 

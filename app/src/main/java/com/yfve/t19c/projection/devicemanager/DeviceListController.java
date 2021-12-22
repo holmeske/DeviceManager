@@ -26,6 +26,8 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.util.Log;
 
+import androidx.core.util.ObjectsCompat;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -457,13 +459,14 @@ public final class DeviceListController {
         for (DeviceInfo localDevice : mDeviceList) {
             if (!isSupportCarPlay) {
                 Log.i(TAG, "device don't support carplay,remove it from list");
-                if (localDevice.BluetoothMac.equals(btMac)
-                        || localDevice.SerialNumber.equals(serial)) {
+
+                if (ObjectsCompat.equals(localDevice.BluetoothMac, btMac)
+                        || ObjectsCompat.equals(localDevice.SerialNumber, serial)) {
                     mDeviceList.remove(localDevice);
                     mStorage.deleteDevice(localDevice);
                 }
             } else {
-                if (localDevice.BluetoothMac.equals(btMac)) {
+                if (Objects.equals(localDevice.BluetoothMac, btMac)) {
                     if (cnt >= 1) {
                         mDeviceList.remove(localDevice);
                         mStorage.deleteDevice(localDevice);
@@ -475,7 +478,7 @@ public final class DeviceListController {
                     cnt++;
                     break;
                 }
-                if (localDevice.SerialNumber.equals(serial)) {
+                if (Objects.equals(localDevice.SerialNumber, serial)) {
                     if (cnt >= 1) {
                         mDeviceList.remove(localDevice);
                         mStorage.deleteDevice(localDevice);
@@ -495,7 +498,7 @@ public final class DeviceListController {
         showListInfos();
         boolean ret = false;
         for (DeviceInfo localDevice : mDeviceList) {
-            if (localDevice.BluetoothMac.equals(btMac)) {
+            if (Objects.equals(localDevice.BluetoothMac, btMac)) {
                 Log.i(TAG, "find corresponding btmac:" + btMac);
                 ret = true;
                 break;
@@ -510,7 +513,7 @@ public final class DeviceListController {
         showListInfos();
         boolean ret = false;
         for (DeviceInfo localDevice : mDeviceList) {
-            if (localDevice.SerialNumber.equals(serialNumber)) {
+            if (Objects.equals(localDevice.SerialNumber, serialNumber)) {
                 Log.i(TAG, "find corresponding serial number:" + serialNumber);
                 ret = true;
                 break;

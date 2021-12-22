@@ -22,6 +22,15 @@ public class DeviceHandlerResolver {
         mUsbManager = (UsbManager) mContext.getSystemService(Context.USB_SERVICE);
     }
 
+    private String getHashed(String serial) {
+        try {
+            return Arrays.toString(MessageDigest.getInstance("MD5").digest(serial.getBytes()));
+        } catch (NoSuchAlgorithmException e) {
+            Log.w(TAG, "could not create MD5 for serial number: " + serial);
+            return Integer.toString(serial.hashCode());
+        }
+    }
+
     public boolean isDeviceAoapPossible(UsbDevice device) {
         UsbManager usbManager = mContext.getSystemService(UsbManager.class);
         UsbDeviceConnection connection = UsbUtil.openConnection(usbManager, device);
@@ -31,15 +40,6 @@ public class DeviceHandlerResolver {
         boolean aoapSupported = AppSupport.isAOASupported(mContext, device, connection);
         connection.close();
         return aoapSupported;
-    }
-
-    private String getHashed(String serial) {
-        try {
-            return Arrays.toString(MessageDigest.getInstance("MD5").digest(serial.getBytes()));
-        } catch (NoSuchAlgorithmException e) {
-            Log.w(TAG, "could not create MD5 for serial number: " + serial);
-            return Integer.toString(serial.hashCode());
-        }
     }
 
     public void requestAoapSwitch(UsbDevice device) throws IOException {

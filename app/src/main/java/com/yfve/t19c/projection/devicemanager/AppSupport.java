@@ -167,14 +167,6 @@ final class AppSupport {
         return !isDeviceBlacklisted(context, device) && isIOSDevice(device) && getCarPlaySupport(conn);
     }
 
-    public static boolean isCarLifeSupport(Context context, UsbDevice device, UsbDeviceConnection conn) {
-        return true;
-    }
-
-    public static boolean isHiCarSupport(Context context, UsbDevice device, UsbDeviceConnection conn) {
-        return true;
-    }
-
     public static void sendString(UsbDeviceConnection conn, int index, String string) throws IOException {
         byte[] buffer = (string + "\0").getBytes();
         int len = transfer(conn, WRITE, ACCESSORY_SEND_STRING, index, buffer, buffer.length);

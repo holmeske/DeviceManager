@@ -63,7 +63,7 @@ public class CarHelper {
     }
 
     public boolean isPresentAndroidAuto() {
-        if (presentAndroidAuto.equals("1")) {
+        if ("1".equals(presentAndroidAuto)) {
             return true;
         } else {
             Log.d(TAG, "Android Auto not present");
@@ -72,7 +72,7 @@ public class CarHelper {
     }
 
     public boolean isPresentCarPlay() {
-        if (presentCarPlay.equals("1")) {
+        if ("1".equals(presentCarPlay)) {
             return true;
         } else {
             Log.d(TAG, "CarPlay not present");

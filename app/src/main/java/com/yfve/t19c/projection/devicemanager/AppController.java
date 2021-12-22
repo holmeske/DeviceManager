@@ -3,7 +3,6 @@ package com.yfve.t19c.projection.devicemanager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,6 +22,7 @@ import com.yfve.t19c.projection.devicemanager.callback.OnCallBackListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class AppController {
@@ -56,7 +56,7 @@ public final class AppController {
     private List<Device> deviceList = new ArrayList<>();
     private OnCallBackListener onCallBackListener;
     private UsbHostController mUsbHostController;
-    private BroadcastReceiver receiver = new BroadcastReceiver() {
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "onReceive() called with: context = [" + context + "], action = [" + intent.getAction() + "]");
@@ -73,11 +73,11 @@ public final class AppController {
                 }
                 if ("detach".equals(value)) {
                     if (mUsbHostController != null) {
-                        mUsbHostController.processDetachedDevice(USBKt.firstUsbDevice(mContext));
+                        stopAndroidAuto();
                     }
                 } else if ("attach".equals(value)) {
                     if (mUsbHostController != null) {
-                        mUsbHostController.processAttachedDevice(USBKt.firstUsbDevice(mContext));
+                        startAndroidAuto(USBKt.firstUsbDevice(mContext).getDeviceName());
                     }
                 }
             } else if (bundle.containsKey("cp")) {
@@ -89,12 +89,10 @@ public final class AppController {
                     projectionScreen(2, "", "184:99:77:17:138:76");
                 }
                 if ("detach".equals(value)) {
-                    if (mUsbHostController != null) {
-                        mUsbHostController.processDetachedDevice(USBKt.firstUsbDevice(mContext));
-                    }
+                    stopCarPlay();
                 } else if ("attach".equals(value)) {
                     if (mUsbHostController != null) {
-                        mUsbHostController.processAttachedDevice(USBKt.firstUsbDevice(mContext));
+                        startCarPlay("d9b03f3b065e47605057ad57a2b8cf8dc71459d8", true);
                     }
                 }
             }
@@ -171,19 +169,14 @@ public final class AppController {
             }
         });
 
-        long start = System.currentTimeMillis();
         mCarPlayClient = new CarPlayClient();
         mCarPlayClient.initialise(context);
         CarPlayListener carPlayListener = new CarPlayListener() {
             @Override
             public void onUpdateClientSts(boolean sts) {
                 super.onUpdateClientSts(sts);
-                Log.d(TAG, "onUpdateClientSts() called with: sts = [" + sts + "]");
+                Log.d(TAG, "onUpdateClientSts() called with: sts = [" + sts + "] , bind carplay service success");
                 CAR_PLAY_BIND_SUCCESS = true;
-                long end = System.currentTimeMillis();
-
-                long time = end - start;
-                Log.d(TAG, "carplay bind success time consuming " + (time));
             }
 
             @Override
@@ -291,14 +284,14 @@ public final class AppController {
         if (type == 1) {
             if (mUsbHostController != null) {
                 UsbDevice device = USBKt.queryUsbDevice(mContext, serial);
-                mUsbHostController.processAttachedDevice(device);
+                mUsbHostController.attach(device);
             }
         } else if (type == 2) {
             mAndroidAutoDeviceClient.ConnectWirelessDevice(mac);
         } else if (type == 3) {
             if (mUsbHostController != null) {
                 UsbDevice device = USBKt.queryUsbDevice(mContext, serial);
-                mUsbHostController.processAttachedDevice(device);
+                mUsbHostController.attach(device);
             }
         } else if (type == 4) {
             startCarPlay(mac, false);
@@ -317,13 +310,13 @@ public final class AppController {
     private void noticeExternal(String serialNumber) {
         Device device = null;
         for (Device d : deviceList) {
-            if (d.getSerial().equals(serialNumber)) {
+            if (Objects.equals(d.getSerial(), serialNumber)) {
                 device = new Device(d.getType(), d.getName(), d.getSerial(), d.getMac(), d.isUsbAA(), d.isWirelessAA(), d.isUsbCP(), d.isWirelessCP(), false);
             }
         }
         Log.d(TAG, "update usb " + device);
         Device finalDevice = device;
-        deviceList.removeIf(d -> d.getSerial().equals(finalDevice == null ? "" : finalDevice.getSerial()));
+        deviceList.removeIf(d -> Objects.equals(d.getSerial(), finalDevice == null ? "" : finalDevice.getSerial()));
         for (int i = 0; i < deviceList.size(); i++) {
             Log.d(TAG, "device " + (i + 1) + " : " + deviceList.get(i));
         }
@@ -373,7 +366,7 @@ public final class AppController {
                 Log.d(TAG, "list already contains the device, do not add");
             }
         } else {
-            deviceList.removeIf(d -> d.getMac().equals(device.getMac()));
+            deviceList.removeIf(d -> Objects.equals(d.getMac(), device.getMac()));
         }
 
         for (int i = 0; i < deviceList.size(); i++) {
@@ -409,12 +402,10 @@ public final class AppController {
     }
 
     public boolean isPresentAndroidAuto() {
-//        return true;
         return mCarHelper.isPresentAndroidAuto();
     }
 
     public boolean isPresentCarPlay() {
-//        return true;
         return mCarHelper.isPresentCarPlay();
     }
 
@@ -428,7 +419,7 @@ public final class AppController {
     }
 
     public boolean deviceSame(UsbDevice device) {
-        if (currentDevice != null && device != null && currentDevice.SerialNumber.equals(device.getSerialNumber())) {
+        if (currentDevice != null && device != null && Objects.equals(currentDevice.SerialNumber, device.getSerialNumber())) {
             Log.d(TAG, "current device == intent device");
             return true;
         } else {
@@ -437,10 +428,13 @@ public final class AppController {
             } else {
                 Log.d(TAG, "current device : null");
             }
-            Log.d(TAG, "intent  device : " + device.getSerialNumber() + ", " + device.getDeviceName());
+            if (device != null) {
+                Log.d(TAG, "intent  device : " + device.getSerialNumber() + ", " + device.getDeviceName());
+            } else {
+                Log.d(TAG, "intent  device : null");
+            }
 
             Log.d(TAG, "current device != intent device");
-
             return false;
         }
     }
@@ -513,7 +507,6 @@ public final class AppController {
 
     public boolean sessionNotExist() {
         if (CURRENT_SESSION_TYPE == TYPE_NO_SESSION) {
-            Log.d(TAG, "session no exist");
             return true;
         } else {
             Log.d(TAG, "session has exist");
