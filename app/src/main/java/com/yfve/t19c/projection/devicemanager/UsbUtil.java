@@ -20,6 +20,7 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -29,6 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 
 class UsbUtil {
+    private static final String TAG = "UsbUtil";
+
     public static List<UsbDevice> findAllPossibleAndroidDevices(Context context, UsbManager usbManager) {
         HashMap<String, UsbDevice> devices = usbManager.getDeviceList();
         ArrayList<UsbDevice> androidDevices = new ArrayList<>(devices.size());
@@ -37,7 +40,11 @@ class UsbUtil {
             if (AppSupport.isAOASupported(context, device, connection)) {
                 androidDevices.add(device);
             }
-            connection.close();
+            if (connection != null) {
+                connection.close();
+            } else {
+                Log.d(TAG, "findAllPossibleAndroidDevices: UsbDeviceConnection is null");
+            }
         }
         return androidDevices;
     }
@@ -60,20 +67,14 @@ class UsbUtil {
     }
 
     public static boolean isTheSameDevice(UsbDevice l, UsbDevice r) {
-        if (TextUtils.equals(l.getManufacturerName(), r.getManufacturerName())
+        return TextUtils.equals(l.getManufacturerName(), r.getManufacturerName())
                 && TextUtils.equals(l.getProductName(), r.getProductName())
-                && TextUtils.equals(l.getSerialNumber(), r.getSerialNumber())) {
-            return true;
-        }
-        return false;
+                && TextUtils.equals(l.getSerialNumber(), r.getSerialNumber());
     }
 
     public static boolean isDevicesMatching(UsbDevice l, UsbDevice r) {
-        if (l.getVendorId() == r.getVendorId() && l.getProductId() == r.getProductId()
-                && TextUtils.equals(l.getSerialNumber(), r.getSerialNumber())) {
-            return true;
-        }
-        return false;
+        return l.getVendorId() == r.getVendorId() && l.getProductId() == r.getProductId()
+                && TextUtils.equals(l.getSerialNumber(), r.getSerialNumber());
     }
 
     public static boolean isDeviceConnected(UsbManager usbManager, UsbDevice device) {

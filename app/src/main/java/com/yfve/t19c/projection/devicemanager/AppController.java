@@ -423,18 +423,9 @@ public final class AppController {
             Log.d(TAG, "current device == intent device");
             return true;
         } else {
-            if (currentDevice != null) {
-                Log.d(TAG, "current device : " + currentDevice.SerialNumber + ", " + currentDevice.DeviceName);
-            } else {
-                Log.d(TAG, "current device : null");
-            }
-            if (device != null) {
-                Log.d(TAG, "intent  device : " + device.getSerialNumber() + ", " + device.getDeviceName());
-            } else {
-                Log.d(TAG, "intent  device : null");
-            }
-
-            Log.d(TAG, "current device != intent device");
+            Log.d(TAG, "current device != intent device ,"
+                    + " current device = " + (currentDevice == null ? null : currentDevice.SerialNumber + ", " + currentDevice.DeviceName)
+                    + " , intent  device = " + (device == null ? null : device.getSerialNumber() + ", " + device.getDeviceName()));
             return false;
         }
     }

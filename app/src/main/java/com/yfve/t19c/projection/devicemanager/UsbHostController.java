@@ -191,23 +191,21 @@ public class UsbHostController {
             return;
         }
         Log.d(TAG, "detach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
-        if (!mAppController.isPreParingState()) {
-            if (mAndroidAutoList.contains(device.getSerialNumber())) {
-                noticeExternal(device, false);
-            }
-        }
 
         if (mAppController.deviceSame(device)) {
             if (mAppController.isPreParingState()) {
                 mAppController.updateSwitchingState();
             } else {
                 if (mAndroidAutoList.contains(device.getSerialNumber())) {
-                    if (mAppController.isPresentAndroidAuto()) {
-                        mAppController.updateUsbAvailableDevice(device.getSerialNumber(), "", false);
-                        mAppController.stopAndroidAuto();
-                    }
+                    mAppController.updateUsbAvailableDevice(device.getSerialNumber(), "", false);
+                    mAppController.stopAndroidAuto();
                 }
             }
+        }
+
+        if (!mAppController.isPreParingState()) {
+            noticeExternal(device, false);
+            mAppController.updateIdleState();
         }
     }
 

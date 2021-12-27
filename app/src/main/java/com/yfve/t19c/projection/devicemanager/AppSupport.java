@@ -188,6 +188,21 @@ final class AppSupport {
         }
     }
 
+    public static boolean isDeviceInAoapMode(UsbDevice device) {
+        if (device == null) {
+            return false;
+        }
+        final int vid = device.getVendorId();
+        final int pid = device.getProductId();
+        Log.d(TAG, "isDeviceInAoapMode:vid=" + vid + "  pid=" + pid);
+        if (USB_ACCESSORY_VENDOR_ID.contains(vid) && USB_ACCESSORY_MODE_PRODUCT_ID.contains(pid)) {
+            Log.d(TAG, "device is in AOA mode");
+        } else {
+            Log.d(TAG, "device is not in AOA mode");
+        }
+        return USB_ACCESSORY_VENDOR_ID.contains(vid) && USB_ACCESSORY_MODE_PRODUCT_ID.contains(pid);
+    }
+
     public static synchronized boolean isDeviceBlacklisted(Context context, UsbDevice device) {
         if (sBlacklistedVidPidPairs == null) {
             sBlacklistedVidPidPairs = new HashSet<>();
@@ -214,21 +229,6 @@ final class AppSupport {
         }
 
         return sBlacklistedVidPidPairs.contains(Pair.create(device.getVendorId(), device.getProductId()));
-    }
-
-    public static boolean isDeviceInAoapMode(UsbDevice device) {
-        if (device == null) {
-            return false;
-        }
-        final int vid = device.getVendorId();
-        final int pid = device.getProductId();
-        Log.d(TAG, "isDeviceInAoapMode:vid=" + vid + "  pid=" + pid);
-        if (USB_ACCESSORY_VENDOR_ID.contains(vid) && USB_ACCESSORY_MODE_PRODUCT_ID.contains(pid)) {
-            Log.d(TAG, "device is in AOA mode");
-        } else {
-            Log.d(TAG, "device is not in AOA mode");
-        }
-        return USB_ACCESSORY_VENDOR_ID.contains(vid) && USB_ACCESSORY_MODE_PRODUCT_ID.contains(pid);
     }
 
     private static int transfer(UsbDeviceConnection conn, @Direction int direction, int string, int index, byte[] buffer, int length) {

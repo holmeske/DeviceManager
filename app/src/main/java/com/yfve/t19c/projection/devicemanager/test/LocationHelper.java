@@ -27,16 +27,16 @@ public class LocationHelper {
     private static String GPGGA = "";//GlobalPositioningSystemFixData TODO: GPS定位信息不一定会包含此字段
     private static String GPRMC = "";//RecommendedMinimumSpecificGPSTransitData TODO: GPS定位信息不一定会包含此字段
     private static String GPGSV = "";//GPSSatellitesInView TODO: GPS定位信息不一定会包含此字段
-    private static String PASCD = "";//VehicleSpeedData
-    private static String PAGCD = "";//VehicleGyroData
-    private static String PAACD = "";//VehicleAccelerometerData
-    private static String GPHDT = "";//VehicleHeadingData
-    private Context mContext;
-    private byte flag;
+    private static final String PASCD = "";//VehicleSpeedData
+    private static final String PAGCD = "";//VehicleGyroData
+    private static final String PAACD = "";//VehicleAccelerometerData
+    private static final String GPHDT = "";//VehicleHeadingData
+    private final Context mContext;
+    private final byte flag;
     /**
      * Android 10及以上申请权限
      */
-    private String[] permissionsQ = new String[]{
+    private final String[] permissionsQ = new String[]{
             // 定位权限
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -45,13 +45,13 @@ public class LocationHelper {
             Manifest.permission.ACCESS_BACKGROUND_LOCATION,
     };
     private Timer mTimer;
-    private TimerTask mTimerTask = new TimerTask() {
+    private final TimerTask mTimerTask = new TimerTask() {
         @Override
         public void run() {
             //IAP2CommClient.getInstance().updateLocationInfo(getLocationData(flag));
         }
     };
-    private LocationListener mLocationListener = new LocationListener() {
+    private final LocationListener mLocationListener = new LocationListener() {
         @Override
         public void onLocationChanged(@NonNull Location location) {
             Log.e(TAG, "onLocationChanged:" + location);
@@ -93,7 +93,7 @@ public class LocationHelper {
             }
         }
     };
-    private OnNmeaMessageListener mOnNmeaMessageListener = new OnNmeaMessageListener() {
+    private final OnNmeaMessageListener mOnNmeaMessageListener = new OnNmeaMessageListener() {
         @Override
         public void onNmeaMessage(String message, long timestamp) {
             Log.v(TAG, "message: " + message + "timestamp: " + timestamp);

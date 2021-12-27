@@ -22,11 +22,11 @@ public class DeviceInfos implements Parcelable {
             return new DeviceInfos[size];
         }
     };
-    public String mSerialNumber = new String();
-    public String mBluetoothMac = new String();
-    public String mDeviceName = new String();
+    public String mSerialNumber = "";
+    public String mBluetoothMac = "";
+    public String mDeviceName = "";
     public int mConnectionType = 0;
-    public boolean mAppAvailable[] = new boolean[Connectivity_AppType_MAX];
+    public boolean[] mAppAvailable = new boolean[Connectivity_AppType_MAX];
 
     public DeviceInfos() {
     }

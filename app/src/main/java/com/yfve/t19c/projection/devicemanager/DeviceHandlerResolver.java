@@ -35,6 +35,7 @@ public class DeviceHandlerResolver {
         UsbManager usbManager = mContext.getSystemService(UsbManager.class);
         UsbDeviceConnection connection = UsbUtil.openConnection(usbManager, device);
         if (connection == null) {
+            Log.d(TAG, "isDeviceAoapPossible: UsbDeviceConnection is null");
             return false;
         }
         boolean aoapSupported = AppSupport.isAOASupported(mContext, device, connection);
@@ -50,7 +51,7 @@ public class DeviceHandlerResolver {
         }
         UsbDeviceConnection connection = UsbUtil.openConnection(mUsbManager, device);
         if (connection == null) {
-            Log.e(TAG, "Failed to connect to usb device.");
+            Log.e(TAG, "Failed to connect to usb device. UsbDeviceConnection is null");
             return;
         }
 
@@ -72,12 +73,15 @@ public class DeviceHandlerResolver {
         Log.d(TAG, "sendAoapAccessoryStart end");
     }
 
-
     public boolean isDeviceCarPlayPossible(UsbDevice device) {
         UsbManager usbManager = mContext.getSystemService(UsbManager.class);
         UsbDeviceConnection connection = UsbUtil.openConnection(usbManager, device);
         boolean carplaySupported = AppSupport.isCarPlaySupport(mContext, device, connection);
-        connection.close();
+        if (connection != null) {
+            connection.close();
+        } else {
+            Log.d(TAG, "isDeviceCarPlayPossible: UsbDeviceConnection is null");
+        }
         return carplaySupported;
     }
 
@@ -85,11 +89,6 @@ public class DeviceHandlerResolver {
         int ret;
         UsbManager usbManager = mContext.getSystemService(UsbManager.class);
         UsbDeviceConnection connection = UsbUtil.openConnection(usbManager, device);
-
-         if (connection == null) {
-             Log.d(TAG, "roleSwitch: UsbDeviceConnection is null");
-            return false;
-        }
 
         ret = connection != null ? connection.controlTransfer(
                 0x40,              // requestType
@@ -107,6 +106,8 @@ public class DeviceHandlerResolver {
         }
         if (connection != null) {
             connection.close();
+        } else {
+            Log.d(TAG, "roleSwitch: UsbDeviceConnection is null");
         }
         return ret == 1;
     }

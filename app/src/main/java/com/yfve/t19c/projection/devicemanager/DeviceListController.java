@@ -67,7 +67,7 @@ public final class DeviceListController {
     };
     public List<IDevListener> mCallbackList = new ArrayList<>();
     private DeviceListStorage mStorage = null;
-    private UsbHelper mUsbHelper;
+    private final UsbHelper mUsbHelper;
     private final BroadcastReceiver mUsbBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -436,6 +436,8 @@ public final class DeviceListController {
         boolean aoapSupported = AppSupport.isAOASupported(mContext, device, connection);
         if (connection != null) {
             connection.close();
+        }else {
+            Log.d(TAG, "isDeviceAoapPossible: UsbDeviceConnection is null");
         }
 
         return aoapSupported;
@@ -445,7 +447,11 @@ public final class DeviceListController {
         UsbManager usbManager = mContext.getSystemService(UsbManager.class);
         UsbDeviceConnection connection = UsbUtil.openConnection(usbManager, device);
         boolean carplaySupported = AppSupport.isCarPlaySupport(mContext, device, connection);
-        connection.close();
+        if (connection != null) {
+            connection.close();
+        }else {
+            Log.d(TAG, "isDeviceCarPlayPossible: UsbDeviceConnection is null");
+        }
 
         return carplaySupported;
     }
