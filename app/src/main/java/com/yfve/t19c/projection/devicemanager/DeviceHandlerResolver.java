@@ -58,7 +58,6 @@ public class DeviceHandlerResolver {
         try {
             String hashedSerial;
             hashedSerial = getHashed(Build.getSerial());
-            Log.d(TAG, "sendAoapAccessoryStart");
             UsbUtil.sendAoapAccessoryStart(
                     connection,
                     "Android",
@@ -70,7 +69,6 @@ public class DeviceHandlerResolver {
         } finally {
             connection.close();
         }
-        Log.d(TAG, "sendAoapAccessoryStart end");
     }
 
     public boolean isDeviceCarPlayPossible(UsbDevice device) {

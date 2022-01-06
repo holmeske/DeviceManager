@@ -48,7 +48,7 @@ public class DeviceManagerService extends Service {
         public void projectionScreen(int connectType, String serialNumber, String btMac) {
             Log.d(TAG, "projectionScreen() called with: connectType = [" + connectType + "], serialNumber = [" + serialNumber + "], btMac = [" + btMac + "]");
             if (mAppController != null) {
-                mAppController.projectionScreen(connectType, serialNumber, btMac);
+                mAppController.switchSession(connectType, serialNumber, btMac);
             }
         }
 
@@ -85,7 +85,7 @@ public class DeviceManagerService extends Service {
             mDeviceListController = new DeviceListController(this, mUsbHelper);
         }
 
-        Log.i(TAG, "DeviceManagerService Thread == " + Thread.currentThread().getId());
+        //Log.i(TAG, "DeviceManagerService Thread == " + Thread.currentThread().getId());
 
         mAppController = new AppController(this, mDeviceListController, mCarHelper);
         mAppController.setOnConnectListener(mOnConnectListeners);
@@ -101,6 +101,9 @@ public class DeviceManagerService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand() called");
+
+
+
         return START_STICKY;
     }
 

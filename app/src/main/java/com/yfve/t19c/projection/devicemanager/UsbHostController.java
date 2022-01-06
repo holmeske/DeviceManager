@@ -46,6 +46,7 @@ public class UsbHostController {
     };
     private boolean isBoundIAapReceiverService = false;
     private boolean isGetCarServiceValue = false;
+    private boolean isCarPlayDevice = false;
 
     public UsbHostController(Context mContext, AppController mAppController, UsbHelper usbHelper, List<OnConnectListener> mOnConnectListeners) {
         Log.d(TAG, "UsbHostController() called");
@@ -93,6 +94,17 @@ public class UsbHostController {
     }
 
     private void noticeExternal(UsbDevice usbDevice, boolean attached) {
+        if (AppSupport.isIOSDevice(usbDevice)) {
+            if (!mAppController.isPresentCarPlay()) {
+                Log.d(TAG, "noticeExternal: carplay is close , do not notice external");
+                return;
+            }
+        } else {
+            if (!mAppController.isPresentAndroidAuto()) {
+                Log.d(TAG, "noticeExternal: android auto is close , do not notice external");
+                return;
+            }
+        }
         Device device = new Device();
         device.setType(1);//1:usb , 2:wireless
         device.setName(usbDevice.getProductName());
@@ -119,9 +131,6 @@ public class UsbHostController {
         } else {
             deviceList.removeIf(d -> ObjectsCompat.equals(d.getSerial(), device.getSerial()));
         }
-        for (int i = 0; i < deviceList.size(); i++) {
-            Log.d(TAG, "device list " + i + " : " + deviceList.get(i));
-        }
 
         Log.d(TAG, "update usb " + device);
         for (OnConnectListener listener : mOnConnectListeners) {
@@ -135,6 +144,29 @@ public class UsbHostController {
                 Log.e(TAG, "noticeExternal: ", e);
             }
         }
+
+        for (int i = 0; i < deviceList.size(); i++) {
+            Log.d(TAG, "device list " + (i + 1) + " : " + deviceList.get(i));
+        }
+    }
+
+    public void onRequestA0ASwitch(UsbDevice device) {
+        Log.d(TAG, "onRequestA0ASwitch() called with: device = [" + device + "]");
+        if (mDeviceHandlerResolver != null) {
+            Log.d(TAG, "onRequestA0ASwitch: 51");
+            if (AppSupport.isDeviceInAoapMode(device)) {
+                try {
+                    Log.d(TAG, "onRequestA0ASwitch: 52 53");
+                    mDeviceHandlerResolver.requestAoapSwitch(device);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                Log.d(TAG, "onRequestA0ASwitch: not in aoa mode");
+            }
+        } else {
+            Log.d(TAG, "onRequestA0ASwitch: mDeviceHandlerResolver is null");
+        }
     }
 
     public void attach(UsbDevice device) {
@@ -146,41 +178,47 @@ public class UsbHostController {
         if (!mAppController.isSwitchingState()) {
             noticeExternal(device, true);
         }
+        if (mAppController.currentSessionIsCarPlay()) {
+            Log.d(TAG, "do not process attach event");
+            return;
+        }
+
         if (mAppController.getCurrentDevice() == null) {
             mAppController.setCurrentDevice(device);
         }
         if (mAppController.deviceSame(device)) {
-            if (mDeviceHandlerResolver.isDeviceAoapPossible(device)) {
-                if (mAppController.isPresentAndroidAuto()) {
-                    if (AppSupport.isDeviceInAoapMode(device)) {
-                        if (!mAndroidAutoList.contains(device.getSerialNumber())) {
-                            mAndroidAutoList.add(device.getSerialNumber());
-                            mAppController.updateUsbAvailableDevice(device.getSerialNumber(), "", true);
+            if (AppSupport.isIOSDevice(device)) {
+                if (mAppController.isPresentCarPlay()) {
+                    if (mDeviceHandlerResolver.isDeviceCarPlayPossible(device)) {
+                        if (!mCarPlayList.contains(device.getSerialNumber())) {
+                            mCarPlayList.add(device.getSerialNumber());
                         }
-                        mAppController.startAndroidAuto(device.getDeviceName());
-                    } else {
-                        if (mAppController.isIdleState()) {
-                            try {
-                                mAppController.updatePreparingState();
-                                mDeviceHandlerResolver.requestAoapSwitch(device);
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                        if (mDeviceHandlerResolver.roleSwitch(device)) {
+                            mAppController.roleSwitchComplete(device.getSerialNumber());
+                        }
+                    }
+                }
+            } else {
+                if (mAppController.isPresentAndroidAuto()) {
+                    if (mDeviceHandlerResolver.isDeviceAoapPossible(device)) {
+                        if (AppSupport.isDeviceInAoapMode(device)) {
+                            if (!mAndroidAutoList.contains(device.getSerialNumber())) {
+                                mAndroidAutoList.add(device.getSerialNumber());
+                                mAppController.updateUsbAvailableDevice(device.getSerialNumber(), "", true);
+                            }
+                            mAppController.startAndroidAuto(device.getDeviceName());
+                        } else {
+                            if (mAppController.isIdleState()) {
+                                try {
+                                    mAppController.updatePreparingState();
+                                    mDeviceHandlerResolver.requestAoapSwitch(device);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
                         }
                     }
                 }
-            } else if (mDeviceHandlerResolver.isDeviceCarPlayPossible(device)) {
-                if (mAppController.isPresentCarPlay()) {
-                    if (!mCarPlayList.contains(device.getSerialNumber())) {
-                        mCarPlayList.add(device.getSerialNumber());
-                    }
-                    if (mDeviceHandlerResolver.roleSwitch(device)) {
-                        mAppController.roleSwitchComplete(device.getSerialNumber());
-                    }
-                }
-            } else {
-                Log.d(TAG, "isDeviceAoapPossible = false , isDeviceCarPlayPossible = false");
-                mAppController.setCurrentDevice(null);
             }
         }
     }
@@ -192,11 +230,12 @@ public class UsbHostController {
         }
         Log.d(TAG, "detach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
 
+
         if (mAppController.deviceSame(device)) {
             if (mAppController.isPreParingState()) {
                 mAppController.updateSwitchingState();
             } else {
-                if (mAndroidAutoList.contains(device.getSerialNumber())) {
+                if (!AppSupport.isIOSDevice(device)) {
                     mAppController.updateUsbAvailableDevice(device.getSerialNumber(), "", false);
                     mAppController.stopAndroidAuto();
                 }
@@ -205,7 +244,9 @@ public class UsbHostController {
 
         if (!mAppController.isPreParingState()) {
             noticeExternal(device, false);
-            mAppController.updateIdleState();
+            if (!AppSupport.isIOSDevice(device)) {
+                mAppController.updateIdleState();
+            }
         }
     }
 

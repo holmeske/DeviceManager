@@ -8,9 +8,6 @@ import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.yfve.t19c.projection.devicemanager.database.DeviceDatabase
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 
 private const val TAG = "MainActivity"
@@ -23,7 +20,7 @@ class MainActivity : AppCompatActivity() {
 
         startForegroundService(Intent(this, DeviceManagerService::class.java))
 
-        Log.i(TAG, "MainActivity Thread == " + Thread.currentThread().id)
+        //Log.i(TAG, "MainActivity Thread == " + Thread.currentThread().id)
 
         /*getUsbDeviceList().forEach {
             Log.d(TAG, "${it.serialNumber}")
@@ -39,13 +36,13 @@ class MainActivity : AppCompatActivity() {
             LocationHelper(this, 0x01).start()
         }.start()*/
 
-        Log.d(TAG, "onCreate: ")
-        firstUsbDevice()
+        //firstUsbDevice()
 
-        val job = GlobalScope.launch {
-            println("Hello")
-        }
+//        val job = GlobalScope.launch {
+//            println("Hello")
+//        }
 
+        //db()
     }
 
     private fun db() {
@@ -77,16 +74,14 @@ class MainActivity : AppCompatActivity() {
                 it.all?.forEachIndexed { index, device ->
                     Log.d(TAG, "onCreate: $index , $device")
                 }
-            }
 
+            }
 
 //            val list: MutableList<Device> = ArrayList()
 //            list.add(Device("1", "1", "1"))
 //            list.add(Device("2", "2", "2"))
 
-
         }.start()
-
 
     }
 

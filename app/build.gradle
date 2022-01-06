@@ -67,6 +67,7 @@ dependencies {
     implementation files('libs/AndroidAutoStackProxy.jar')
     implementation files('libs/classes_car.jar')
     compileOnly files('libs/framework.jar')
+//    implementation files('libs/framework.jar')
     implementation files('libs/javalib.jar')
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
@@ -92,4 +93,6 @@ dependencies {
 
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
+
+    implementation 'me.weishu:free_reflection:3.0.1'
 }

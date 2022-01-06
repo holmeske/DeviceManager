@@ -65,9 +65,9 @@ public final class DeviceListController {
             }*/
         }
     };
+    private final UsbHelper mUsbHelper;
     public List<IDevListener> mCallbackList = new ArrayList<>();
     private DeviceListStorage mStorage = null;
-    private final UsbHelper mUsbHelper;
     private final BroadcastReceiver mUsbBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -357,6 +357,19 @@ public final class DeviceListController {
     }
 
     synchronized public void addDeviceToList(UsbDevice device) {
+
+        if (AppSupport.isIOSDevice(device)) {
+            if (!CarHelper.isPresentCarPlay()) {
+                Log.d(TAG, "addDeviceToList: carplay is close , do not deal");
+                return;
+            }
+        } else {
+            if (!CarHelper.isPresentAndroidAuto()) {
+                Log.d(TAG, "addDeviceToList: android auto is close , do not deal");
+                return;
+            }
+        }
+
         Log.d(TAG, "addDeviceToList() called with: device = [" + device.getSerialNumber() + "]");
         boolean deviceMatch = false;
         for (DeviceInfo localDevice : mDeviceList) {
@@ -436,7 +449,7 @@ public final class DeviceListController {
         boolean aoapSupported = AppSupport.isAOASupported(mContext, device, connection);
         if (connection != null) {
             connection.close();
-        }else {
+        } else {
             Log.d(TAG, "isDeviceAoapPossible: UsbDeviceConnection is null");
         }
 
@@ -449,7 +462,7 @@ public final class DeviceListController {
         boolean carplaySupported = AppSupport.isCarPlaySupport(mContext, device, connection);
         if (connection != null) {
             connection.close();
-        }else {
+        } else {
             Log.d(TAG, "isDeviceCarPlayPossible: UsbDeviceConnection is null");
         }
 

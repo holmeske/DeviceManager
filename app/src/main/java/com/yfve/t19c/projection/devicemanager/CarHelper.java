@@ -11,9 +11,9 @@ import android.util.Log;
 
 public class CarHelper {
     private static final String TAG = "CarHelper";
+    private static String presentAndroidAuto = "";
+    private static String presentCarPlay = "";
     private final Handler mHandler = new Handler();
-    private String presentAndroidAuto = "";
-    private String presentCarPlay = "";
     private Car mCar;
     private CarInfoManager mCarInfoManager;
     private byte[] property;
@@ -21,7 +21,7 @@ public class CarHelper {
     private final Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            if (property != null && mCarInfoManager != null) {
+            if (mCarInfoManager != null) {
                 Log.d(TAG, "property.length = " + property.length + " , continue reading data from CarService ...");
                 property = mCarInfoManager.getByteProperty(CarInfoManager.ID_DIAGNOSTIC_CONFIG_701A);
 
@@ -58,11 +58,7 @@ public class CarHelper {
 
     }
 
-    public void setOnGetBytePropertyListener(OnGetBytePropertyListener onGetBytePropertyListener) {
-        this.onGetBytePropertyListener = onGetBytePropertyListener;
-    }
-
-    public boolean isPresentAndroidAuto() {
+    public static boolean isPresentAndroidAuto() {
         if ("1".equals(presentAndroidAuto)) {
             return true;
         } else {
@@ -71,13 +67,17 @@ public class CarHelper {
         }
     }
 
-    public boolean isPresentCarPlay() {
+    public static boolean isPresentCarPlay() {
         if ("1".equals(presentCarPlay)) {
             return true;
         } else {
             Log.d(TAG, "CarPlay not present");
             return false;
         }
+    }
+
+    public void setOnGetBytePropertyListener(OnGetBytePropertyListener onGetBytePropertyListener) {
+        this.onGetBytePropertyListener = onGetBytePropertyListener;
     }
 
     private void initCar(Context context) {

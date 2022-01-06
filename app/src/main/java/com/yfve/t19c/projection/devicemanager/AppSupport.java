@@ -120,6 +120,7 @@ final class AppSupport {
     }
 
     public static int getProtocol(UsbDeviceConnection conn) {
+        Log.d(TAG, "getProtocol() called");
         byte[] buffer = new byte[2];
 
         int len = transfer(conn, READ, ACCESSORY_GET_PROTOCOL, 0, buffer, buffer.length);
@@ -151,7 +152,7 @@ final class AppSupport {
         return rev[0] == 1;
     }
 
-    private static boolean isIOSDevice(UsbDevice device) {
+    public static boolean isIOSDevice(UsbDevice device) {
         return (device.getVendorId() == APPLE_DEVICE_VENDOR_ID) && ((device.getProductId() & 0xff00) == APPLE_DEVICE_PRODUCT_ID_MASK);
     }
 

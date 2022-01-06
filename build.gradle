@@ -3,10 +3,11 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:7.0.4'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.0"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -17,12 +18,12 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-project('app') { // app是你工程的名字，配置只对当前工程有效
-    gradle.projectsEvaluated {
-        tasks.withType(JavaCompile) {
-            // Xbootclasspath/p:是 Java 编译的寻址优先设置，先找缺省路径还是全路径
-            options.compilerArgs.add('-Xbootclasspath/p:app/libs/framework.jar')
-        }
-    }
-}
+//project('app') { // app是你工程的名字，配置只对当前工程有效
+//    gradle.projectsEvaluated {
+//        tasks.withType(JavaCompile) {
+//            // Xbootclasspath/p:是 Java 编译的寻址优先设置，先找缺省路径还是全路径
+//            options.compilerArgs.add('-Xbootclasspath/p:app/libs/framework.jar')
+//        }
+//    }
+//}
 
