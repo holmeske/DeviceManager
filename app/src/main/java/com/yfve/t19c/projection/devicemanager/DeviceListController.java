@@ -357,14 +357,14 @@ public final class DeviceListController {
     }
 
     synchronized public void addDeviceToList(UsbDevice device) {
-
+        if (CarHelper.isOpenQDLink()) return;
         if (AppSupport.isIOSDevice(device)) {
-            if (!CarHelper.isPresentCarPlay()) {
+            if (!CarHelper.isOpenCarPlay()) {
                 Log.d(TAG, "addDeviceToList: carplay is close , do not deal");
                 return;
             }
         } else {
-            if (!CarHelper.isPresentAndroidAuto()) {
+            if (!CarHelper.isOpenAndroidAuto()) {
                 Log.d(TAG, "addDeviceToList: android auto is close , do not deal");
                 return;
             }
@@ -380,7 +380,7 @@ public final class DeviceListController {
         }
         if (!deviceMatch) {
             DeviceInfo newDevice = new DeviceInfo(device.getSerialNumber(), device.getDeviceName(), DeviceInfo.ConnectType_USB
-                    , isDeviceCarPlayPossible(device), isDeviceAoapPossible(device));
+                    , isDeviceCarPlayPossible(device), new DeviceHandlerResolver(mContext).isDeviceAoapPossible(device));
             boolean isFirstConnect = isFirstConnect(newDevice.SerialNumber, newDevice.BluetoothMac);
             Log.i(TAG, "add usb device,serial is " + newDevice.SerialNumber + (isFirstConnect ? "  is FirstConnect" : "  not FirstConnect"));
             mDeviceList.add(newDevice);
@@ -408,6 +408,7 @@ public final class DeviceListController {
     }
 
     synchronized public void removeDeviceFromList(UsbDevice device) {
+        if (CarHelper.isOpenQDLink()) return;
         Log.d(TAG, "removeDeviceFromList() called with: device = [" + device.getSerialNumber() + "]");
         for (DeviceInfo localDevice : mDeviceList) {
             Log.i(TAG, "removeDeviceFromList " + device.getSerialNumber());
@@ -437,23 +438,6 @@ public final class DeviceListController {
                 notifyDeviceList();
             }
         }
-    }
-
-    private boolean isDeviceAoapPossible(UsbDevice device) {
-        if (AppSupport.isDeviceInAoapMode(device)) {
-            return true;
-        }
-
-        UsbManager usbManager = mContext.getSystemService(UsbManager.class);
-        UsbDeviceConnection connection = UsbUtil.openConnection(usbManager, device);
-        boolean aoapSupported = AppSupport.isAOASupported(mContext, device, connection);
-        if (connection != null) {
-            connection.close();
-        } else {
-            Log.d(TAG, "isDeviceAoapPossible: UsbDeviceConnection is null");
-        }
-
-        return aoapSupported;
     }
 
     private boolean isDeviceCarPlayPossible(UsbDevice device) {

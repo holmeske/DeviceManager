@@ -3,7 +3,6 @@ package com.yfve.t19c.projection.devicemanager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.os.Bundle;
 import android.os.Handler;
@@ -75,9 +74,6 @@ public final class AppController {
                 if ("usb0".equals(value)) {
                     stopAndroidAuto();
                 } else if ("usb1".equals(value)) {
-//                    if (mUsbHostController != null) {
-//                        mUsbHostController.onRequestA0ASwitch(USBKt.firstUsbDevice(mContext));
-//                    }
                     /*UsbManager usbManager = (UsbManager) mContext.getSystemService(Context.USB_SERVICE);
                     Class cls = usbManager.getClass();
 
@@ -470,11 +466,11 @@ public final class AppController {
     }
 
     public boolean isPresentAndroidAuto() {
-        return mCarHelper.isPresentAndroidAuto();
+        return mCarHelper.isOpenAndroidAuto();
     }
 
     public boolean isPresentCarPlay() {
-        return mCarHelper.isPresentCarPlay();
+        return mCarHelper.isOpenCarPlay();
     }
 
     public void startAndroidAuto(String deviceName) {
@@ -566,9 +562,10 @@ public final class AppController {
 
     public boolean sessionNotExist() {
         if (CURRENT_SESSION_TYPE == TYPE_NO_SESSION) {
+            Log.d(TAG, "session is idle state");
             return true;
         } else {
-            Log.d(TAG, "session has exist");
+            Log.d(TAG, "session already exists");
             return false;
         }
     }

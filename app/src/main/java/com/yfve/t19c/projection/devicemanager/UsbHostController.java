@@ -37,6 +37,11 @@ public class UsbHostController {
             if (mUsbHelper != null && mUsbHelper.isBluePort()) return;
 
             UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+            if (device == null) {
+                Log.d(TAG, "device is null");
+            } else {
+                Log.d(TAG, "VendorId = [" + device.getVendorId() + "], ProductId = [" + device.getProductId() + "]");
+            }
             if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(intent.getAction())) {
                 attach(device);
             } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(intent.getAction())) {
@@ -46,7 +51,6 @@ public class UsbHostController {
     };
     private boolean isBoundIAapReceiverService = false;
     private boolean isGetCarServiceValue = false;
-    private boolean isCarPlayDevice = false;
 
     public UsbHostController(Context mContext, AppController mAppController, UsbHelper usbHelper, List<OnConnectListener> mOnConnectListeners) {
         Log.d(TAG, "UsbHostController() called");
@@ -150,30 +154,12 @@ public class UsbHostController {
         }
     }
 
-    public void onRequestA0ASwitch(UsbDevice device) {
-        Log.d(TAG, "onRequestA0ASwitch() called with: device = [" + device + "]");
-        if (mDeviceHandlerResolver != null) {
-            Log.d(TAG, "onRequestA0ASwitch: 51");
-            if (AppSupport.isDeviceInAoapMode(device)) {
-                try {
-                    Log.d(TAG, "onRequestA0ASwitch: 52 53");
-                    mDeviceHandlerResolver.requestAoapSwitch(device);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                Log.d(TAG, "onRequestA0ASwitch: not in aoa mode");
-            }
-        } else {
-            Log.d(TAG, "onRequestA0ASwitch: mDeviceHandlerResolver is null");
-        }
-    }
-
     public void attach(UsbDevice device) {
         if (device == null) {
             Log.d(TAG, "attached device is null");
             return;
         }
+        if (!AppSupport.isIOSDevice(device) && CarHelper.isOpenQDLink()) return;
         Log.d(TAG, "attach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
         if (!mAppController.isSwitchingState()) {
             noticeExternal(device, true);
@@ -228,6 +214,7 @@ public class UsbHostController {
             Log.d(TAG, "detached device is null");
             return;
         }
+        if (!AppSupport.isIOSDevice(device) && CarHelper.isOpenQDLink()) return;
         Log.d(TAG, "detach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
 
 

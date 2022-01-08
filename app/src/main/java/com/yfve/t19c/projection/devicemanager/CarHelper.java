@@ -13,6 +13,7 @@ public class CarHelper {
     private static final String TAG = "CarHelper";
     private static String presentAndroidAuto = "";
     private static String presentCarPlay = "";
+    private static String presentQDLink = "";
     private final Handler mHandler = new Handler();
     private Car mCar;
     private CarInfoManager mCarInfoManager;
@@ -58,20 +59,32 @@ public class CarHelper {
 
     }
 
-    public static boolean isPresentAndroidAuto() {
+    public static boolean isOpenAndroidAuto() {
         if ("1".equals(presentAndroidAuto)) {
+            Log.d(TAG, "AndroidAuto configuration opened");
             return true;
         } else {
-            Log.d(TAG, "Android Auto not present");
+            Log.d(TAG, "AndroidAuto configuration not open");
             return false;
         }
     }
 
-    public static boolean isPresentCarPlay() {
+    public static boolean isOpenCarPlay() {
         if ("1".equals(presentCarPlay)) {
+            Log.d(TAG, "CarPlay configuration opened");
             return true;
         } else {
-            Log.d(TAG, "CarPlay not present");
+            Log.d(TAG, "CarPlay configuration not open");
+            return false;
+        }
+    }
+
+    public static boolean isOpenQDLink() {
+        if ("1".equals(presentQDLink)) {
+            Log.d(TAG, "QDLink configuration opened");
+            return true;
+        } else {
+            Log.d(TAG, "QDLink configuration not open");
             return false;
         }
     }
@@ -123,6 +136,14 @@ public class CarHelper {
             mCar.disconnect();
         }
     }
+    /*property[0] = 00000000
+    property[1] = 00000000
+    property[2] = 00101000 cp   qd
+    property[3] = 00000000
+    property[4] = 00000000
+    property[5] = 00000000
+    property[6] = 00000000
+    property[7] = 00000000*/
 
     private void processValidValue() {
         if (onGetBytePropertyListener != null) {
@@ -140,6 +161,9 @@ public class CarHelper {
 
             presentCarPlay = byte2.substring(4, 5);//第4个bit
             Log.d(TAG, "presentCarPlay: " + presentCarPlay);
+
+            presentQDLink = byte2.substring(2, 3);//第6个bit
+            Log.d(TAG, "presentQDLink: " + presentQDLink);
         } else {
             Log.d(TAG, "CarService returned value is invalid");
         }

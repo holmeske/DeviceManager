@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Provides API to persist USB device settings.
+ * Provides API to pergetProtocol() failed. Retrying...sist USB device settings.
  */
 public final class DeviceListStorage {
     private static final String DATABASE_NAME = "deviceManager.db";

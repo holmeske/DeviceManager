@@ -32,6 +32,9 @@ public class DeviceHandlerResolver {
     }
 
     public boolean isDeviceAoapPossible(UsbDevice device) {
+        if (AppSupport.isDeviceInAoapMode(device)) {
+            return true;
+        }
         UsbManager usbManager = mContext.getSystemService(UsbManager.class);
         UsbDeviceConnection connection = UsbUtil.openConnection(usbManager, device);
         if (connection == null) {

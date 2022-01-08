@@ -17,6 +17,7 @@ import android.content.Context;
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbInterface;
 import android.util.ArraySet;
 import android.util.Log;
 import android.util.Pair;
@@ -153,7 +154,34 @@ final class AppSupport {
     }
 
     public static boolean isIOSDevice(UsbDevice device) {
-        return (device.getVendorId() == APPLE_DEVICE_VENDOR_ID) && ((device.getProductId() & 0xff00) == APPLE_DEVICE_PRODUCT_ID_MASK);
+        //return (device.getVendorId() == APPLE_DEVICE_VENDOR_ID) && ((device.getProductId() & 0xff00) == APPLE_DEVICE_PRODUCT_ID_MASK);
+        if (device == null) {
+            Log.d(TAG, "device is null");
+            return false;
+        }
+        if (device.getVendorId() == APPLE_DEVICE_VENDOR_ID) {
+            Log.d(TAG, "this is a ios device");
+            return true;
+        } else {
+            Log.d(TAG, "this isn't a ios device");
+            return false;
+        }
+        /*UsbInterface i = device.getConfiguration(0).getInterface(0);
+        if (i.getInterfaceClass() == 6 && i.getInterfaceSubclass() == 1 && i.getInterfaceProtocol() == 1) {
+            if (device.getVendorId() == APPLE_DEVICE_VENDOR_ID) {
+                Log.d(TAG, "this is a ios device");
+                return true;
+            } else {
+                Log.d(TAG, "this isn't a ios device");
+                return false;
+            }
+        } else if (i.getInterfaceClass() == 8 && i.getInterfaceSubclass() == 60 && i.getInterfaceProtocol() == 80) {
+            Log.d(TAG, "this is a USB drive");
+            return false;
+        } else {
+            Log.d(TAG, "this is a unknown device");
+            return false;
+        }*/
     }
 
     public static boolean isAOASupported(Context context, UsbDevice device, UsbDeviceConnection conn) {
