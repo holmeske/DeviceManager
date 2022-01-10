@@ -7,6 +7,8 @@ import android.hardware.usb.UsbDevice;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
+import android.os.SystemProperties;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.core.util.ObjectsCompat;
@@ -196,6 +198,19 @@ public final class AppController {
                     CURRENT_SESSION_TYPE = TYPE_NO_SESSION;
                     updateIdleState();
                 }
+
+                String usb = SystemProperties.get("sys.usbotg.power");
+                Log.d(TAG, "sys.usbotg.power = " + usb);
+                if (TextUtils.equals(usb, "1")) {
+                    Log.d(TAG, "usb reset");
+                    SystemProperties.set("sys.usbotg.power", "0");
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    SystemProperties.set("sys.usbotg.power", "1");
+                }
             }
         });
 
@@ -245,6 +260,8 @@ public final class AppController {
                 } else {
                     mDeviceListController.removeUsbDeviceFromList(serialNum);
                     noticeExternal(serialNum);
+                    CURRENT_SESSION_TYPE = TYPE_NO_SESSION;
+                    updateIdleState();
                 }
             }
 
