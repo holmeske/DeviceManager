@@ -109,6 +109,59 @@ public final class AppController {
                         return;
                     }
                     startAndroidAuto(device.getDeviceName());
+                } else if ("0".equals(value)) {
+                    Log.d(TAG, "set property sys.usbotg.power 0");
+                    SystemProperties.set("sys.usbotg.power", "0");
+                    Log.d(TAG, "sys.usbotg.power = " + SystemProperties.get("sys.usbotg.power"));
+                } else if ("1".equals(value)) {
+                    Log.d(TAG, "set property sys.usbotg.power 1");
+                    SystemProperties.set("sys.usbotg.power", "1");
+                    Log.d(TAG, "sys.usbotg.power = " + SystemProperties.get("sys.usbotg.power"));
+                } else if ("2".equals(value)) {
+                    Log.d(TAG, "show dialog");
+                    /*Toast.makeText(context.getApplicationContext(), "yes", Toast.LENGTH_LONG).show();
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context.getApplicationContext());
+                    builder.setTitle("提示");
+                    builder.setMessage("connect new device ？");
+                    builder.setIcon(R.mipmap.ic_launcher);
+                    builder.setCancelable(true);
+                    builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Toast.makeText(context.getApplicationContext(), "yes", Toast.LENGTH_LONG).show();
+                        }
+                    });
+                    builder.setNegativeButton("no", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+                    AlertDialog dialog = builder.create();
+                    dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
+                    dialog.show();
+
+                    WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+                            PixelFormat.TRANSLUCENT);
+                    params.gravity = Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL;
+
+                    Button mFloatingButton = new Button(mContext);
+                    mFloatingButton.setText("Android Auto");
+                    mFloatingButton.setVisibility(View.GONE);
+                    WindowManager.LayoutParams fbtLp = new WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.WRAP_CONTENT,
+                            WindowManager.LayoutParams.WRAP_CONTENT,
+                            WindowManager.LayoutParams.FIRST_SYSTEM_WINDOW + 26,
+                            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                            PixelFormat.TRANSPARENT
+                    );
+                    fbtLp.gravity = Gravity.BOTTOM | Gravity.RIGHT;
+                    WindowManager wm = (WindowManager) context.getApplicationContext().getSystemService(WINDOW_SERVICE);
+                    wm.getDefaultDisplay().getRealMetrics(new DisplayMetrics());
+                    wm.addView(mFloatingButton, params);*/
                 }
             } else if (bundle.containsKey("cp")) {
                 String value = (String) bundle.get("cp");
@@ -127,6 +180,7 @@ public final class AppController {
             }
         }
     };
+    private boolean canConnectUSB = true;
 
     public AppController(Context context, DeviceListController deviceListController, CarHelper carHelper) {
         Log.d(TAG, "AppController() called");
@@ -277,8 +331,30 @@ public final class AppController {
                 aawDeviceInfo.setAvailable(available);
                 noticeExternal(aawDeviceInfo, 4);
             }
+
+
+            @Override
+            public void onNotiftIApAuthStatus(int AuthType, int state) {
+                super.onNotiftIApAuthStatus(AuthType, state);
+                Log.d(TAG, "onNotiftIApAuthStatus() called with: AuthType = [" + AuthType + "], state = [" + state + "]");
+                if (AuthType == 1) {
+
+                } else {
+                    if (state != 15) {
+                        canConnectUSB = false;
+                    }
+                }
+                if (state == 15) {
+                    canConnectUSB = true;
+                }
+            }
         };
         mCarPlayClient.registerListener(carPlayListener);
+    }
+
+    public boolean canConnectUSB() {
+        Log.d(TAG, "canConnectUSB: " + canConnectUSB);
+        return canConnectUSB;
     }
 
     public void setOnCallBackListener(OnCallBackListener onCallBackListener) {
@@ -556,10 +632,16 @@ public final class AppController {
 
     public void startCarPlay(String btMac, boolean isUSB) {
         Log.d(TAG, "startCarPlay() called with: btMac = [" + btMac + "], isUSB = [" + isUSB + "]");
+        if (btMac == null) return;
         if (sessionNotExist()) {
             if (carPlayProxyValid()) {
-                Log.w(TAG, "start carplay session");
-                mCarPlayClient.startSession(btMac, isUSB);
+                if (isConnectingState()) {
+                    Log.d(TAG, "don't start carplay , because current state is connecting");
+                } else {
+                    Log.w(TAG, "start carplay session");
+                    updateConnectingState();
+                    mCarPlayClient.startSession(btMac, isUSB);
+                }
             }
         }
     }
@@ -615,6 +697,10 @@ public final class AppController {
 
     public boolean isSwitchingState() {
         return CURRENT_CONNECT_STATE == STATE_SWITCHING;
+    }
+
+    public boolean isConnectingState() {
+        return CURRENT_CONNECT_STATE == STATE_CONNECTING;
     }
 
     public void updatePreparingState() {
