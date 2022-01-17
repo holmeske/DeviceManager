@@ -142,16 +142,15 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         if (!mHandlerThread.isAlive()) {
             mHandlerThread.start();
         }
-        //Log.i(TAG, "try to get binder in sub thread");
 //        getThreadHandler().post(this::getBinderClient);
-        Log.i(TAG, "connectService Thread == " + Thread.currentThread().getId());
+//        Log.i(TAG, "connectService Thread == " + Thread.currentThread().getId());
         new Handler().post(this::getBinderClient);
-        new Handler().post(new Runnable() {
-            @Override
-            public void run() {
-                Log.i(TAG, "Handler Thread == " + Thread.currentThread().getId());
-            }
-        });
+//        new Handler().post(new Runnable() {
+//            @Override
+//            public void run() {
+//                Log.i(TAG, "Handler Thread == " + Thread.currentThread().getId());
+//            }
+//        });
         return true;
     }
 
@@ -175,8 +174,8 @@ public class AapBinderClient implements IBinder.DeathRecipient {
     public void binderDied() {
         Log.i(TAG, "binderDied");
         mAapClient = null;
+        getBinderClient();
     }
-
     public int startSession(String deviceName) {
         Log.d(TAG, "android auto startSession() called with: usbDeviceAddress = [" + deviceName + "]");
         int ret = -1;
