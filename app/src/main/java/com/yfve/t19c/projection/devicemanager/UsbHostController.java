@@ -159,8 +159,20 @@ public class UsbHostController {
             Log.d(TAG, "attached device is null");
             return;
         }
-        if (!AppSupport.isIOSDevice(device) && CarHelper.isOpenQDLink()) return;
+
         Log.d(TAG, "attach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
+        if (ObjectsCompat.equals(device.getSerialNumber(), null)) {
+            Log.d(TAG, "attached device serialnumber is null");
+            return;
+        }
+        if (AppSupport.isIOSDevice(device)) {
+            if (!mAppController.canConnectUSB()) {
+                Log.d(TAG, "attach: don't connect usb car play");
+                return;
+            }
+        }
+        if (!AppSupport.isIOSDevice(device) && CarHelper.isOpenQDLink()) return;
+
         if (!mAppController.isSwitchingState()) {
             noticeExternal(device, true);
         }
@@ -168,7 +180,6 @@ public class UsbHostController {
             Log.d(TAG, "do not process attach event");
             return;
         }
-
         if (mAppController.getCurrentDevice() == null) {
             mAppController.setCurrentDevice(device);
         }
