@@ -98,7 +98,18 @@ public class UsbHostController {
     }
 
     private void noticeExternal(UsbDevice usbDevice, boolean attached) {
+        Device device = new Device();
+        device.setType(1);//1:usb , 2:wireless
+        device.setName(usbDevice.getProductName());
+        device.setSerial(usbDevice.getSerialNumber());
+        device.setAvailable(attached);
+
         if (AppSupport.isIOSDevice(usbDevice)) {
+            if (attached) {
+                device.setUsbAA(false);
+            } else {
+                return;
+            }
             if (!mAppController.isPresentCarPlay()) {
                 Log.d(TAG, "noticeExternal: carplay is close , do not notice external");
                 return;
@@ -108,16 +119,10 @@ public class UsbHostController {
                 Log.d(TAG, "noticeExternal: android auto is close , do not notice external");
                 return;
             }
+            if (attached) {
+                device.setUsbAA(mDeviceHandlerResolver.isDeviceAoapPossible(usbDevice));
+            }
         }
-        Device device = new Device();
-        device.setType(1);//1:usb , 2:wireless
-        device.setName(usbDevice.getProductName());
-        device.setSerial(usbDevice.getSerialNumber());
-        if (attached) {
-            device.setUsbAA(mDeviceHandlerResolver.isDeviceAoapPossible(usbDevice));
-        }
-        device.setAvailable(attached);
-
 
         AtomicBoolean isContain = new AtomicBoolean(false);
         deviceList.forEach(d -> {
@@ -157,6 +162,11 @@ public class UsbHostController {
     public void attach(UsbDevice device) {
         if (device == null) {
             Log.d(TAG, "attached device is null");
+            return;
+        }
+
+        if (AppController.isCanConnectingCPWifi) {
+            Log.d(TAG, "attach: cp wifi connecting");
             return;
         }
 

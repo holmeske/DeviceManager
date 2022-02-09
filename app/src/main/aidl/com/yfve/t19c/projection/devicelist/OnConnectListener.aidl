@@ -7,4 +7,6 @@ interface OnConnectListener {
 
      void update(in Device device);
 
+     void onNotification(int id, String content);
+
 }

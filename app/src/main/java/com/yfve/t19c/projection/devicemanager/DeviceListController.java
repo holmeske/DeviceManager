@@ -380,7 +380,8 @@ public final class DeviceListController {
         }
         if (!deviceMatch) {
             DeviceInfo newDevice = new DeviceInfo(device.getSerialNumber(), device.getDeviceName(), DeviceInfo.ConnectType_USB
-                    , isDeviceCarPlayPossible(device), new DeviceHandlerResolver(mContext).isDeviceAoapPossible(device));
+                    , isDeviceCarPlayPossible(device),
+                    !AppSupport.isIOSDevice(device) && new DeviceHandlerResolver(mContext).isDeviceAoapPossible(device));
             boolean isFirstConnect = isFirstConnect(newDevice.SerialNumber, newDevice.BluetoothMac);
             Log.i(TAG, "add usb device,serial is " + newDevice.SerialNumber + (isFirstConnect ? "  is FirstConnect" : "  not FirstConnect"));
             mDeviceList.add(newDevice);

@@ -1,6 +1,12 @@
 package com.yfve.t19c.projection.devicemanager
 
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -18,7 +24,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        startForegroundService(Intent(this, DeviceManagerService::class.java))
+        //startForegroundService(Intent(this, DeviceManagerService::class.java))
+
+
+
+//        Car.createCar(this, null, 10000) { car, b ->
+//            Log.d(TAG, "car == null : ${car == null}")
+//            Log.d(TAG, "b :$b")
+//        }
 
         //Log.i(TAG, "MainActivity Thread == " + Thread.currentThread().id)
 
@@ -45,8 +58,8 @@ class MainActivity : AppCompatActivity() {
         //db()
     }
 
-    private fun db() {
 
+    private fun db() {
 
         val migration: Migration = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {

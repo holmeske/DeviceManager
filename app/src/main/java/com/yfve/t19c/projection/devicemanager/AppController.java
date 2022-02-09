@@ -21,6 +21,9 @@ import com.yfve.t19c.projection.carplay.proxy.CarPlayListener;
 import com.yfve.t19c.projection.devicelist.Device;
 import com.yfve.t19c.projection.devicelist.OnConnectListener;
 import com.yfve.t19c.projection.devicemanager.callback.OnCallBackListener;
+import com.yfve.t19c.projection.devicemanager.constant.CacheHelperKt;
+import com.yfve.t19c.projection.devicemanager.constant.Phone;
+import com.yfve.t19c.projection.devicemanager.constant.SessionType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,10 +44,9 @@ public final class AppController {
     private static final int TYPE_WIFI_ANDROID_AUTO = 2;
     private static final int TYPE_USB_CAR_PLAY = 3;
     private static final int TYPE_WIFI_CAR_PLAY = 4;
-
+    public static boolean isCanConnectingCPWifi = false;
     private static int CURRENT_CONNECT_STATE = 0;
     private static int CURRENT_SESSION_TYPE = 0;
-
     private final Object mLock = new Object();  // lock protect session status
     private final CarPlayClient mCarPlayClient;
     private final AapBinderClient mAapProxy;
@@ -52,6 +54,8 @@ public final class AppController {
     private final DeviceListController mDeviceListController;
     private final CarHelper mCarHelper;
     private final Context mContext;
+    private final DeviceInfo lastConnectedDevice = new DeviceInfo(); //record last connected cp device
+    private final List<Phone> phones = new ArrayList<>();
     private boolean CAR_PLAY_BIND_SUCCESS = false;
     private DeviceInfo currentDevice = null;
     private List<OnConnectListener> mOnConnectListeners;
@@ -168,10 +172,10 @@ public final class AppController {
                 Log.d(TAG, "onReceive: " + bundle.get("cp"));
                 switch (value) {
                     case "usb":
-                        switchSession(3, "d9b03f3b065e47605057ad57a2b8cf8dc71459d8", "");
+                        switchSession(3, "18b7ac5e44a01d89625e1428f66e61b52dd4b433", "");
                         break;
                     case "wifi":
-                        switchSession(4, "", "B8:63:4D:11:8A:4C");
+                        switchSession(4, "", "CC:44:63:57:3A:1B");
                         break;
                     case "stop":
                         stopCarPlay();
@@ -192,6 +196,40 @@ public final class AppController {
 
         this.mDeviceListController = deviceListController;
         this.mCarHelper = carHelper;
+        mCarHelper.setOnCarPowerStateListener(new CarHelper.OnCarPowerStateListener() {
+            @Override
+            public void standby() {
+                Log.d(TAG, "standby() called");
+                if (currentSessionIsCarPlay()) {
+                    stopCarPlay();
+                }
+            }
+
+            @Override
+            public void run() {
+                Log.d(TAG, "run() called");
+                if (sessionNotExist()) {
+                    if (lastConnectedDevice == null) {
+                        Log.d(TAG, "lastConnectedDevice is null");
+                        return;
+                    }
+                    if (lastConnectedDevice.getLastConnectType() == SessionType.USB_CP) {
+                        if (TextUtils.isEmpty(lastConnectedDevice.SerialNumber)) {
+                            Log.d(TAG, "lastConnectedDevice.SerialNumber = " + lastConnectedDevice.SerialNumber);
+                            return;
+                        }
+                        startCarPlay(lastConnectedDevice.SerialNumber, true);
+                    }
+                    if (lastConnectedDevice.getLastConnectType() == SessionType.WIFI_CP) {
+                        if (TextUtils.isEmpty(lastConnectedDevice.BluetoothMac)) {
+                            Log.d(TAG, "lastConnectedDevice.BluetoothMac = " + lastConnectedDevice.BluetoothMac);
+                            return;
+                        }
+                        startCarPlay(CacheHelperKt.toHexString(lastConnectedDevice.BluetoothMac), false);
+                    }
+                }
+            }
+        });
 
         mAndroidAutoDeviceClient = new AndroidAutoDeviceClient();
         mAndroidAutoDeviceClient.initialise(context);
@@ -272,6 +310,8 @@ public final class AppController {
         mCarPlayClient.initialise(context);
         CarPlayListener carPlayListener = new CarPlayListener() {
             private int sessionType = -1;
+            private String mac;
+            private String serial;
 
             @Override
             public void onUpdateClientSts(boolean sts) {
@@ -288,10 +328,42 @@ public final class AppController {
                     if (sts == 0) {
                         CURRENT_SESSION_TYPE = sessionType == 1 ? TYPE_USB_CAR_PLAY : TYPE_WIFI_CAR_PLAY;
                         CURRENT_CONNECT_STATE = STATE_CONNECTED;
+
+                        serial = currentDevice == null ? "" : currentDevice.SerialNumber;
+
+                        if (!TextUtils.isEmpty(btMac)) {
+                            if (!CacheHelperKt.contains(phones, btMac)) {
+                                phones.add(new Phone(serial, btMac));
+                            } else {
+                                if (serial != "") {
+                                    phones.forEach(t -> {
+                                                if (btMac.equals(t.getMac())) {
+                                                    t.setSerial(serial);
+                                                }
+                                            }
+                                    );
+                                }
+                            }
+                        }
+
+                        Phone phone = CacheHelperKt.find(phones, btMac);
+                        if (phone != null) {
+                            lastConnectedDevice.SerialNumber = phone.getSerial();
+                            lastConnectedDevice.BluetoothMac = phone.getMac();
+                        } else {
+                            Log.d(TAG, "phone is null");
+                        }
+
+                        Log.d(TAG, "lastConnectedDevice blueToothMac = " + lastConnectedDevice.BluetoothMac);
+                        Log.d(TAG, "lastConnectedDevice serialNumber = " + lastConnectedDevice.SerialNumber);
+
+                        lastConnectedDevice.setLastConnectType(sessionType == 1 ? 3 : 4);
+
                     } else if (sts == 1) {
                         CURRENT_SESSION_TYPE = TYPE_NO_SESSION;
                         updateIdleState();
                     }
+                    isCanConnectingCPWifi = false;
                 }
             }
 
@@ -299,6 +371,17 @@ public final class AppController {
             public void onNotifyCPReadyToAuth(String uniqueInfo, int connectType) {
                 super.onNotifyCPReadyToAuth(uniqueInfo, connectType);
                 Log.d(TAG, "onNotifyCPReadyToAuth() called with: uniqueInfo = [" + uniqueInfo + "], connectType = [" + connectType + "]");
+                if (CarHelper.isStandby()) {
+                    Log.d(TAG, "in standby mode, don't start carplay");
+                    return;
+                }
+                if (uniqueInfo == null || "".equals(uniqueInfo)) {
+                    Log.e(TAG, "can't start carplay");
+                    return;
+                }
+                if (connectType != 1) {
+                    isCanConnectingCPWifi = true;
+                }
                 if (isPresentCarPlay()) {
                     sessionType = connectType;
                     startCarPlay(uniqueInfo, connectType == 1);
@@ -317,6 +400,7 @@ public final class AppController {
                     CURRENT_SESSION_TYPE = TYPE_NO_SESSION;
                     updateIdleState();
                 }
+                isCanConnectingCPWifi = false;
             }
 
             @Override
@@ -337,12 +421,8 @@ public final class AppController {
             public void onNotiftIApAuthStatus(int AuthType, int state) {
                 super.onNotiftIApAuthStatus(AuthType, state);
                 Log.d(TAG, "onNotiftIApAuthStatus() called with: AuthType = [" + AuthType + "], state = [" + state + "]");
-                if (AuthType == 1) {
-
-                } else {
-                    if (state != 15) {
-                        canConnectUSB = false;
-                    }
+                if (AuthType != 1 && state != 15) {
+                    canConnectUSB = false;
                 }
                 if (state == 15) {
                     canConnectUSB = true;
@@ -559,11 +639,11 @@ public final class AppController {
     }
 
     public boolean isPresentAndroidAuto() {
-        return mCarHelper.isOpenAndroidAuto();
+        return CarHelper.isOpenAndroidAuto();
     }
 
     public boolean isPresentCarPlay() {
-        return mCarHelper.isOpenCarPlay();
+        return CarHelper.isOpenCarPlay();
     }
 
     public void startAndroidAuto(String deviceName) {
@@ -577,7 +657,7 @@ public final class AppController {
 
     public boolean deviceSame(UsbDevice device) {
         if (currentDevice != null && device != null && Objects.equals(currentDevice.SerialNumber, device.getSerialNumber())) {
-            Log.d(TAG, "current device == intent device");
+            //Log.d(TAG, "current device == intent device");
             return true;
         } else {
             Log.d(TAG, "current device != intent device ,"
@@ -590,11 +670,11 @@ public final class AppController {
     public void stopAndroidAuto() {
         updateDisConnectingState();
         if (androidAutoProxyValid()) {
-            printCurrentSessionType();
+            //printCurrentSessionType();
             if (CURRENT_SESSION_TYPE == TYPE_USB_ANDROID_AUTO) {
                 mAapProxy.stopSession();
             } else {
-                Log.d(TAG, "current session is not android auto");
+                Log.d(TAG, "current session isn't android auto");
             }
         }
         updateIdleState();
@@ -632,16 +712,16 @@ public final class AppController {
 
     public void startCarPlay(String btMac, boolean isUSB) {
         Log.d(TAG, "startCarPlay() called with: btMac = [" + btMac + "], isUSB = [" + isUSB + "]");
-        if (btMac == null) return;
+        if (TextUtils.isEmpty(btMac)) return;
         if (sessionNotExist()) {
             if (carPlayProxyValid()) {
-                if (isConnectingState()) {
-                    Log.d(TAG, "don't start carplay , because current state is connecting");
-                } else {
-                    Log.w(TAG, "start carplay session");
-                    updateConnectingState();
-                    mCarPlayClient.startSession(btMac, isUSB);
-                }
+//                if (isConnectingState()) {
+//                    Log.d(TAG, "don't start carplay , because current state is connecting");
+//                } else {
+                updateConnectingState();
+                Log.w(TAG, "start carplay session");
+                mCarPlayClient.startSession(btMac, isUSB);
+//                }
             }
         }
     }
@@ -653,7 +733,7 @@ public final class AppController {
                 Log.w(TAG, "carplay stopSession() called");
                 mCarPlayClient.stopSession();
             } else {
-                Log.d(TAG, "current session is not carplay");
+                Log.d(TAG, "current session isn't carplay, can't stop");
             }
         }
         updateIdleState();
@@ -661,7 +741,7 @@ public final class AppController {
 
     public boolean sessionNotExist() {
         if (CURRENT_SESSION_TYPE == TYPE_NO_SESSION) {
-            Log.d(TAG, "session is idle state");
+            Log.d(TAG, "session state is idle");
             return true;
         } else {
             Log.d(TAG, "session already exists");

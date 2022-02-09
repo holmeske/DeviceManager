@@ -13,4 +13,6 @@ interface DeviceListManager {
     void projectionScreen(int connectType, String serialNumber, String btMac);
 
     List<Device> getList();
+
+    void startSession();
 }

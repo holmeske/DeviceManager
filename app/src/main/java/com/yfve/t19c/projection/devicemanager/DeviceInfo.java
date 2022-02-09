@@ -23,6 +23,10 @@ public class DeviceInfo {
     public String DeviceName;
     public int ConnectionType;
     public boolean[] AppAvailable = new boolean[Connectivity_AppType_MAX];
+    private int lastConnectType;
+
+    public DeviceInfo() {
+    }
 
     public DeviceInfo(String serial, String name, int conType) {
         if (conType == ConnectType_USB) {
@@ -57,6 +61,14 @@ public class DeviceInfo {
         AppAvailable[Connectivity_AppType_AndroidAuto] = isSupAA;
         AppAvailable[Connectivity_AppType_CarLife] = isSupCL;
         AppAvailable[Connectivity_AppType_HiCar] = isSupHC;
+    }
+
+    public int getLastConnectType() {
+        return lastConnectType;
+    }
+
+    public void setLastConnectType(int lastConnectType) {
+        this.lastConnectType = lastConnectType;
     }
 
     public boolean match(String inputData, int conType) {

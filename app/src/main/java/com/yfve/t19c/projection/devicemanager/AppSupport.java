@@ -160,7 +160,7 @@ final class AppSupport {
             return false;
         }
         if (device.getVendorId() == APPLE_DEVICE_VENDOR_ID) {
-            Log.d(TAG, "this is a ios device");
+            //Log.d(TAG, "this is a ios device");
             return true;
         } else {
             Log.d(TAG, "this isn't a ios device");
@@ -256,7 +256,7 @@ final class AppSupport {
             }
             */
         }
-
+     
         return sBlacklistedVidPidPairs.contains(Pair.create(device.getVendorId(), device.getProductId()));
     }
 

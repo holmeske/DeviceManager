@@ -2,6 +2,7 @@ package com.yfve.t19c.projection.devicemanager;
 
 import android.car.Car;
 import android.car.CarInfoManager;
+import android.car.hardware.power.CarPowerManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
@@ -14,8 +15,10 @@ public class CarHelper {
     private static String presentAndroidAuto = "";
     private static String presentCarPlay = "";
     private static String presentQDLink = "";
+    private static boolean standby;
     private final Handler mHandler = new Handler();
     private Car mCar;
+    private CarPowerManager mCarPowerManager;
     private CarInfoManager mCarInfoManager;
     private byte[] property;
     private OnGetBytePropertyListener onGetBytePropertyListener;
@@ -34,10 +37,14 @@ public class CarHelper {
             }
         }
     };
-
+    private OnCarPowerStateListener onCarPowerStateListener;
     public CarHelper(Context mContext) {
         Log.d(TAG, "CarHelper() called");
         initCar(mContext);
+    }
+
+    public static boolean isStandby() {
+        return standby;
     }
 
     public static String byteToBit(byte b) {
@@ -71,10 +78,10 @@ public class CarHelper {
 
     public static boolean isOpenCarPlay() {
         if ("1".equals(presentCarPlay)) {
-            Log.d(TAG, "CarPlay configuration opened");
+            //Log.d(TAG, "carplay configuration switch is opened");
             return true;
         } else {
-            Log.d(TAG, "CarPlay configuration not open");
+            Log.d(TAG, "carplay configuration switch is closed");
             return false;
         }
     }
@@ -89,6 +96,10 @@ public class CarHelper {
         }
     }
 
+    public void setOnCarPowerStateListener(OnCarPowerStateListener onCarPowerStateListener) {
+        this.onCarPowerStateListener = onCarPowerStateListener;
+    }
+
     public void setOnGetBytePropertyListener(OnGetBytePropertyListener onGetBytePropertyListener) {
         this.onGetBytePropertyListener = onGetBytePropertyListener;
     }
@@ -100,6 +111,7 @@ public class CarHelper {
                 Log.d(TAG, "onServiceConnected() called with: name = [" + name.getPackageName() + "]");
                 if (mCar != null) {
                     try {
+                        setCarPowerStateListener();
                         mCarInfoManager = (CarInfoManager) mCar.getCarManager(Car.INFO_SERVICE);
                         if (mCarInfoManager != null) {
                             property = mCarInfoManager.getByteProperty(CarInfoManager.ID_DIAGNOSTIC_CONFIG_701A);
@@ -129,6 +141,61 @@ public class CarHelper {
             mCar.connect();
         }
 
+    }
+
+    private void setCarPowerStateListener() {
+        Log.d(TAG, "setCarPowerStateListener() called");
+        mCarPowerManager = (CarPowerManager) mCar.getCarManager(Car.POWER_SERVICE);
+        if (mCarPowerManager != null) {
+            mCarPowerManager.setListener(state -> {
+                //Log.d(TAG, "onStateChanged() called with: state = [" + state + "]");
+                // int PWR_MODE_NONE = 9;
+                // int PWR_MODE_OFF = 10;
+                // int PWR_MODE_STANDBY = 11;
+                // int PWR_MODE_RUN = 12;
+                // int PWR_MODE_SLEEP = 13;
+                // int PWR_MODE_ABNORMAL = 14;
+                // int PWR_MODE_TEMP_ON = 15;
+                // int PWR_MODE_OFF_USER = 16;
+                // int PWR_MODE_PARTIALRUN = 17;
+                // int PWR_MODE_PROTECTION = 18;
+                // int PWR_MODE_TEMPRUN_ENDING = 19;
+                // int PWR_REQ_SYSTEM_OFF = 20;
+                // int PWR_SCREEN_ON = 21;
+                // int PWR_SCREEN_OFF = 22;
+                //sometime will receive twice pwr_mode_standy without pwr_run
+                if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_STANDBY) {
+                    if (onCarPowerStateListener != null) {
+                        onCarPowerStateListener.standby();
+                        standby = true;
+                    }
+                    /*Log.d(TAG, "onStateChanged:PWR_MODE_STANDBY send borrow video and audio");
+                    if (!mIsStandby) {
+                        CarPlayCommClient.getInstance().requestBorrowVideo(37, true);  // kResource_Type_POWEROFF in c++
+                        CarPlayCommClient.getInstance().requestBorrowAudio(37, true);  // kResource_Type_POWEROFF in c++
+                        mIsStandby = true;
+                    } else {
+                        Log.d(TAG, "PWR_MODE_RUN not coming yet:mIsStandby=" + mIsStandby);
+                    }*/
+                } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_RUN) {
+                    if (onCarPowerStateListener != null) {
+                        onCarPowerStateListener.run();
+                        standby = false;
+                    }
+                    /*Log.d(TAG, "onStateChanged:PWR_MODE_RUN send unborrow video and audio");
+                    if (mIsStandby) {
+                        CarPlayCommClient.getInstance().requestBorrowVideo(37, false);  // kResource_Type_POWEROFF in c++
+                        CarPlayCommClient.getInstance().requestBorrowAudio(37, false);  // kResource_Type_POWEROFF in c++
+                        CarPlayCommProtocal.getInstance().startRequestAudioFocus();
+                        mIsStandby = false;
+                    } else {
+                        Log.d(TAG, "PWR_MODE_STANDBY not coming yet:mIsStandby=" + mIsStandby);
+                    }*/
+                }
+            });
+        } else {
+            Log.d(TAG, "CarPowerManager is null");
+        }
     }
 
     public void release() {
@@ -176,4 +243,9 @@ public class CarHelper {
         void callback();
     }
 
+    public interface OnCarPowerStateListener {
+        void standby();
+
+        void run();
+    }
 }

@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -56,6 +57,11 @@ public class DeviceManagerService extends Service {
         public List<Device> getList() {
             Log.d(TAG, "getList() called" + " size = " + deviceList.size());
             return deviceList;
+        }
+
+        @Override
+        public void startSession() {
+
         }
 
     };
