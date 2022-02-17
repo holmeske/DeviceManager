@@ -38,7 +38,7 @@ public class UsbHostController {
 
             UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
             if (device == null) {
-                Log.d(TAG, "device is null");
+                Log.e(TAG, "device is null");
             } else {
                 Log.d(TAG, "VendorId = [" + device.getVendorId() + "], ProductId = [" + device.getProductId() + "]");
             }
@@ -47,6 +47,10 @@ public class UsbHostController {
             } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(intent.getAction())) {
                 detach(device);
             }
+
+//            Log.d(TAG, "InterfaceClass: " + (device != null ? device.getInterface(0).getInterfaceClass() : -1));
+//            Log.d(TAG, "onReceive: " + device.toString());
+
         }
     };
     private boolean isBoundIAapReceiverService = false;

@@ -22,6 +22,7 @@ import com.yfve.t19c.projection.devicelist.Device;
 import com.yfve.t19c.projection.devicelist.OnConnectListener;
 import com.yfve.t19c.projection.devicemanager.callback.OnCallBackListener;
 import com.yfve.t19c.projection.devicemanager.constant.CacheHelperKt;
+import com.yfve.t19c.projection.devicemanager.constant.CommonUtilsKt;
 import com.yfve.t19c.projection.devicemanager.constant.Phone;
 import com.yfve.t19c.projection.devicemanager.constant.SessionType;
 
@@ -52,7 +53,6 @@ public final class AppController {
     private final AapBinderClient mAapProxy;
     private final AndroidAutoDeviceClient mAndroidAutoDeviceClient;
     private final DeviceListController mDeviceListController;
-    private final CarHelper mCarHelper;
     private final Context mContext;
     private final DeviceInfo lastConnectedDevice = new DeviceInfo(); //record last connected cp device
     private final List<Phone> phones = new ArrayList<>();
@@ -80,33 +80,6 @@ public final class AppController {
                 if ("usb0".equals(value)) {
                     stopAndroidAuto();
                 } else if ("usb1".equals(value)) {
-                    /*UsbManager usbManager = (UsbManager) mContext.getSystemService(Context.USB_SERVICE);
-                    Class cls = usbManager.getClass();
-
-                    for (Method method : cls.getDeclaredMethods()) {
-                        Log.d(TAG, "onReceive: " + method.getName());
-                        if (method.getName().equals("resetUsbGadget")) {
-                            Log.d(TAG, "onReceive: hi hi hi , i am here");
-                        }
-                    }
-
-                    Method method = null;
-                    try {
-                        method = cls.getMethod("resetUsbGadget");//
-                    } catch (NoSuchMethodException e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "", e);
-                    }
-                    try {
-                        if (method == null) {
-                            Log.d(TAG, "method = null");
-                        } else {
-                            method.invoke(usbManager, 1);
-                        }
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "", e);
-                    }*/
                     UsbDevice device = USBKt.firstUsbDevice(mContext);
                     if (device == null) {
                         Log.d(TAG, "onReceive: connected usb device is null");
@@ -121,51 +94,6 @@ public final class AppController {
                     Log.d(TAG, "set property sys.usbotg.power 1");
                     SystemProperties.set("sys.usbotg.power", "1");
                     Log.d(TAG, "sys.usbotg.power = " + SystemProperties.get("sys.usbotg.power"));
-                } else if ("2".equals(value)) {
-                    Log.d(TAG, "show dialog");
-                    /*Toast.makeText(context.getApplicationContext(), "yes", Toast.LENGTH_LONG).show();
-                    AlertDialog.Builder builder = new AlertDialog.Builder(context.getApplicationContext());
-                    builder.setTitle("提示");
-                    builder.setMessage("connect new device ？");
-                    builder.setIcon(R.mipmap.ic_launcher);
-                    builder.setCancelable(true);
-                    builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Toast.makeText(context.getApplicationContext(), "yes", Toast.LENGTH_LONG).show();
-                        }
-                    });
-                    builder.setNegativeButton("no", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-                    AlertDialog dialog = builder.create();
-                    dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
-                    dialog.show();
-
-                    WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                            WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
-                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
-                            PixelFormat.TRANSLUCENT);
-                    params.gravity = Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL;
-
-                    Button mFloatingButton = new Button(mContext);
-                    mFloatingButton.setText("Android Auto");
-                    mFloatingButton.setVisibility(View.GONE);
-                    WindowManager.LayoutParams fbtLp = new WindowManager.LayoutParams(
-                            WindowManager.LayoutParams.WRAP_CONTENT,
-                            WindowManager.LayoutParams.WRAP_CONTENT,
-                            WindowManager.LayoutParams.FIRST_SYSTEM_WINDOW + 26,
-                            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                            PixelFormat.TRANSPARENT
-                    );
-                    fbtLp.gravity = Gravity.BOTTOM | Gravity.RIGHT;
-                    WindowManager wm = (WindowManager) context.getApplicationContext().getSystemService(WINDOW_SERVICE);
-                    wm.getDefaultDisplay().getRealMetrics(new DisplayMetrics());
-                    wm.addView(mFloatingButton, params);*/
                 }
             } else if (bundle.containsKey("cp")) {
                 String value = (String) bundle.get("cp");
@@ -184,6 +112,7 @@ public final class AppController {
             }
         }
     };
+    private AAWDeviceInfo lastAAWDeviceInfo;
     private boolean canConnectUSB = true;
 
     public AppController(Context context, DeviceListController deviceListController, CarHelper carHelper) {
@@ -195,8 +124,7 @@ public final class AppController {
 //        context.registerReceiver(receiver, intentFilter);
 
         this.mDeviceListController = deviceListController;
-        this.mCarHelper = carHelper;
-        mCarHelper.setOnCarPowerStateListener(new CarHelper.OnCarPowerStateListener() {
+        carHelper.setOnCarPowerStateListener(new CarHelper.OnCarPowerStateListener() {
             @Override
             public void standby() {
                 Log.d(TAG, "standby() called");
@@ -259,11 +187,20 @@ public final class AppController {
             @Override
             public void onUpdateWirelessDevice(AAWDeviceInfo device) {
                 super.onUpdateWirelessDevice(device);
-                Log.d(TAG, "onUpdateWirelessDevice() called with: mac = [" + device.getMacAddress() + "]"
-                        + ", name = [" + device.getDeviceName() + "]" + ", serial = [" + device.getSerialNumber() + "]"
-                        + ", type = [" + device.getDeviceType() + "]" + ", capability = [" + device.getCapability() + "]"
-                        + ", available = [" + device.getAvailable() + "]");
+                Log.d(TAG, "onUpdateWirelessDevice: " + CommonUtilsKt.toJson(device));
+                lastAAWDeviceInfo = device;
                 noticeExternal(device, 2);
+
+                if (!sessionNotExist()) {
+                    //switchAAWDevice();
+                    mOnConnectListeners.forEach(listener -> {
+                        try {
+                            listener.onNotification(1, "");
+                        } catch (RemoteException e) {
+                            Log.e(TAG, "onUpdateWirelessDevice: ", e);
+                        }
+                    });
+                }
             }
         });
 
@@ -310,7 +247,6 @@ public final class AppController {
         mCarPlayClient.initialise(context);
         CarPlayListener carPlayListener = new CarPlayListener() {
             private int sessionType = -1;
-            private String mac;
             private String serial;
 
             @Override
@@ -335,7 +271,7 @@ public final class AppController {
                             if (!CacheHelperKt.contains(phones, btMac)) {
                                 phones.add(new Phone(serial, btMac));
                             } else {
-                                if (serial != "") {
+                                if (!"".equals(serial)) {
                                     phones.forEach(t -> {
                                                 if (btMac.equals(t.getMac())) {
                                                     t.setSerial(serial);
@@ -449,6 +385,40 @@ public final class AppController {
         this.mUsbHostController = controller;
     }
 
+    public void stopLastSession() {
+        switch (CURRENT_SESSION_TYPE) {
+            case TYPE_USB_ANDROID_AUTO:
+                stopAndroidAuto();
+                break;
+            case TYPE_WIFI_ANDROID_AUTO:
+                mAndroidAutoDeviceClient.DisconnectWirelessDevice();
+                break;
+            case TYPE_USB_CAR_PLAY:
+            case TYPE_WIFI_CAR_PLAY:
+                stopCarPlay();
+                break;
+            default:
+                break;
+        }
+
+        int cnt = 0;
+        while (cnt < 10) {
+            if (CURRENT_CONNECT_STATE == STATE_IDLE) break;
+            Log.i(TAG, "current connect state is not idle, try to refresh");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            cnt++;
+        }
+    }
+
+    public void switchAAWDevice() {
+        Log.d(TAG, "switchAAWDevice: ");
+        switchSession(2, lastAAWDeviceInfo.getSerialNumber(), lastAAWDeviceInfo.getMacAddress());
+    }
+
     /**
      * @param connectType  1:usb_aa , 2:wireless_aa , 3:usb_cp , 4:wireless_cp
      * @param serialNumber usb device serial number
@@ -456,59 +426,18 @@ public final class AppController {
      */
     public void switchSession(int connectType, String serialNumber, String btMac) {
         Log.d(TAG, "switchSession() called with: connectType = [" + connectType + "], serialNumber = [" + serialNumber + "], btMac = [" + btMac + "]");
-        if (!sessionNotExist()) {
+        if (CURRENT_SESSION_TYPE == TYPE_WIFI_ANDROID_AUTO && currentDevice != null && ObjectsCompat.equals(currentDevice.BluetoothMac, btMac)) {
+            Log.d(TAG, "in wifi android auto, current device mac = switch device mac, don't process");
             return;
         }
-//        if (CURRENT_SESSION_TYPE == TYPE_USB_ANDROID_AUTO) {
-//            if (connectType == 1) {
-//                Log.d(TAG, "same as the current session type, do not switch");
-//                return;
-//            } else {
-//                stopAndroidAuto();
-//            }
-//        } else if (CURRENT_SESSION_TYPE == TYPE_WIFI_ANDROID_AUTO) {
-//            if (connectType == 2) {
-//                Log.d(TAG, "same as the current session type, do not switch");
-//                return;
-//            } else {
-//                if (mAndroidAutoDeviceClient != null) {
-//                    Log.d(TAG, "disconnect wireless android auto");
-//                    mAndroidAutoDeviceClient.DisconnectWirelessDevice();
-//                } else {
-//                    Log.d(TAG, "AndroidAutoDeviceClient is null");
-//                }
-//            }
-//        } else if (CURRENT_SESSION_TYPE == TYPE_USB_CAR_PLAY) {
-//            if (connectType == 3) {
-//                Log.d(TAG, "same as the current session type, do not switch");
-//                return;
-//            } else {
-//                stopCarPlay();
-//            }
-//        } else if (CURRENT_SESSION_TYPE == TYPE_WIFI_CAR_PLAY) {
-//            if (connectType == 4) {
-//                Log.d(TAG, "same as the current session type, do not switch");
-//                return;
-//            } else {
-//                stopCarPlay();
-//            }
-//        }
-//
-//        int cnt = 0;
-//        while (cnt < 10) {
-//            if (CURRENT_CONNECT_STATE == STATE_IDLE) break;
-//            Log.i(TAG, "current connect state is not idle, try to refresh");
-//            try {
-//                Thread.sleep(1000);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//            cnt++;
-//        }
+        stopLastSession();
         connectSession(connectType, serialNumber, btMac);
     }
 
-    private void connectSession(int type, String serial, String mac) {
+    public void connectSession(int type, String serial, String mac) {
+        if (!sessionNotExist()) {
+            return;
+        }
         Log.d(TAG, "connectSession() called with: type = [" + type + "], serial = [" + serial + "], mac = [" + mac + "]");
         if (type == 1) {
             if (mUsbHostController != null) {
@@ -680,23 +609,6 @@ public final class AppController {
         updateIdleState();
     }
 
-    private void printCurrentSessionType() {
-        switch (CURRENT_SESSION_TYPE) {
-            case TYPE_USB_ANDROID_AUTO:
-                Log.d(TAG, "current session is usb android auto");
-                break;
-            case TYPE_WIFI_ANDROID_AUTO:
-                Log.d(TAG, "current session is wifi android auto");
-                break;
-            case TYPE_USB_CAR_PLAY:
-                Log.d(TAG, "current session is usb carplay");
-                break;
-            case TYPE_WIFI_CAR_PLAY:
-                Log.d(TAG, "current session is wifi carplay");
-                break;
-        }
-    }
-
     public void roleSwitchComplete(String serialNumber) {
         Log.d(TAG, "roleSwitchComplete() called with: serialNumber = [" + serialNumber + "]");
         if (CAR_PLAY_BIND_SUCCESS) {
@@ -741,7 +653,7 @@ public final class AppController {
 
     public boolean sessionNotExist() {
         if (CURRENT_SESSION_TYPE == TYPE_NO_SESSION) {
-            Log.d(TAG, "session state is idle");
+            //Log.d(TAG, "session state is idle");
             return true;
         } else {
             Log.d(TAG, "session already exists");
@@ -753,7 +665,7 @@ public final class AppController {
         if (mAapProxy.getClient() != null) {
             return true;
         } else {
-            Log.d(TAG, "android auto proxy invalid");
+            Log.e(TAG, "android auto proxy invalid");
             return false;
         }
     }
@@ -762,7 +674,7 @@ public final class AppController {
         if (CAR_PLAY_BIND_SUCCESS) {
             return true;
         } else {
-            Log.d(TAG, "carplay proxy invalid");
+            Log.e(TAG, "carplay proxy invalid");
             return false;
         }
     }
@@ -777,10 +689,6 @@ public final class AppController {
 
     public boolean isSwitchingState() {
         return CURRENT_CONNECT_STATE == STATE_SWITCHING;
-    }
-
-    public boolean isConnectingState() {
-        return CURRENT_CONNECT_STATE == STATE_CONNECTING;
     }
 
     public void updatePreparingState() {

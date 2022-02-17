@@ -11,7 +11,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.IBinder;
-import android.os.RemoteException;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -49,7 +48,7 @@ public class DeviceManagerService extends Service {
         public void projectionScreen(int connectType, String serialNumber, String btMac) {
             Log.d(TAG, "projectionScreen() called with: connectType = [" + connectType + "], serialNumber = [" + serialNumber + "], btMac = [" + btMac + "]");
             if (mAppController != null) {
-                mAppController.switchSession(connectType, serialNumber, btMac);
+                mAppController.connectSession(connectType, serialNumber, btMac);
             }
         }
 
@@ -61,7 +60,10 @@ public class DeviceManagerService extends Service {
 
         @Override
         public void startSession() {
-
+            Log.d(TAG, "startSession() called");
+            if (mAppController != null) {
+                mAppController.switchAAWDevice();
+            }
         }
 
     };
@@ -107,9 +109,6 @@ public class DeviceManagerService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand() called");
-
-
-
         return START_STICKY;
     }
 
