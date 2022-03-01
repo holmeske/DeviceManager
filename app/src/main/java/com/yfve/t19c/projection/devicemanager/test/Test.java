@@ -51,4 +51,7 @@ public class Test {
         }
         return false;
     }
+
+    public static void t() {
+    }
 }

@@ -1,7 +1,9 @@
 package com.yfve.t19c.projection.devicemanager.constant
 
+import android.content.Context
 import android.text.TextUtils
 import android.util.Log
+import com.yfve.t19c.projection.devicemanager.Device
 import java.util.*
 
 private const val TAG = "CacheHelper"
@@ -37,4 +39,30 @@ fun toHexString(mac: String?): String {
         Log.e(TAG, "toHexString: ", e)
         ""
     }
+}
+
+fun Context.saveLastConnectDeviceInfo(
+    name: String,
+    serial: String,
+    mac: String,
+    ability: Int
+) {
+    if (TextUtils.isEmpty(serial) || TextUtils.isEmpty(mac)) return
+    getSharedPreferences("last_connect_device", Context.MODE_PRIVATE).edit()
+        .putString("name", name).putString("serial", serial).putString("mac", mac)
+        .putInt("ability", ability)
+        .apply()
+    //getSharedPreferences("last_connect_device", Context.MODE_PRIVATE).edit().clear().apply()
+}
+
+fun Context.getLastConnectDeviceInfo(): Device {
+    val device: Device
+    val sp = getSharedPreferences("last_connect_device", Context.MODE_PRIVATE)
+    device = Device(
+        sp.getString("name", ""),
+        sp.getString("serial", ""),
+        sp.getString("mac", ""),
+        sp.getInt("ability", 0)
+    )
+    return device
 }

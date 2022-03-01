@@ -7,4 +7,9 @@ object SessionType {
     const val WIFI_CP = 4
 }
 
+object ConnectType {
+    const val USB = 1
+    const val WIFI = 2
+}
+
 data class Phone(var serial: String? = "", var mac: String? = "")

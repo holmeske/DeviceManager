@@ -38,6 +38,7 @@ public class CarHelper {
         }
     };
     private OnCarPowerStateListener onCarPowerStateListener;
+
     public CarHelper(Context mContext) {
         Log.d(TAG, "CarHelper() called");
         initCar(mContext);
@@ -148,7 +149,7 @@ public class CarHelper {
         mCarPowerManager = (CarPowerManager) mCar.getCarManager(Car.POWER_SERVICE);
         if (mCarPowerManager != null) {
             mCarPowerManager.setListener(state -> {
-                //Log.d(TAG, "onStateChanged() called with: state = [" + state + "]");
+                Log.d(TAG, "onStateChanged() called with: state = [" + state + "]");
                 // int PWR_MODE_NONE = 9;
                 // int PWR_MODE_OFF = 10;
                 // int PWR_MODE_STANDBY = 11;
@@ -177,7 +178,8 @@ public class CarHelper {
                     } else {
                         Log.d(TAG, "PWR_MODE_RUN not coming yet:mIsStandby=" + mIsStandby);
                     }*/
-                } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_RUN) {
+                } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_RUN
+                        || state == CarPowerManager.CarPowerStateListener.PWR_MODE_TEMP_ON) {
                     if (onCarPowerStateListener != null) {
                         onCarPowerStateListener.run();
                         standby = false;

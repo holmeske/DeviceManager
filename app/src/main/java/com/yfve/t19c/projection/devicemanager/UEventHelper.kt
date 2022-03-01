@@ -58,15 +58,15 @@ class UsbHelper {
         }
     }
 
-    fun isBluePort(): Boolean {
-        return currentPort == 2
-    }
-
-    private var currentPort: Int = 0
-
     init {
-        Log.d(TAG, "EventObserver.startObserving() called")
+        Log.d(TAG, "EventObserver startObserving()")
         uEventObserver.startObserving(match)
     }
 
+    companion object {
+        private var currentPort: Int = 0
+        fun isBluePort(): Boolean {
+            return currentPort == 2
+        }
+    }
 }

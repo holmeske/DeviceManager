@@ -18,6 +18,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+//        DeviceListHelper(this).test(this)
         startForegroundService(Intent(this, DeviceManagerService::class.java))
 
 //        Car.createCar(this, null, 10000) { car, b ->

@@ -7,6 +7,6 @@ interface OnConnectListener {
 
      void update(in Device device);
 
-     void onNotification(int id, String content);
+     void onNotification(int id, String content, int connectType, String serial, String mac);
 
 }

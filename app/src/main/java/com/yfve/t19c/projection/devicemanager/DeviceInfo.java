@@ -63,6 +63,22 @@ public class DeviceInfo {
         AppAvailable[Connectivity_AppType_HiCar] = isSupHC;
     }
 
+    public void update(String serial, String mac, String name, int conType) {
+        SerialNumber = serial;
+        BluetoothMac = mac;
+        DeviceName = name;
+        ConnectionType = conType;
+    }
+
+    public void reset() {
+        SerialNumber = "";
+        BluetoothMac = "";
+        DeviceName = "";
+        ConnectionType = 0;
+        AppAvailable = new boolean[]{false, false, false, false};
+        lastConnectType = 0;
+    }
+
     public int getLastConnectType() {
         return lastConnectType;
     }
@@ -106,4 +122,6 @@ public class DeviceInfo {
                 ", AppAvailable=" + Arrays.toString(AppAvailable) +
                 '}';
     }
+
+
 }

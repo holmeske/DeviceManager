@@ -65,13 +65,12 @@ public final class DeviceListController {
             }*/
         }
     };
-    private final UsbHelper mUsbHelper;
     public List<IDevListener> mCallbackList = new ArrayList<>();
     private DeviceListStorage mStorage = null;
     private final BroadcastReceiver mUsbBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (mUsbHelper != null && mUsbHelper.isBluePort()) {
+            if (UsbHelper.Companion.isBluePort()) {
                 Log.d(TAG, "blue port do not process device list");
                 return;
             }
@@ -87,10 +86,9 @@ public final class DeviceListController {
     };
 
 
-    public DeviceListController(Context context, UsbHelper usbHelper) {
+    public DeviceListController(Context context) {
         Log.d(TAG, "DeviceListController() called");
         mContext = context;
-        this.mUsbHelper = usbHelper;
 
         if (mContext != null) {
             mStorage = new DeviceListStorage(mContext);

@@ -25,9 +25,7 @@ public class AapBinderClient implements IBinder.DeathRecipient {
     private final List<AapListener> mCallbackList = new ArrayList<>();
     private final ISessionStatusListener mAapSessionStsListener = new ISessionStatusListener.Stub() {
         @Override
-        public void sessionStarted(boolean b, String smallIcon, String mediumIcon, String largeIcon, String label,
-                                   String deviceName, String instanceId) {
-            Log.i(TAG, "sessionStarted is called()");
+        public void sessionStarted(boolean b, String smallIcon, String mediumIcon, String largeIcon, String label, String deviceName, String instanceId) {
             for (AapListener l : mCallbackList) {
                 try {
                     l.sessionStarted(b, smallIcon, mediumIcon, largeIcon, label, deviceName, instanceId);
@@ -39,7 +37,6 @@ public class AapBinderClient implements IBinder.DeathRecipient {
 
         @Override
         public void sessionTerminated(boolean b, int reason) {
-            Log.i(TAG, "sessionTerminated is called()");
             for (AapListener l : mCallbackList) {
                 try {
                     l.sessionTerminated(b, reason);
@@ -53,13 +50,12 @@ public class AapBinderClient implements IBinder.DeathRecipient {
     private HandlerThread mHandlerThread = null;
     private OnCallBackListener onCallBackListener;
 
-    public void setOnCallBackListener(OnCallBackListener onCallBackListener) {
-        this.onCallBackListener = onCallBackListener;
-    }
-
     public AapBinderClient() {
         if (mHandlerThread == null) mHandlerThread = new HandlerThread(TAG);
-        //connectService();
+    }
+
+    public void setOnCallBackListener(OnCallBackListener onCallBackListener) {
+        this.onCallBackListener = onCallBackListener;
     }
 
     public IAapReceiverService getClient() {
@@ -107,7 +103,7 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         }
 
         Log.i(TAG, "IAapReceiverService is bound");
-        if (onCallBackListener!=null){
+        if (onCallBackListener != null) {
             onCallBackListener.callback();
         }
 
@@ -135,22 +131,15 @@ public class AapBinderClient implements IBinder.DeathRecipient {
     private boolean connectService() {
         Log.d(TAG, "connectService() called");
         if (mAapClient != null) {
-            Log.i(TAG, "already binded");
+            Log.i(TAG, "already bind");
             return true;
         }
-
         if (!mHandlerThread.isAlive()) {
             mHandlerThread.start();
         }
-//        getThreadHandler().post(this::getBinderClient);
-//        Log.i(TAG, "connectService Thread == " + Thread.currentThread().getId());
+        //getThreadHandler().post(this::getBinderClient);
+        //Log.i(TAG, "connectService Thread == " + Thread.currentThread().getId());
         new Handler().post(this::getBinderClient);
-//        new Handler().post(new Runnable() {
-//            @Override
-//            public void run() {
-//                Log.i(TAG, "Handler Thread == " + Thread.currentThread().getId());
-//            }
-//        });
         return true;
     }
 
@@ -176,19 +165,18 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         mAapClient = null;
         getBinderClient();
     }
-    public int startSession(String deviceName) {
+
+    public void startSession(String deviceName) {
         Log.d(TAG, "android auto startSession() called with: usbDeviceAddress = [" + deviceName + "]");
-        int ret = -1;
         if (mAapClient != null) {
             try {
-                ret = mAapClient.startSession(true, deviceName);
+                mAapClient.startSession(true, deviceName);
             } catch (RemoteException e) {
-                Log.e(TAG, "startSession: ", e);
+                Log.e(TAG, "", e);
             }
         } else {
-            Log.e(TAG, "mAapClient == null");
+            Log.e(TAG, "IAapReceiverService is null");
         }
-        return ret;
     }
 
     public void stopSession() {
