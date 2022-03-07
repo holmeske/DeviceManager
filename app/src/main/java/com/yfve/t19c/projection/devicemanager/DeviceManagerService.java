@@ -10,7 +10,9 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.hardware.usb.UsbDevice;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -27,10 +29,11 @@ public class DeviceManagerService extends Service {
     private static final List<Device> deviceList = new ArrayList<>();
     private static final List<Device> historyDeviceList = new ArrayList<>();
     private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
+    private int retryCount;
     private CarHelper mCarHelper;
     private UsbHostController mUsbHostController;
-    private DeviceListController mDeviceListController;
     private AppController mAppController;
+    private Context mContext;
     private final IBinder binder = new DeviceListManager.Stub() {
 
         @Override
@@ -46,32 +49,59 @@ public class DeviceManagerService extends Service {
         }
 
         @Override
-        public void projectionScreen(int connectType, String serialNumber, String btMac) {
-            Log.d(TAG, "projectionScreen() called with: connectType = [" + connectType + "], serialNumber = [" + serialNumber + "], btMac = [" + btMac + "]");
+        public void startSession(String serial, String mac, int connectType) {
+            Log.d(TAG, "startSession() called with: serial = [" + serial + "], mac = [" + mac + "], connectType = [" + connectType + "]");
             if (mAppController != null) {
-                mAppController.switchSession(connectType, serialNumber, btMac);
+                if (connectType > 4 || connectType < 1) {
+                    retryCount = 3;
+                    mAppController.switchSession(serial, mac);
+                } else {
+                    mAppController.switchSession(connectType, serial, mac);
+                }
             }
         }
 
         @Override
-        public List<Device> getList() {
-            Log.d(TAG, "getList() called" + " size = " + deviceList.size());
+        public List<Device> getAliveDevices() {
+            Log.d(TAG, "getAliveDevices() called" + " size = " + deviceList.size());
             return deviceList;
         }
 
         @Override
-        public void startSession() {
-            Log.d(TAG, "startSession() called");
-            if (mAppController != null) {
-                //mAppController.switchAAWDevice();
+        public List<Device> getHistoryDevices() {
+            Log.d(TAG, "getHistoryDevices() called" + " size = " + historyDeviceList.size());
+            return historyDeviceList;
+        }
+
+        @Override
+        public void onBluetoothPairResult(String mac, int result) {
+            Log.d(TAG, "onBluetoothPairResult() called with: mac = [" + mac + "], result = [" + result + "]");
+            //0:success  -1:scan not  -2:connect failed(retry three)
+            for (OnConnectListener l : mOnConnectListeners) {
+                try {
+                    if (result == 0) {
+                        retryCount = 0;
+                    } else if (result == -1) {
+                        l.onNotification(-1, "scan not bluetooth", "", mac, 0);
+                        UsbDevice device = USBKt.queryUsbDevice(mContext, mAppController.switchingPhone.getSerial());
+                        if (device != null) {
+                            mUsbHostController.attach(USBKt.queryUsbDevice(mContext, device.getSerialNumber()));
+                        }
+                    } else if (result == -2) {
+                        if (retryCount > 0) {
+                            retryCount--;
+                            l.onRequestBluetoothPair(mac);
+                        } else {
+                            l.onNotification(-2, "connect failed", "", mac, 0);
+                        }
+                    }
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
     };
-
-    public List<Device> getHistoryDevice() {
-        return historyDeviceList;
-    }
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -88,19 +118,14 @@ public class DeviceManagerService extends Service {
     @Override
     public void onCreate() {
         Log.d(TAG, "onCreate() called");
+        mContext = this;
         startForeground();
 
         mCarHelper = new CarHelper(this);
 
         new UsbHelper();
 
-        /*if (mDeviceListController == null) {
-            mDeviceListController = new DeviceListController(this, mUsbHelper);
-        }*/
-
-        //Log.i(TAG, "DeviceManagerService Thread == " + Thread.currentThread().getId());
-
-        mAppController = new AppController(this, mDeviceListController, mCarHelper);
+        mAppController = new AppController(this, mCarHelper);
         mAppController.setOnConnectListener(mOnConnectListeners);
         mAppController.setDeviceList(deviceList);
         mAppController.setHistoryDeviceList(historyDeviceList);
@@ -130,6 +155,7 @@ public class DeviceManagerService extends Service {
         Log.d(TAG, "onDestroy() called");
         mCarHelper.release();
         mUsbHostController.unRegisterReceiver();
+        mAppController.release();
     }
 
     private void startForeground() {

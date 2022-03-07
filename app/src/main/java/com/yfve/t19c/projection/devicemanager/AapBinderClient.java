@@ -9,10 +9,7 @@ import android.util.Log;
 
 import com.yfve.t19c.projection.androidauto.IAapReceiverService;
 import com.yfve.t19c.projection.androidauto.ISessionStatusListener;
-import com.yfve.t19c.projection.devicemanager.callback.OnCallBackListener;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,14 +45,10 @@ public class AapBinderClient implements IBinder.DeathRecipient {
     };
     private IAapReceiverService mAapClient = null;
     private HandlerThread mHandlerThread = null;
-    private OnCallBackListener onCallBackListener;
+    private OnBindIAapReceiverServiceListener listener;
 
     public AapBinderClient() {
         if (mHandlerThread == null) mHandlerThread = new HandlerThread(TAG);
-    }
-
-    public void setOnCallBackListener(OnCallBackListener onCallBackListener) {
-        this.onCallBackListener = onCallBackListener;
     }
 
     public IAapReceiverService getClient() {
@@ -86,7 +79,7 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         IBinder binder = null;
         int cnt = 0;
         while (cnt < BIND_FAIL_RETRY_CNT) {
-            Log.i(TAG, "try to get binder");
+            Log.d(TAG, "try to get binder");
             binder = ServiceManager.getService(DESCRIPTOR);
             if (binder != null) break;
             try {
@@ -102,11 +95,6 @@ public class AapBinderClient implements IBinder.DeathRecipient {
             return;
         }
 
-        Log.i(TAG, "IAapReceiverService is bound");
-        if (onCallBackListener != null) {
-            onCallBackListener.callback();
-        }
-
         try {
             binder.linkToDeath(this, 0);
         } catch (RemoteException e) {
@@ -115,6 +103,7 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         }
 
         mAapClient = IAapReceiverService.Stub.asInterface(binder);
+        if (listener != null) listener.success();
 
         if (null == mAapClient) {
             Log.i(TAG, "Service is null");
@@ -137,26 +126,8 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         if (!mHandlerThread.isAlive()) {
             mHandlerThread.start();
         }
-        //getThreadHandler().post(this::getBinderClient);
-        //Log.i(TAG, "connectService Thread == " + Thread.currentThread().getId());
         new Handler().post(this::getBinderClient);
         return true;
-    }
-
-    Handler getThreadHandler() {
-        Handler mHandler = null;
-        try {
-            Class cls = mHandlerThread.getClass();
-            Method method = cls.getMethod("getThreadHandler");
-            if (!method.isAccessible()) {
-                method.setAccessible(true);
-            }
-            mHandler = (Handler) method.invoke(mHandlerThread);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
-            Log.e(TAG, "getThreadHandler: ", e);
-        }
-        return mHandler;
     }
 
     @Override
@@ -172,7 +143,7 @@ public class AapBinderClient implements IBinder.DeathRecipient {
             try {
                 mAapClient.startSession(true, deviceName);
             } catch (RemoteException e) {
-                Log.e(TAG, "", e);
+                Log.e(TAG, e.toString());
             }
         } else {
             Log.e(TAG, "IAapReceiverService is null");
@@ -185,10 +156,18 @@ public class AapBinderClient implements IBinder.DeathRecipient {
             try {
                 mAapClient.stopSession(true);
             } catch (RemoteException e) {
-                Log.e(TAG, "RemoteException:" + e);
+                Log.e(TAG, e.toString());
             }
         } else {
-            Log.e(TAG, "mAapClient is null");
+            Log.e(TAG, "IAapReceiverService is null");
         }
+    }
+
+    public void setOnBindIAapReceiverServiceListener(OnBindIAapReceiverServiceListener listener) {
+        this.listener = listener;
+    }
+
+    public interface OnBindIAapReceiverServiceListener {
+        void success();
     }
 }

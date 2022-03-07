@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class StorageHelper {
-    private static final String TAG = StorageHelper.class.getSimpleName();
+    private static final String TAG = "StorageHelper";
     private static final String DATABASE_NAME = "device.db";
     private static final String TABLE_DEVICE_LIST = "device_list";
     private static final String COLUMN_SERIAL = "serial";

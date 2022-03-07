@@ -1,4 +1,3 @@
-// DeviceListManager.aidl
 package com.yfve.t19c.projection.devicelist;
 
 import com.yfve.t19c.projection.devicelist.OnConnectListener;
@@ -10,9 +9,12 @@ interface DeviceListManager {
 
     void unregisterListener(OnConnectListener listener);
 
-    void projectionScreen(int connectType, String serialNumber, String btMac);
+    void startSession(String serial, String mac, int connectType);
 
-    List<Device> getList();
+    List<Device> getAliveDevices();
 
-    void startSession();
+    List<Device> getHistoryDevices();
+
+    void onBluetoothPairResult(String mac, int result);
+
 }

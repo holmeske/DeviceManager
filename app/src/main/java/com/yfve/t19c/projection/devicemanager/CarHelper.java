@@ -12,16 +12,16 @@ import android.util.Log;
 
 public class CarHelper {
     private static final String TAG = "CarHelper";
-    private static String presentAndroidAuto = "";
-    private static String presentCarPlay = "";
-    private static String presentQDLink = "";
+    private static String AndroidAutoSwitch = "";
+    private static String CarPlaySwitch = "";
+    private static String QDLinkSwitch = "";
     private static boolean standby;
     private final Handler mHandler = new Handler();
     private Car mCar;
     private CarPowerManager mCarPowerManager;
     private CarInfoManager mCarInfoManager;
     private byte[] property;
-    private OnGetBytePropertyListener onGetBytePropertyListener;
+    private OnGetValidValueListener onGetValidValueListener;
     private final Runnable runnable = new Runnable() {
         @Override
         public void run() {
@@ -68,31 +68,31 @@ public class CarHelper {
     }
 
     public static boolean isOpenAndroidAuto() {
-        if ("1".equals(presentAndroidAuto)) {
-            Log.d(TAG, "AndroidAuto configuration opened");
+        if ("1".equals(AndroidAutoSwitch)) {
+            Log.d(TAG, "AndroidAuto Switch is open");
             return true;
         } else {
-            Log.d(TAG, "AndroidAuto configuration not open");
+            Log.d(TAG, "AndroidAuto Switch is close");
             return false;
         }
     }
 
     public static boolean isOpenCarPlay() {
-        if ("1".equals(presentCarPlay)) {
-            //Log.d(TAG, "carplay configuration switch is opened");
+        if ("1".equals(CarPlaySwitch)) {
+            Log.d(TAG, "CarPlay Switch is open");
             return true;
         } else {
-            Log.d(TAG, "carplay configuration switch is closed");
+            Log.d(TAG, "CarPlay Switch is close");
             return false;
         }
     }
 
     public static boolean isOpenQDLink() {
-        if ("1".equals(presentQDLink)) {
-            Log.d(TAG, "QDLink configuration opened");
+        if ("1".equals(QDLinkSwitch)) {
+            Log.d(TAG, "QDLink Switch is open");
             return true;
         } else {
-            Log.d(TAG, "QDLink configuration not open");
+            Log.d(TAG, "QDLink Switch is close");
             return false;
         }
     }
@@ -101,8 +101,8 @@ public class CarHelper {
         this.onCarPowerStateListener = onCarPowerStateListener;
     }
 
-    public void setOnGetBytePropertyListener(OnGetBytePropertyListener onGetBytePropertyListener) {
-        this.onGetBytePropertyListener = onGetBytePropertyListener;
+    public void setOnGetValidValueListener(OnGetValidValueListener onGetValidValueListener) {
+        this.onGetValidValueListener = onGetValidValueListener;
     }
 
     private void initCar(Context context) {
@@ -117,7 +117,6 @@ public class CarHelper {
                         if (mCarInfoManager != null) {
                             property = mCarInfoManager.getByteProperty(CarInfoManager.ID_DIAGNOSTIC_CONFIG_701A);
 
-                            //property = new byte[]{0x00};
                             if (property.length != 8) {
                                 mHandler.postDelayed(runnable, 1000);
                             } else {
@@ -125,11 +124,13 @@ public class CarHelper {
                             }
 
                         } else {
-                            Log.i(TAG, "CarInfoManager is null");
+                            Log.e(TAG, "CarInfoManager is null");
                         }
                     } catch (Exception e) {
-                        Log.e(TAG, "onServiceConnected: ", e);
+                        Log.e(TAG, e.toString());
                     }
+                } else {
+                    Log.e(TAG, "Car is null");
                 }
             }
 
@@ -145,7 +146,6 @@ public class CarHelper {
     }
 
     private void setCarPowerStateListener() {
-        Log.d(TAG, "setCarPowerStateListener() called");
         mCarPowerManager = (CarPowerManager) mCar.getCarManager(Car.POWER_SERVICE);
         if (mCarPowerManager != null) {
             mCarPowerManager.setListener(state -> {
@@ -196,7 +196,7 @@ public class CarHelper {
                 }
             });
         } else {
-            Log.d(TAG, "CarPowerManager is null");
+            Log.e(TAG, "CarPowerManager is null");
         }
     }
 
@@ -215,8 +215,8 @@ public class CarHelper {
     property[7] = 00000000*/
 
     private void processValidValue() {
-        if (onGetBytePropertyListener != null) {
-            onGetBytePropertyListener.callback();
+        if (onGetValidValueListener != null) {
+            onGetValidValueListener.callback();
         }
 
         for (int i = 0; i < property.length; i++) {
@@ -225,23 +225,23 @@ public class CarHelper {
 
         if (property.length > 2) {
             String byte2 = byteToBit(property[2]);
-            presentAndroidAuto = byte2.substring(1, 2);//第7个bit
-            Log.d(TAG, "presentAndroidAuto: " + presentAndroidAuto);
+            AndroidAutoSwitch = byte2.substring(1, 2);//第7个bit
+            Log.d(TAG, "AndroidAutoSwitch: " + AndroidAutoSwitch);
 
-            presentCarPlay = byte2.substring(4, 5);//第4个bit
-            Log.d(TAG, "presentCarPlay: " + presentCarPlay);
+            CarPlaySwitch = byte2.substring(4, 5);//第4个bit
+            Log.d(TAG, "CarPlaySwitch: " + CarPlaySwitch);
 
-            presentQDLink = byte2.substring(2, 3);//第6个bit
-            Log.d(TAG, "presentQDLink: " + presentQDLink);
+            QDLinkSwitch = byte2.substring(2, 3);//第6个bit
+            Log.d(TAG, "QDLinkSwitch: " + QDLinkSwitch);
         } else {
-            Log.d(TAG, "CarService returned value is invalid");
+            Log.e(TAG, "CarService returned value is invalid");
         }
     }
 
     /**
      * CarService got value from MCU
      */
-    public interface OnGetBytePropertyListener {
+    public interface OnGetValidValueListener {
         void callback();
     }
 

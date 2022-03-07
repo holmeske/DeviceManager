@@ -17,7 +17,6 @@ import android.content.Context;
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
-import android.hardware.usb.UsbInterface;
 import android.util.ArraySet;
 import android.util.Log;
 import android.util.Pair;
@@ -160,28 +159,11 @@ final class AppSupport {
             return false;
         }
         if (device.getVendorId() == APPLE_DEVICE_VENDOR_ID) {
-            //Log.d(TAG, "this is a ios device");
             return true;
         } else {
-            Log.d(TAG, "this isn't a ios device");
+            Log.d(TAG, "is not ios device");
             return false;
         }
-        /*UsbInterface i = device.getConfiguration(0).getInterface(0);
-        if (i.getInterfaceClass() == 6 && i.getInterfaceSubclass() == 1 && i.getInterfaceProtocol() == 1) {
-            if (device.getVendorId() == APPLE_DEVICE_VENDOR_ID) {
-                Log.d(TAG, "this is a ios device");
-                return true;
-            } else {
-                Log.d(TAG, "this isn't a ios device");
-                return false;
-            }
-        } else if (i.getInterfaceClass() == 8 && i.getInterfaceSubclass() == 60 && i.getInterfaceProtocol() == 80) {
-            Log.d(TAG, "this is a USB drive");
-            return false;
-        } else {
-            Log.d(TAG, "this is a unknown device");
-            return false;
-        }*/
     }
 
     public static boolean isAOASupported(Context context, UsbDevice device, UsbDeviceConnection conn) {
@@ -223,7 +205,6 @@ final class AppSupport {
         }
         final int vid = device.getVendorId();
         final int pid = device.getProductId();
-        Log.d(TAG, "isDeviceInAoapMode:vid=" + vid + "  pid=" + pid);
         if (USB_ACCESSORY_VENDOR_ID.contains(vid) && USB_ACCESSORY_MODE_PRODUCT_ID.contains(pid)) {
             Log.d(TAG, "device is in AOA mode");
         } else {
@@ -256,7 +237,7 @@ final class AppSupport {
             }
             */
         }
-     
+
         return sBlacklistedVidPidPairs.contains(Pair.create(device.getVendorId(), device.getProductId()));
     }
 

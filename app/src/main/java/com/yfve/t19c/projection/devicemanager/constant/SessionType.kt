@@ -12,4 +12,14 @@ object ConnectType {
     const val WIFI = 2
 }
 
-data class Phone(var serial: String? = "", var mac: String? = "")
+data class Phone(var serial: String? = "", var mac: String? = "") {
+    fun clear() {
+        serial = ""
+        mac = ""
+    }
+
+    fun update(serial: String? = "", mac: String? = "") {
+        this.serial = serial
+        this.mac = mac
+    }
+}

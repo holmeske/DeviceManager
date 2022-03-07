@@ -2,8 +2,6 @@ package com.yfve.t19c.projection.devicemanager;
 
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -111,7 +109,6 @@ public class DeviceInfo {
         }
     }
 
-    @NonNull
     @Override
     public String toString() {
         return "DeviceInfo{" +
@@ -120,8 +117,7 @@ public class DeviceInfo {
                 ", DeviceName='" + DeviceName + '\'' +
                 ", ConnectionType=" + ConnectionType +
                 ", AppAvailable=" + Arrays.toString(AppAvailable) +
+                ", lastConnectType=" + lastConnectType +
                 '}';
     }
-
-
 }
