@@ -14,7 +14,6 @@ import androidx.core.util.ObjectsCompat;
 
 import com.yfve.t19c.projection.devicelist.Device;
 import com.yfve.t19c.projection.devicelist.OnConnectListener;
-import com.yfve.t19c.projection.devicemanager.constant.CommonUtilsKt;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,10 +37,7 @@ public class UsbHostController {
 
             UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
             //Log.d(TAG, "onReceive: " + CommonUtilsKt.toJson(device));
-            if (device == null) {
-                Log.e(TAG, "UsbDevice is null");
-                return;
-            } else {
+            if (device != null) {
                 UsbInterface usbInterface = device.getInterface(0);
                 if (usbInterface != null) {
                     int mClass = usbInterface.getInterfaceClass();
@@ -140,24 +136,20 @@ public class UsbHostController {
             }
         }
 
-        AtomicBoolean isContain = new AtomicBoolean(false);
-        deviceList.forEach(d -> {
-            if (ObjectsCompat.equals(d.getSerial(), device.getSerial())) {
-                isContain.set(true);
-            }
-        });
-
         if (attached) {
+            AtomicBoolean isContain = new AtomicBoolean(false);
+            deviceList.forEach(d -> {
+                if (ObjectsCompat.equals(d.getSerial(), device.getSerial())) {
+                    isContain.set(true);
+                }
+            });
             if (!isContain.get()) {
                 deviceList.add(device);
             } else {
                 Log.d(TAG, "list already contains the device, do not add");
             }
         } else {
-            Device temp = deviceList.stream().findFirst().orElse(null);
-            Log.d(TAG, "onDeviceUpdate: tmep = " + CommonUtilsKt.toJson(temp));
             deviceList.removeIf(d -> ObjectsCompat.equals(d.getSerial(), device.getSerial()));
-            Log.d(TAG, "onDeviceUpdate: tmep = " + CommonUtilsKt.toJson(temp));
         }
 
         Log.d(TAG, "update usb " + device);
@@ -189,42 +181,28 @@ public class UsbHostController {
         }
         Log.d(TAG, "attach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
         boolean ios = AppSupport.isIOSDevice(device);
-        /*if (ios) {
-            Log.d(TAG, "attach: This version is only used for authentication branch and does not support USB CarPlay");
-            return;
-        }*/
-        if (AppController.isCanConnectingCPWifi) {
-            Log.e(TAG, "attach: cp wifi connecting");
-            return;
-        }
         if (ios) {
-            if (!mAppController.canConnectUSB()) {
+            if (AppController.isCanConnectingCPWifi) {
+                Log.e(TAG, "attach: cp wifi connecting");
+                return;
+            }
+            if (!mAppController.canConnectUsbCarPlay()) {
                 Log.d(TAG, "attach: don't connect usb car play");
                 return;
             }
+        } else {
+            if (CarHelper.isOpenQDLink()) return;
+            if (!mAppController.isAutoConnectUsbAndroidAuto()) return;
         }
-        if (!ios && CarHelper.isOpenQDLink()) return;
-
         if (!mAppController.isSwitchingState()) {
             onDeviceUpdate(device, true, ios);
-            if (mAppController.sessionNotExist()) {
+            if (mAppController.isIdleState()) {
                 mAppController.updateCurrentDevice(device, ios ? 3 : 1);
-            }
-            //when session not null ,  attach android auto device , need notify users
-            if (!mAppController.sessionNotExist() && !ios) {
-                for (OnConnectListener listener : mOnConnectListeners) {
-                    try {
-                        if (listener == null) {
-                            Log.d(TAG, "OnConnectListener is null");
-                        } else {
-                            String c = "There is available device  " + device.getProductName() + "  , do you want to start Android Auto ?";
-                            listener.onNotification(1, c, device.getSerialNumber(), "", 1);
-                        }
-                    } catch (RemoteException e) {
-                        Log.e(TAG, "onDeviceUpdate: ", e);
-                    }
+            } else {
+                if (!ios) {
+                    onNotification(device);
+                    return;
                 }
-                return;
             }
         }
         if (mAppController.sameUsbDevice(device)) {
@@ -258,15 +236,26 @@ public class UsbHostController {
     }
 
     public void detach(UsbDevice device) {
-        boolean ios = AppSupport.isIOSDevice(device);
-        /*if (ios) {
-            Log.d(TAG, "detach: This version is only used for authentication branch and does not support USB CarPlay");
+        /*if (device == null) {
+            Log.d(TAG, "detach device is null");
             return;
+        }
+        Log.d(TAG, "detach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
+        boolean ios = AppSupport.isIOSDevice(device);
+        if (!ios) {
+            if (CarHelper.isOpenQDLink()) return;
+            if (mAppController.isPreParingState()) {
+                mAppController.updateSwitchingState();
+            } else {
+                onDeviceUpdate(device, false, ios);
+                mAppController.updateIdleState();
+            }
         }*/
         if (device == null) {
             Log.d(TAG, "detach device is null");
             return;
         }
+        boolean ios = AppSupport.isIOSDevice(device);
         if (!ios && CarHelper.isOpenQDLink()) return;
         Log.d(TAG, "detach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
 
@@ -293,6 +282,24 @@ public class UsbHostController {
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         mContext.registerReceiver(mBroadcastReceiver, filter);
+    }
+
+    /**
+     * when session not null ,  attach android auto device , need notify users
+     */
+    private void onNotification(UsbDevice device) {
+        for (OnConnectListener listener : mOnConnectListeners) {
+            try {
+                if (listener == null) {
+                    Log.d(TAG, "OnConnectListener is null");
+                } else {
+                    String c = "There is available device  " + device.getProductName() + "  , do you want to start Android Auto ?";
+                    listener.onNotification(1, c, device.getSerialNumber(), "", 1);
+                }
+            } catch (RemoteException e) {
+                Log.e(TAG, "onDeviceUpdate: ", e);
+            }
+        }
     }
 
     public void unRegisterReceiver() {

@@ -82,7 +82,7 @@ public class DeviceManagerService extends Service {
                     if (result == 0) {
                         retryCount = 0;
                     } else if (result == -1) {
-                        l.onNotification(-1, "scan not bluetooth", "", mac, 0);
+                        l.onNotification(-1, "", "", mac, 0);
                         UsbDevice device = USBKt.queryUsbDevice(mContext, mAppController.switchingPhone.getSerial());
                         if (device != null) {
                             mUsbHostController.attach(USBKt.queryUsbDevice(mContext, device.getSerialNumber()));
@@ -92,11 +92,11 @@ public class DeviceManagerService extends Service {
                             retryCount--;
                             l.onRequestBluetoothPair(mac);
                         } else {
-                            l.onNotification(-2, "connect failed", "", mac, 0);
+                            l.onNotification(-2, "", "", mac, 0);
                         }
                     }
                 } catch (RemoteException e) {
-                    e.printStackTrace();
+                    Log.e(TAG, e.toString());
                 }
             }
         }

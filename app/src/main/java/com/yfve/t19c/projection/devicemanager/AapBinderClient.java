@@ -51,10 +51,6 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         if (mHandlerThread == null) mHandlerThread = new HandlerThread(TAG);
     }
 
-    public IAapReceiverService getClient() {
-        return mAapClient;
-    }
-
     public boolean registerListener(AapListener listener) {
         if (listener == null) return false;
         if (!mCallbackList.contains(listener)) mCallbackList.add(listener);
@@ -137,8 +133,8 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         getBinderClient();
     }
 
-    public void startSession(String deviceName) {
-        Log.d(TAG, "android auto startSession() called with: usbDeviceAddress = [" + deviceName + "]");
+    public void startAndroidAuto(String deviceName) {
+        Log.d(TAG, "startAndroidAuto() called with: deviceName = [" + deviceName + "]");
         if (mAapClient != null) {
             try {
                 mAapClient.startSession(true, deviceName);
@@ -150,8 +146,8 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         }
     }
 
-    public void stopSession() {
-        Log.d(TAG, "android auto stopSession() called");
+    public void stopAndroidAuto() {
+        Log.d(TAG, "stopAndroidAuto() called");
         if (mAapClient != null) {
             try {
                 mAapClient.stopSession(true);

@@ -63,7 +63,7 @@ public class CarHelper {
 
                 (byte) ((b >> 1) & 0x1) +
 
-                (byte) ((b >> 0) & 0x1);
+                (byte) ((b) & 0x1);
 
     }
 
@@ -142,14 +142,12 @@ public class CarHelper {
         if (mCar != null) {
             mCar.connect();
         }
-
     }
 
     private void setCarPowerStateListener() {
         mCarPowerManager = (CarPowerManager) mCar.getCarManager(Car.POWER_SERVICE);
         if (mCarPowerManager != null) {
             mCarPowerManager.setListener(state -> {
-                Log.d(TAG, "onStateChanged() called with: state = [" + state + "]");
                 // int PWR_MODE_NONE = 9;
                 // int PWR_MODE_OFF = 10;
                 // int PWR_MODE_STANDBY = 11;
@@ -166,33 +164,23 @@ public class CarHelper {
                 // int PWR_SCREEN_OFF = 22;
                 //sometime will receive twice pwr_mode_standy without pwr_run
                 if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_STANDBY) {
+                    Log.d(TAG, "onStateChanged() called with: PWR_MODE_STANDBY");
                     if (onCarPowerStateListener != null) {
                         onCarPowerStateListener.standby();
                         standby = true;
                     }
-                    /*Log.d(TAG, "onStateChanged:PWR_MODE_STANDBY send borrow video and audio");
-                    if (!mIsStandby) {
-                        CarPlayCommClient.getInstance().requestBorrowVideo(37, true);  // kResource_Type_POWEROFF in c++
-                        CarPlayCommClient.getInstance().requestBorrowAudio(37, true);  // kResource_Type_POWEROFF in c++
-                        mIsStandby = true;
-                    } else {
-                        Log.d(TAG, "PWR_MODE_RUN not coming yet:mIsStandby=" + mIsStandby);
-                    }*/
-                } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_RUN
-                        || state == CarPowerManager.CarPowerStateListener.PWR_MODE_TEMP_ON) {
+                } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_RUN) {
+                    Log.d(TAG, "onStateChanged() called with: PWR_MODE_RUN");
                     if (onCarPowerStateListener != null) {
                         onCarPowerStateListener.run();
                         standby = false;
                     }
-                    /*Log.d(TAG, "onStateChanged:PWR_MODE_RUN send unborrow video and audio");
-                    if (mIsStandby) {
-                        CarPlayCommClient.getInstance().requestBorrowVideo(37, false);  // kResource_Type_POWEROFF in c++
-                        CarPlayCommClient.getInstance().requestBorrowAudio(37, false);  // kResource_Type_POWEROFF in c++
-                        CarPlayCommProtocal.getInstance().startRequestAudioFocus();
-                        mIsStandby = false;
-                    } else {
-                        Log.d(TAG, "PWR_MODE_STANDBY not coming yet:mIsStandby=" + mIsStandby);
-                    }*/
+                } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_TEMP_ON) {
+                    Log.d(TAG, "onStateChanged() called with: PWR_MODE_TEMP_ON");
+                    if (onCarPowerStateListener != null) {
+                        onCarPowerStateListener.run();
+                        standby = false;
+                    }
                 }
             });
         } else {
