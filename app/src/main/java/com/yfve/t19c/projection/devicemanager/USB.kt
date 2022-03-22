@@ -28,6 +28,7 @@ fun Context.usbDeviceList(): HashMap<String, UsbDevice>? {
 }
 
 fun Context.queryUsbDevice(serial: String?): UsbDevice? {
+    Log.d(TAG, "query attached usb device list")
     usbDeviceList()?.values?.forEach {
         if (Objects.equals(it.serialNumber, serial)) return it
     }

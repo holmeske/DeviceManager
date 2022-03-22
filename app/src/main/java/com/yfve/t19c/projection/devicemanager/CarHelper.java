@@ -165,21 +165,24 @@ public class CarHelper {
                 //sometime will receive twice pwr_mode_standy without pwr_run
                 if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_STANDBY) {
                     Log.d(TAG, "onStateChanged() called with: PWR_MODE_STANDBY");
+                    standby = true;
+                    Log.d(TAG, "standby == true");
                     if (onCarPowerStateListener != null) {
                         onCarPowerStateListener.standby();
-                        standby = true;
                     }
                 } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_RUN) {
                     Log.d(TAG, "onStateChanged() called with: PWR_MODE_RUN");
+                    standby = false;
+                    Log.d(TAG, "standby == false");
                     if (onCarPowerStateListener != null) {
                         onCarPowerStateListener.run();
-                        standby = false;
                     }
                 } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_TEMP_ON) {
                     Log.d(TAG, "onStateChanged() called with: PWR_MODE_TEMP_ON");
+                    standby = false;
+                    Log.d(TAG, "standby == false");
                     if (onCarPowerStateListener != null) {
                         onCarPowerStateListener.run();
-                        standby = false;
                     }
                 }
             });

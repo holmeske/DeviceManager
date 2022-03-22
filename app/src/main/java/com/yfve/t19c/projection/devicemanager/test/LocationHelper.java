@@ -14,7 +14,6 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
@@ -148,7 +147,7 @@ public class LocationHelper {
         if ((flag & 0x01) == 0x07) {
             sb.append(GPHDT);
         }
-        Log.v(TAG, "send data :" + sb.toString());
+        Log.v(TAG, "send data :" + sb);
         return sb.toString();
     }
 

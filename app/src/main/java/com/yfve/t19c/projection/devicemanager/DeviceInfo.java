@@ -26,17 +26,6 @@ public class DeviceInfo {
     public DeviceInfo() {
     }
 
-    public DeviceInfo(String serial, String name, int conType) {
-        if (conType == ConnectType_USB) {
-            SerialNumber = serial;
-        } else if (conType == ConnectType_WIFI) {
-            BluetoothMac = serial;
-        }
-
-        DeviceName = name;
-        ConnectionType = conType;
-    }
-
     public DeviceInfo(String serial, String name, int conType, boolean isSupCp, boolean isSupAA) {
         if (conType == ConnectType_USB) {
             SerialNumber = serial;

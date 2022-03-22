@@ -13,6 +13,7 @@ import android.graphics.Color;
 import android.hardware.usb.UsbDevice;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -26,8 +27,8 @@ import java.util.List;
 
 public class DeviceManagerService extends Service {
     private static final String TAG = "DeviceManagerService";
-    private static final List<Device> deviceList = new ArrayList<>();
-    private static final List<Device> historyDeviceList = new ArrayList<>();
+    public static final List<Device> historyDeviceList = new ArrayList<>();
+    private static final List<Device> aliveDeviceList = new ArrayList<>();
     private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private int retryCount;
     private CarHelper mCarHelper;
@@ -38,13 +39,13 @@ public class DeviceManagerService extends Service {
 
         @Override
         public void registerListener(OnConnectListener listener) {
-            Log.d(TAG, "registerListener() called");
+            Log.d(TAG, "registerListener() called, " + mOnConnectListeners.size());
             mOnConnectListeners.add(listener);
         }
 
         @Override
         public void unregisterListener(OnConnectListener listener) {
-            Log.d(TAG, "unregisterListener() called");
+            Log.d(TAG, "unregisterListener() called, " + mOnConnectListeners.size());
             mOnConnectListeners.remove(listener);
         }
 
@@ -63,8 +64,8 @@ public class DeviceManagerService extends Service {
 
         @Override
         public List<Device> getAliveDevices() {
-            Log.d(TAG, "getAliveDevices() called" + " size = " + deviceList.size());
-            return deviceList;
+            Log.d(TAG, "getAliveDevices() called" + " size = " + aliveDeviceList.size());
+            return aliveDeviceList;
         }
 
         @Override
@@ -76,22 +77,29 @@ public class DeviceManagerService extends Service {
         @Override
         public void onBluetoothPairResult(String mac, int result) {
             Log.d(TAG, "onBluetoothPairResult() called with: mac = [" + mac + "], result = [" + result + "]");
+            if (TextUtils.isEmpty(mac)) return;
             //0:success  -1:scan not  -2:connect failed(retry three)
             for (OnConnectListener l : mOnConnectListeners) {
                 try {
                     if (result == 0) {
                         retryCount = 0;
                     } else if (result == -1) {
+                        Log.d(TAG, "onNotification -1");
                         l.onNotification(-1, "", "", mac, 0);
+                        Log.d(TAG, "onBluetoothPairResult: ");
                         UsbDevice device = USBKt.queryUsbDevice(mContext, mAppController.switchingPhone.getSerial());
                         if (device != null) {
-                            mUsbHostController.attach(USBKt.queryUsbDevice(mContext, device.getSerialNumber()));
+                            mUsbHostController.attach(device);
+                        } else {
+                            Log.d(TAG, "no find attached usb device");
                         }
                     } else if (result == -2) {
                         if (retryCount > 0) {
                             retryCount--;
+                            Log.d(TAG, "onRequestBluetoothPair " + mac);
                             l.onRequestBluetoothPair(mac);
                         } else {
+                            Log.d(TAG, "onNotification -2");
                             l.onNotification(-2, "", "", mac, 0);
                         }
                     }
@@ -127,12 +135,12 @@ public class DeviceManagerService extends Service {
 
         mAppController = new AppController(this, mCarHelper);
         mAppController.setOnConnectListener(mOnConnectListeners);
-        mAppController.setDeviceList(deviceList);
+        mAppController.setDeviceList(aliveDeviceList);
         mAppController.setHistoryDeviceList(historyDeviceList);
 
         mUsbHostController = new UsbHostController(this, mAppController, mOnConnectListeners);
         mUsbHostController.setCarHelper(mCarHelper);
-        mUsbHostController.setDeviceList(deviceList);
+        mUsbHostController.setDeviceList(aliveDeviceList);
 
         mAppController.setUsbHostController(mUsbHostController);
     }

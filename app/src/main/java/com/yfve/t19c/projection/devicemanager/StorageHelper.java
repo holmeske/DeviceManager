@@ -39,11 +39,16 @@ public final class StorageHelper {
     private static final String COLUMN_CL_SUP = "clSupport";
     private static final String COLUMN_HC_SUP = "hcSupport";
 
-    private static final String SQL = "SELECT * FROM " + TABLE_DEVICE_LIST + " WHERE " + COLUMN_SERIAL + "=? OR " + COLUMN_BT + "=?";
+    private static final String SQL_BT = "SELECT * FROM " + TABLE_DEVICE_LIST + " WHERE " + COLUMN_BT + "=?";
 
-    private static final String WHERE_CLAUSE = COLUMN_SERIAL + " = ? AND " + COLUMN_BT + " = ? AND " + COLUMN_NAME + " = ?";
+    private static final String SQL_SERIAL = "SELECT * FROM " + TABLE_DEVICE_LIST + " WHERE " + COLUMN_SERIAL + "=?";
 
+    private static final String SQL_SERIAL_BT = "SELECT * FROM " + TABLE_DEVICE_LIST + " WHERE " + COLUMN_SERIAL + "=? OR " + COLUMN_BT + "=?";
 
+    private static final String WHERE_CLAUSE_SERIAL = COLUMN_SERIAL + " = ?";
+    private static final String WHERE_CLAUSE_BT = COLUMN_BT + " = ?";
+    private static final String WHERE_CLAUSE_SERIAL_BT = COLUMN_SERIAL + " = ? AND " + COLUMN_BT + " = ?";
+    private static final String WHERE_CLAUSE_SERIAL_BT_NAME = COLUMN_SERIAL + " = ? AND " + COLUMN_BT + " = ? AND " + COLUMN_NAME + " = ?";
     private final DeviceListSQLiteOpenHelper mDbHelper;
 
     public StorageHelper(Context context) {
@@ -59,16 +64,38 @@ public final class StorageHelper {
         sqliteDatabase.close();
     }
 
+    public void deleteByMac(String mac) {
+        Log.d(TAG, "deleteByMac() called with: mac = [" + mac + "]");
+        SQLiteDatabase sqliteDatabase = mDbHelper.getWritableDatabase();
+        int result = sqliteDatabase.delete(TABLE_DEVICE_LIST, WHERE_CLAUSE_BT, new String[]{mac});
+        Log.d(TAG, "delete result = " + result);
+    }
+
+    public void deleteBySerial(String serial) {
+        Log.d(TAG, "deleteBySerial() called with: serial = [" + serial + "]");
+        SQLiteDatabase sqliteDatabase = mDbHelper.getWritableDatabase();
+        int result = sqliteDatabase.delete(TABLE_DEVICE_LIST, WHERE_CLAUSE_SERIAL, new String[]{serial});
+        Log.d(TAG, "delete result = " + result);
+    }
+
+    public void deleteBySerialMac(String serial, String mac) {
+        Log.d(TAG, "deleteBySerialMac() called with: serial = [" + serial + "], mac = [" + mac + "]");
+        SQLiteDatabase sqliteDatabase = mDbHelper.getWritableDatabase();
+        int result = sqliteDatabase.delete(TABLE_DEVICE_LIST, WHERE_CLAUSE_SERIAL_BT, new String[]{serial, mac});
+        Log.d(TAG, "delete result = " + result);
+    }
+
     public void delete(Device device) {
+        Log.d(TAG, "delete() called with: device = [" + device.toString() + "]");
         SQLiteDatabase sqliteDatabase = mDbHelper.getWritableDatabase();
 
-        int result = sqliteDatabase.delete(TABLE_DEVICE_LIST, WHERE_CLAUSE, new String[]{device.getSerial(), device.getMac(), device.getName()});
+        int result = sqliteDatabase.delete(TABLE_DEVICE_LIST, WHERE_CLAUSE_SERIAL_BT_NAME, new String[]{device.getSerial(), device.getMac(), device.getName()});
 
         Log.d(TAG, "delete result = " + result);
     }
 
     public void insert(Device device) {
-        //Log.d(TAG, "insert() called with: device = [" + device.toString() + "]");
+        Log.d(TAG, "insert() called with: device = [" + device.toString() + "]");
         SQLiteDatabase sqliteDatabase = mDbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
 
@@ -87,7 +114,7 @@ public final class StorageHelper {
     }
 
     public void update(Device device) {
-        //Log.d(TAG, "update() called with: device = [" + device.toString() + "]");
+        Log.d(TAG, "update() called with: device = [" + device.toString() + "]");
 
         SQLiteDatabase sqliteDatabase = mDbHelper.getWritableDatabase();
 
@@ -98,7 +125,7 @@ public final class StorageHelper {
         values.put(COLUMN_ABILITY, device.getAbility());
 
         try {
-            long rowID = sqliteDatabase.update(TABLE_DEVICE_LIST, values, WHERE_CLAUSE, new String[]{device.getSerial(), device.getMac(), device.getName()});
+            long rowID = sqliteDatabase.update(TABLE_DEVICE_LIST, values, WHERE_CLAUSE_SERIAL_BT_NAME, new String[]{device.getSerial(), device.getMac()});
             Log.i(TAG, "update data end,rowID:" + rowID);
         } catch (Exception e) {
             Log.e(TAG, "" + e);
@@ -107,12 +134,12 @@ public final class StorageHelper {
         sqliteDatabase.close();
     }
 
-    public Device query(String serial, String mac) {
-        //Log.d(TAG, "query() called with: serial = [" + serial + "], mac = [" + mac + "]");
+    public Device queryBySerial(String serial) {
+        Log.d(TAG, "queryBySerial() called with: serial = [" + serial + "]");
         Device device = null;
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
         try {
-            Cursor cursor = db.rawQuery(SQL, new String[]{serial, mac});
+            Cursor cursor = db.rawQuery(SQL_SERIAL, new String[]{serial});
             if (cursor.moveToFirst()) {
                 String s1 = cursor.getString(cursor.getColumnIndex(COLUMN_NAME));
                 String s2 = cursor.getString(cursor.getColumnIndex(COLUMN_SERIAL));
@@ -122,7 +149,49 @@ public final class StorageHelper {
             }
             cursor.close();
         } catch (Exception e) {
-            Log.e(TAG, "" + e);
+            Log.e(TAG, e.toString());
+        }
+        db.close();
+        return device;
+    }
+
+    public Device queryByMac(String mac) {
+        Log.d(TAG, "queryByMac() called with: mac = [" + mac + "]");
+        Device device = null;
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+        try {
+            Cursor cursor = db.rawQuery(SQL_BT, new String[]{mac});
+            if (cursor.moveToFirst()) {
+                String s1 = cursor.getString(cursor.getColumnIndex(COLUMN_NAME));
+                String s2 = cursor.getString(cursor.getColumnIndex(COLUMN_SERIAL));
+                String s3 = cursor.getString(cursor.getColumnIndex(COLUMN_BT));
+                int ability = cursor.getInt(cursor.getColumnIndex(COLUMN_ABILITY));
+                device = new Device(s1, s2, s3, ability);
+            }
+            cursor.close();
+        } catch (Exception e) {
+            Log.e(TAG, e.toString());
+        }
+        db.close();
+        return device;
+    }
+
+    public Device query(String serial, String mac) {
+        Log.d(TAG, "query() called with: serial = [" + serial + "], mac = [" + mac + "]");
+        Device device = null;
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+        try {
+            Cursor cursor = db.rawQuery(SQL_SERIAL_BT, new String[]{serial, mac});
+            if (cursor.moveToFirst()) {
+                String s1 = cursor.getString(cursor.getColumnIndex(COLUMN_NAME));
+                String s2 = cursor.getString(cursor.getColumnIndex(COLUMN_SERIAL));
+                String s3 = cursor.getString(cursor.getColumnIndex(COLUMN_BT));
+                int ability = cursor.getInt(cursor.getColumnIndex(COLUMN_ABILITY));
+                device = new Device(s1, s2, s3, ability);
+            }
+            cursor.close();
+        } catch (Exception e) {
+            Log.e(TAG, e.toString());
         }
         db.close();
         return device;

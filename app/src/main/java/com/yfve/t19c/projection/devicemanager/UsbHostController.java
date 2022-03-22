@@ -1,5 +1,7 @@
 package com.yfve.t19c.projection.devicemanager;
 
+import static com.yfve.t19c.projection.devicemanager.AppController.isCertifiedVersion;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -182,6 +184,10 @@ public class UsbHostController {
         Log.d(TAG, "attach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
         boolean ios = AppSupport.isIOSDevice(device);
         if (ios) {
+            if (isCertifiedVersion) {
+                Log.d(TAG, "certified version not attach usb carplay");
+                return;
+            }
             if (AppController.isCanConnectingCPWifi) {
                 Log.e(TAG, "attach: cp wifi connecting");
                 return;
@@ -192,7 +198,6 @@ public class UsbHostController {
             }
         } else {
             if (CarHelper.isOpenQDLink()) return;
-            if (!mAppController.isAutoConnectUsbAndroidAuto()) return;
         }
         if (!mAppController.isSwitchingState()) {
             onDeviceUpdate(device, true, ios);
@@ -216,6 +221,7 @@ public class UsbHostController {
                 }
             } else {
                 if (CarHelper.isOpenAndroidAuto()) {
+                    if (!mAppController.isAutoConnectUsbAndroidAuto()) return;
                     if (mDeviceHandlerResolver.isDeviceAoapPossible(device)) {
                         if (AppSupport.isDeviceInAoapMode(device)) {
                             mAppController.startAndroidAuto(device.getDeviceName());
@@ -255,10 +261,16 @@ public class UsbHostController {
             Log.d(TAG, "detach device is null");
             return;
         }
-        boolean ios = AppSupport.isIOSDevice(device);
-        if (!ios && CarHelper.isOpenQDLink()) return;
         Log.d(TAG, "detach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
-
+        boolean ios = AppSupport.isIOSDevice(device);
+        if (ios) {
+            if (isCertifiedVersion) {
+                Log.d(TAG, "certified version not detach usb carplay");
+                return;
+            }
+        } else {
+            if (CarHelper.isOpenQDLink()) return;
+        }
         if (mAppController.sameUsbDevice(device)) {
             if (mAppController.isPreParingState()) {
                 mAppController.updateSwitchingState();
