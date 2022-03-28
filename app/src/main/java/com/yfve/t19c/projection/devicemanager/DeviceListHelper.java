@@ -112,12 +112,12 @@ public class DeviceListHelper {
 //        write("5", "5", "5", 1);
 //        write("6", "6", "6", 2);
 //        write("7", "7", "7", 2);
-//        clear();
+        clear();
 //        write("11111111", "11111111", "", 1);
 //        write("1:1:1:1:1:1:1:1", "", "1:1:1:1:1:1:1:1", 2);
 //        write("2:2:2:2:2:2:2:2", "", ":2:2:2:2:2:2:2", 8);
 //        write("iphone", "22222222", ":2:2:2:2:2:2:2", 4);
-//        read();
+        read();
 //        CacheHelperKt.saveLastConnectDeviceInfo(c, "name", "serial", "mac", 3);
         //Log.d(TAG, "test: " + CommonUtilsKt.toJson(CacheHelperKt.getLastConnectDeviceInfo(c)));
     }

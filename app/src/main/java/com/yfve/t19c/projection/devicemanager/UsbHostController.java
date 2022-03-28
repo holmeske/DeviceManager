@@ -1,6 +1,7 @@
 package com.yfve.t19c.projection.devicemanager;
 
 import static com.yfve.t19c.projection.devicemanager.AppController.isCertifiedVersion;
+import static com.yfve.t19c.projection.devicemanager.AppController.isReplugged;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -52,6 +53,7 @@ public class UsbHostController {
             if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(intent.getAction())) {
                 attach(device);
             } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(intent.getAction())) {
+                isReplugged = true;
                 detach(device);
             }
         }
