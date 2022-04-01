@@ -24,10 +24,10 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         @Override
         public void sessionStarted(boolean b, String smallIcon, String mediumIcon, String largeIcon, String label, String deviceName, String instanceId) {
             for (AapListener l : mCallbackList) {
-                try {
+                if (l != null) {
                     l.sessionStarted(b, smallIcon, mediumIcon, largeIcon, label, deviceName, instanceId);
-                } catch (Exception e) {
-                    Log.e(TAG, e.toString());
+                } else {
+                    Log.e(TAG, "sessionStarted: AapListener is null");
                 }
             }
         }
@@ -35,10 +35,10 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         @Override
         public void sessionTerminated(boolean b, int reason) {
             for (AapListener l : mCallbackList) {
-                try {
+                if (l != null) {
                     l.sessionTerminated(b, reason);
-                } catch (Exception e) {
-                    Log.e(TAG, e.toString());
+                } else {
+                    Log.e(TAG, "sessionTerminated: AapListener is null");
                 }
             }
         }
@@ -87,29 +87,28 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         }
 
         if (binder == null) {
-            Log.i(TAG, "Binder still null");
+            Log.e(TAG, "Binder still null");
             return;
         }
 
         try {
             binder.linkToDeath(this, 0);
         } catch (RemoteException e) {
-            e.printStackTrace();
-            Log.i(TAG, e.toString());
+            Log.e(TAG, e.toString());
         }
 
         mAapClient = IAapReceiverService.Stub.asInterface(binder);
         if (listener != null) listener.success();
 
         if (null == mAapClient) {
-            Log.i(TAG, "Service is null");
+            Log.e(TAG, "Service is null");
             return;
         }
 
         try {
             mAapClient.registerStatusListener(mAapSessionStsListener);
         } catch (RemoteException e) {
-            Log.e(TAG, "RemoteException:" + e);
+            Log.e(TAG, e.toString());
         }
     }
 

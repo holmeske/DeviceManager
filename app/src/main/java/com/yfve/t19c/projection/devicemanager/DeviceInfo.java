@@ -1,5 +1,6 @@
 package com.yfve.t19c.projection.devicemanager;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.Arrays;
@@ -55,6 +56,10 @@ public class DeviceInfo {
         BluetoothMac = mac;
         DeviceName = name;
         ConnectionType = conType;
+    }
+
+    public boolean isEmpty() {
+        return TextUtils.isEmpty(SerialNumber) && TextUtils.isEmpty(BluetoothMac);
     }
 
     public void reset() {
