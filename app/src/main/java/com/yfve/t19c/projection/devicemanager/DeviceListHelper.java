@@ -89,6 +89,16 @@ public class DeviceListHelper {
         }
     }
 
+    public String getMac(String serial) {
+        Log.d(TAG, "getMac() called with: serial = [" + serial + "]");
+        return mStorageHelper.queryBySerial(serial).getMac();
+    }
+
+    public String getSerial(String mac) {
+        Log.d(TAG, "getSerial() called with: mac = [" + mac + "]");
+        return mStorageHelper.queryByMac(mac).getSerial();
+    }
+
     public List<Device> queryAll() {
         return mStorageHelper.queryAll();
     }

@@ -119,7 +119,9 @@ public final class AppController {
             if (b) {
                 UsbDevice d = USBKt.firstUsbDevice(mContext);
                 String serial = d == null ? "" : d.getSerialNumber();
-                currentDevice.update(serial, "", deviceName, 1);
+
+                currentDevice.update(serial, mDeviceListHelper.getMac(serial), deviceName, 1);
+                Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(currentDevice));
 
                 onSessionStateUpdate(currentDevice.SerialNumber, "", 0, "connected");
 
@@ -128,6 +130,10 @@ public final class AppController {
             } else {
                 CacheHelperKt.saveLastConnectDeviceInfo(mContext, deviceName, "", currentDevice.BluetoothMac, 2);
                 mDeviceListHelper.write(deviceName, "", currentDevice.BluetoothMac, 2);
+
+                currentDevice.update(mDeviceListHelper.getSerial(currentDevice.BluetoothMac), currentDevice.BluetoothMac, deviceName, 2);
+                Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(currentDevice));
+
                 onSessionStateUpdate("", currentDevice.BluetoothMac, 0, "connected");
             }
             if (isSwitchingSession) {//reset switching state
@@ -139,10 +145,16 @@ public final class AppController {
         @Override
         public void sessionTerminated(boolean b, int reason) {
             //USER_SELECTION = 1, DEVICE_SWITCH = 2, NOT_SUPPORTED = 3, NOT_CURRENTLY_SUPPORTED = 4, PROBE_SUPPORTED = 5
+            //old device  1 2 3 4  not  process
+            //old device  0        auto connect
             Log.d(TAG, "sessionTerminated() called with: isUsb = [" + b + "], reason = [" + reason + "]");
             synchronized (mLock) {
                 isSessionStarted = false;
                 isClientActiveRequest = false;
+                if (!currentDevice.isEmpty()) {
+                    onSessionStateUpdate(b ? currentDevice.SerialNumber : "", b ? "" : currentDevice.BluetoothMac, 1, "disconnected");
+                }
+                updateIdleState();
                 if (reason == 1) {
                     resetUsb();
                 } else if (reason == 3) {
@@ -154,13 +166,6 @@ public final class AppController {
                     isReplugged_id = -4;
                     onNotification(-4);
                 }
-                if (currentDevice.isEmpty()) {
-                    Log.d(TAG, "current device is empty");
-                    return;
-                }
-                onSessionStateUpdate(b ? currentDevice.SerialNumber : "", b ? "" : currentDevice.BluetoothMac, 1, "disconnected");
-                currentDevice.reset();
-                updateIdleState();
             }
         }
     };
@@ -275,10 +280,18 @@ public final class AppController {
                                 Log.d(TAG, "switching session do not display popup, directly connect");
                                 mAndroidAutoDeviceClient.aribitrationWirelessResponse(btMac, true);
                             } else {
-                                onNotification(2, "", btMac);
+                                if (mDeviceListHelper.query("", btMac) == null) {
+                                    onNotification(2, "", btMac);//switch new session popup, start or not now
+                                } else {
+                                    Log.d(TAG, "old device not notification 2 popup");
+                                }
                             }
                         }
                     } else {
+                        if (TextUtils.equals(currentDevice.BluetoothMac, btMac)) {
+                            Log.d(TAG, "onArbitrationWirelessConnect: btMac same as current device mac");
+                            return;
+                        }
                         Log.d(TAG, "aribitrationWirelessResponse false");
                         mAndroidAutoDeviceClient.aribitrationWirelessResponse(btMac, false);
                         AtomicReference<String> name = new AtomicReference<>("");
@@ -291,7 +304,7 @@ public final class AppController {
                         if (isSwitchingSession) {
                             Log.d(TAG, "onArbitrationWirelessConnect: switching session do not display popup");
                         } else {
-                            onNotification(1, c, btMac);
+                            onNotification(1, c, btMac);//switch new session popup, yes or no
                         }
                     }
                 }
@@ -303,7 +316,7 @@ public final class AppController {
                 Log.d(TAG, "onWirelessConnectionFailure() called with: btMac = [" + btMac + "]");
                 if (CURRENT_SESSION_TYPE == TYPE_WIFI_ANDROID_AUTO) {
                     isClientActiveRequest = false;
-                    updateIdleState();
+                    //updateIdleState();
                 }
             }
 
@@ -358,8 +371,9 @@ public final class AppController {
                         UsbDevice d = USBKt.firstUsbDevice(mContext);
                         String serial = d == null ? "" : d.getSerialNumber();
 
-                        onSessionStateUpdate(isUsb ? serial : "", isUsb ? "" : btMac, sts, "connected");
                         currentDevice.update(isUsb ? serial : "", btMac, deviceName, isUsb ? 3 : 4);
+
+                        onSessionStateUpdate(isUsb ? serial : "", isUsb ? "" : btMac, sts, "connected");
 
                         CacheHelperKt.saveLastConnectDeviceInfo(mContext, deviceName, isUsb ? serial : "", btMac, isUsb ? 4 : 8);
                         mDeviceListHelper.write(deviceName, isUsb ? serial : "", btMac, isUsb ? 4 : 8);
@@ -395,7 +409,6 @@ public final class AppController {
                         lastDevice.setLastConnectType(sessionType == 1 ? 3 : 4);
                     } else if (sts == 1) {
                         onSessionStateUpdate(isUsb ? currentDevice.SerialNumber : "", isUsb ? "" : currentDevice.BluetoothMac, sts, "disconnected");
-                        currentDevice.reset();
                         updateIdleState();
                     }
                     isCanConnectingCPWifi = false;
@@ -434,7 +447,7 @@ public final class AppController {
                 Log.d(TAG, "onUSBIAP2DeviceStsChanged() called with: isDeviceAttached = [" + isDeviceAttached + "], serialNum = [" + serialNum + "]");
                 if (!isDeviceAttached) {
                     noticeExternal(serialNum);
-                    updateIdleState();
+                    //updateIdleState();
                     handler.removeMessages(3);
                     handler.sendEmptyMessage(3);
                 }
@@ -470,7 +483,10 @@ public final class AppController {
     }
 
     private void resetUsb() {
-        if (aliveDeviceList.stream().anyMatch(device -> (device.isUsbAA() || device.isWirelessAA()) && device.getType() == 1)) {
+        //if (aliveDeviceList.stream().anyMatch(device -> (device.isUsbAA() || device.isWirelessAA()) && device.getType() == 1)) {
+        int attached = USBKt.usbDeviceList(mContext).size();
+        Log.d(TAG, "attached usb device size = " + attached);
+        if (attached > 0) {
             Log.d(TAG, "resetUsb() called");
             handler.sendEmptyMessage(0);
             SystemProperties.set("sys.usbotg.power", "0");
@@ -566,24 +582,24 @@ public final class AppController {
         }
     }
 
-    private void onNotification(int id, String content, String mac) {
-        Log.d(TAG, "OnConnectListener.onNotification() called with: id = [" + id + "], content = [" + content + "], mac = [" + mac + "]"
+    private void onSessionStateUpdate(String serial, String mac, int state, String msg) {
+        Log.d(TAG, "onSessionStateUpdate() called with: serial = [" + serial + "], mac = [" + mac + "], state = [" + state + "], msg = [" + msg + "]"
                 + ", OnConnectListener size == " + mOnConnectListeners.size());
         for (OnConnectListener listener : mOnConnectListeners) {
             try {
-                listener.onNotification(id, content, "", mac, 2);
+                listener.onSessionStateUpdate(serial, mac, state, msg);
             } catch (RemoteException e) {
                 Log.e(TAG, e.toString());
             }
         }
     }
 
-    private void onSessionStateUpdate(String serial, String mac, int state, String msg) {
-        Log.d(TAG, "OnConnectListener.onSessionStateUpdate() called with: serial = [" + serial + "], mac = [" + mac + "], state = [" + state + "], msg = [" + msg + "]"
+    private void onNotification(int id, String content, String mac) {
+        Log.d(TAG, "onNotification() called with: id = [" + id + "], content = [" + content + "], mac = [" + mac + "]"
                 + ", OnConnectListener size == " + mOnConnectListeners.size());
         for (OnConnectListener listener : mOnConnectListeners) {
             try {
-                listener.onSessionStateUpdate(serial, mac, state, msg);
+                listener.onNotification(id, content, "", mac, 2);
             } catch (RemoteException e) {
                 Log.e(TAG, e.toString());
             }
@@ -597,6 +613,14 @@ public final class AppController {
      */
     public void switchSession(int connectType, String serialNumber, String btMac) {
         Log.d(TAG, "switchSession() called with: connectType = [" + connectType + "], serialNumber = [" + serialNumber + "], btMac = [" + btMac + "]");
+        if (connectType == 1 && currentDevice.ConnectionType == 1 && TextUtils.equals(serialNumber, currentDevice.SerialNumber)) {
+            Log.d(TAG, "same as android auto usb device, not switch");
+            return;
+        }
+        if (connectType == 3 && currentDevice.ConnectionType == 3 && TextUtils.equals(serialNumber, currentDevice.SerialNumber)) {
+            Log.d(TAG, "same as carplay usb device, not switch");
+            return;
+        }
         if (ObjectsCompat.equals(currentDevice.SerialNumber, serialNumber) && !TextUtils.isEmpty(serialNumber) && !TextUtils.isEmpty(currentDevice.SerialNumber)
                 || ObjectsCompat.equals(currentDevice.BluetoothMac, btMac) && !TextUtils.isEmpty(btMac) && !TextUtils.isEmpty(currentDevice.BluetoothMac)) {
             Log.d(TAG, "same as current session, do not switch");
@@ -710,8 +734,6 @@ public final class AppController {
         if (aawDeviceInfo.getAvailable()) {
             if (!isContain.get()) {
                 aliveDeviceList.add(device);
-            } else {
-                Log.d(TAG, "list already contains the device, do not add");
             }
         } else {
             aliveDeviceList.removeIf(d -> Objects.equals(d.getMac(), device.getMac()));
@@ -759,7 +781,6 @@ public final class AppController {
         } else {
             Log.d(TAG, "current session isn't android auto, no need stop");
         }
-        updateIdleState();
     }
 
     public void roleSwitchComplete(String serialNumber) {
@@ -805,7 +826,7 @@ public final class AppController {
                 Log.d(TAG, "current session isn't carplay, no need stop");
             }
         }
-        updateIdleState();
+        //updateIdleState();
     }
 
     private boolean carPlayProxyValid() {
@@ -818,10 +839,10 @@ public final class AppController {
     }
 
     public boolean isIdleState() {
-        if (CURRENT_CONNECT_STATE == STATE_IDLE) {
+        if (CURRENT_CONNECT_STATE == STATE_IDLE || CURRENT_SESSION_TYPE == TYPE_NO_SESSION) {
             return true;
         } else {
-            Log.e(TAG, "current connect state is not idle, current session type is " + CURRENT_SESSION_TYPE);
+            Log.e(TAG, "current session type = " + CURRENT_SESSION_TYPE);
             return false;
         }
     }
@@ -838,11 +859,7 @@ public final class AppController {
         Log.d(TAG, "onDeviceUpdate() called with: " + device.toString() + ", OnConnectListener size == " + mOnConnectListeners.size());
         for (OnConnectListener listener : mOnConnectListeners) {
             try {
-                if (listener == null) {
-                    Log.d(TAG, "noticeExternal: listener is null");
-                } else {
-                    listener.onDeviceUpdate(device);
-                }
+                listener.onDeviceUpdate(device);
             } catch (RemoteException e) {
                 Log.e(TAG, e.toString());
             }
@@ -887,6 +904,7 @@ public final class AppController {
     }
 
     public void release() {
+        Log.d(TAG, "release() called");
         handler.removeCallbacksAndMessages(null);
         mAapProxy.unregisterListener(mAapListener);
 
@@ -901,7 +919,7 @@ public final class AppController {
 //                int retVal = 0;
                 switch (action) {
                     case BluetoothAdapter.ACTION_STATE_CHANGED:
-                        Log.d(TAG, "onReceive: ACTION_STATE_CHANGED");
+                        Log.d(TAG, "ACTION_STATE_CHANGED");
                         if (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) == BluetoothAdapter.STATE_ON) {
                             Log.d(TAG, "Bluetooth State ON");
 //                            retVal = mServerListener.startRfcommServer();
@@ -916,7 +934,7 @@ public final class AppController {
                         }
                         break;
                     case BluetoothHeadsetClient.ACTION_CONNECTION_STATE_CHANGED:
-                        Log.d(TAG, "onReceive: ACTION_CONNECTION_STATE_CHANGED");
+                        Log.d(TAG, "ACTION_CONNECTION_STATE_CHANGED");
 //                        if (intent.getIntExtra(BluetoothProfile.EXTRA_STATE, -1) == BluetoothProfile.STATE_CONNECTED) {
 //                            Log.d(TAG, "HFP connection to device");
 //                            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -935,28 +953,28 @@ public final class AppController {
 //                        }
                         break;
                     case BluetoothDevice.ACTION_ACL_CONNECTED:
-                        Log.d(TAG, "onReceive: ACTION_ACL_CONNECTED");
+                        Log.d(TAG, "ACTION_ACL_CONNECTED");
                         BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                         if (null != device) {
-                            Log.d(TAG, "+++++ ACL link up device : " + device.getName() + " with address:" + device.getAddress());
+                            Log.d(TAG, "ACL link up device : " + device.getName() + " with address:" + device.getAddress());
                             mACLConnectedList.add(device.getAddress());
 //                            if (null != mServerListener) {
 //                                mServerListener.deviceConnectedWithACL(device.getAddress());
 //                            }
                         }
-                        Log.d(TAG, "onReceive: " + new Gson().toJson(mACLConnectedList));
+                        Log.d(TAG, "mACLConnectedList = " + new Gson().toJson(mACLConnectedList));
                         break;
                     case BluetoothDevice.ACTION_ACL_DISCONNECTED:
-                        Log.d(TAG, "onReceive: ACTION_ACL_DISCONNECTED");
+                        Log.d(TAG, "ACTION_ACL_DISCONNECTED");
                         BluetoothDevice aclDisconnectDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                         if (null != aclDisconnectDevice) {
-                            Log.d(TAG, "----- ACL link down device : " + aclDisconnectDevice.getName() + " with address:" + aclDisconnectDevice.getAddress());
+                            Log.d(TAG, "ACL link down device : " + aclDisconnectDevice.getName() + " with address:" + aclDisconnectDevice.getAddress());
                             mACLConnectedList.remove(aclDisconnectDevice.getAddress());
 //                            if (null != mServerListener) {
 //                                mServerListener.hfpDisconnect(aclDisconnectDevice.getAddress());
 //                            }
                         }
-                        Log.d(TAG, "onReceive: " + new Gson().toJson(mACLConnectedList));
+                        Log.d(TAG, "mACLConnectedList = " + new Gson().toJson(mACLConnectedList));
                         break;
                     default:
                         break;

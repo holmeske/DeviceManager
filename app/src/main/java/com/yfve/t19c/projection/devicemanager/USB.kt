@@ -19,17 +19,17 @@ fun Context.firstUsbDevice(): UsbDevice? {
     return null
 }
 
-fun Context.usbManager(): UsbManager? {
+fun Context.usbManager(): UsbManager {
     return getSystemService(UsbManager::class.java)
 }
 
-fun Context.usbDeviceList(): HashMap<String, UsbDevice>? {
-    return usbManager()?.deviceList
+fun Context.usbDeviceList(): HashMap<String, UsbDevice> {
+    return usbManager().deviceList
 }
 
 fun Context.queryUsbDevice(serial: String?): UsbDevice? {
     Log.d(TAG, "query attached usb device list")
-    usbDeviceList()?.values?.forEach {
+    usbDeviceList().values.forEach {
         if (Objects.equals(it.serialNumber, serial)) return it
     }
     return null

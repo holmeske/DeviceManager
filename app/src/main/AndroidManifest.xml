@@ -39,7 +39,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DeviceManager">
 
-        <activity
+        <!--<activity
             android:name=".MainActivity"
             android:enabled="true"
             android:exported="true">
@@ -48,7 +48,7 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity>-->
 
         <service
             android:name=".DeviceManagerService"

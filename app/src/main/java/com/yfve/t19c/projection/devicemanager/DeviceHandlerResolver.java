@@ -31,7 +31,7 @@ public class DeviceHandlerResolver {
         }
     }
 
-    public boolean isDeviceAoapPossible(UsbDevice device) {
+    public boolean isSupportedAOAP(UsbDevice device) {
         if (AppSupport.isDeviceInAoapMode(device)) {
             return true;
         }
@@ -46,7 +46,7 @@ public class DeviceHandlerResolver {
         return aoapSupported;
     }
 
-    public void requestAoapSwitch(UsbDevice device) throws IOException {
+    public void requestAoapSwitch(UsbDevice device) {
         Log.d(TAG, "requestAoapSwitch() called");
         if (device == null) {
             Log.e(TAG, "invalid device");
@@ -57,7 +57,6 @@ public class DeviceHandlerResolver {
             Log.e(TAG, "Failed to connect to usb device. UsbDeviceConnection is null");
             return;
         }
-
         try {
             String hashedSerial;
             hashedSerial = getHashed(Build.getSerial());
@@ -69,6 +68,8 @@ public class DeviceHandlerResolver {
                     "1.0",
                     "http://www.android.com/auto",
                     hashedSerial);
+        } catch (IOException e) {
+            Log.e(TAG, e.toString());
         } finally {
             connection.close();
         }

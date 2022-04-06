@@ -26,8 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DeviceManagerService extends Service {
-    private static final String TAG = "DeviceManagerService";
     public static final List<Device> historyDeviceList = new ArrayList<>();
+    private static final String TAG = "DeviceManagerService";
     private static final List<Device> aliveDeviceList = new ArrayList<>();
     private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private int retryCount;
@@ -86,7 +86,6 @@ public class DeviceManagerService extends Service {
                     } else if (result == -1) {
                         Log.d(TAG, "onNotification -1");
                         l.onNotification(-1, "", "", mac, 0);
-                        Log.d(TAG, "onBluetoothPairResult: ");
                         UsbDevice device = USBKt.queryUsbDevice(mContext, mAppController.switchingPhone.getSerial());
                         if (device != null) {
                             mUsbHostController.attach(device);
