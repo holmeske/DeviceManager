@@ -96,6 +96,7 @@ public class UsbHostController {
         if (isBoundIAapReceiverService && isGetCarServiceValue) {
             UsbDevice d = USBKt.firstUsbDevice(mContext);
             if (d != null) {
+                Log.d(TAG, "first Usb Device " + d.getSerialNumber());
                 attach(d);
             } else {
                 Log.d(TAG, "current no attached usb device");

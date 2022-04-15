@@ -88,6 +88,7 @@ public class DeviceManagerService extends Service {
                         l.onNotification(-1, "", "", mac, 0);
                         UsbDevice device = USBKt.queryUsbDevice(mContext, mAppController.switchingPhone.getSerial());
                         if (device != null) {
+                            Log.d(TAG, "onBluetoothPairResult: UsbHostController.attach");
                             mUsbHostController.attach(device);
                         } else {
                             Log.d(TAG, "no find attached usb device");

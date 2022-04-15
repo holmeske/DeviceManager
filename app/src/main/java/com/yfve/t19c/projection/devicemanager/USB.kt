@@ -9,9 +9,8 @@ import java.util.*
 private const val TAG = "USB"
 
 fun Context.firstUsbDevice(): UsbDevice? {
-    val usbManager: UsbManager = getSystemService(UsbManager::class.java)
-    usbManager.deviceList?.let {
-        Log.d(TAG, "deviceList size = ${it.size}")
+    usbManager().deviceList?.let {
+        Log.d(TAG, "UsbManager getDeviceList() size = ${it.size}")
         if (it.isNotEmpty()) {
             return it.values.first()
         }

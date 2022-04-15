@@ -1,15 +1,10 @@
 package com.yfve.t19c.projection.devicemanager.constant
 
 object SessionType {
-    const val USB_AA = 1
-    const val WIFI_AA = 2
-    const val USB_CP = 3
-    const val WIFI_CP = 4
-}
-
-object ConnectType {
-    const val USB = 1
-    const val WIFI = 2
+    const val USB_ANDROID_AUTO = 1
+    const val WIFI_ANDROID_AUTO = 2
+    const val USB_CARPLAY = 3
+    const val WIFI_CARPLAY = 4
 }
 
 data class Phone(var serial: String? = "", var mac: String? = "") {
