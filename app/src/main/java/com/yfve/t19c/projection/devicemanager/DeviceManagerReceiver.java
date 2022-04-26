@@ -14,7 +14,14 @@ public class DeviceManagerReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Log.d(TAG, "onReceive() called with: action = [" + intent.getAction() + "]");
         if (Objects.equals(intent.getAction(), Intent.ACTION_BOOT_COMPLETED)) {
-            context.startForegroundService(new Intent(context, DeviceManagerService.class));
+            if (DeviceManagerService.isStarted) {
+                Log.d(TAG, "device manager service is started");
+            } else {
+//                Log.d(TAG, "stop");
+//                context.stopService(new Intent(context, DeviceManagerService.class));
+                Log.d(TAG, "start");
+                context.startForegroundService(new Intent(context, DeviceManagerService.class));
+            }
         }
     }
 }

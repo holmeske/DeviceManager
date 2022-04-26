@@ -118,6 +118,7 @@ public class CarHelper {
                             property = mCarInfoManager.getByteProperty(CarInfoManager.ID_DIAGNOSTIC_CONFIG_701A);
 
                             if (property.length != 8) {
+                                Log.d(TAG, "onServiceConnected: postDelayed  1000");
                                 mHandler.postDelayed(runnable, 1000);
                             } else {
                                 processValidValue();
@@ -206,6 +207,7 @@ public class CarHelper {
     property[7] = 00000000*/
 
     private void processValidValue() {
+        Log.d(TAG, "processValidValue() called");
         if (onGetValidValueListener != null) {
             onGetValidValueListener.callback();
         }

@@ -29,6 +29,7 @@ public class DeviceManagerService extends Service {
     public static final List<Device> historyDeviceList = new ArrayList<>();
     private static final String TAG = "DeviceManagerService";
     private static final List<Device> aliveDeviceList = new ArrayList<>();
+    public static boolean isStarted = false;
     private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private int retryCount;
     private CarHelper mCarHelper;
@@ -85,6 +86,7 @@ public class DeviceManagerService extends Service {
                         retryCount = 0;
                     } else if (result == -1) {
                         Log.d(TAG, "onNotification -1");
+                        mAppController.resetIsSwitchingSession();
                         l.onNotification(-1, "", "", mac, 0);
                         UsbDevice device = USBKt.queryUsbDevice(mContext, mAppController.switchingPhone.getSerial());
                         if (device != null) {
@@ -100,6 +102,7 @@ public class DeviceManagerService extends Service {
                             l.onRequestBluetoothPair(mac);
                         } else {
                             Log.d(TAG, "onNotification -2");
+                            mAppController.resetIsSwitchingSession();
                             l.onNotification(-2, "", "", mac, 0);
                         }
                     }
@@ -126,6 +129,7 @@ public class DeviceManagerService extends Service {
     @Override
     public void onCreate() {
         Log.d(TAG, "onCreate() called");
+        isStarted = true;
         mContext = this;
         startForeground();
 
@@ -161,6 +165,7 @@ public class DeviceManagerService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy() called");
+        isStarted = false;
         mCarHelper.release();
         mUsbHostController.unRegisterReceiver();
         mAppController.release();

@@ -18,39 +18,40 @@ public class DeviceListHelper {
 
     public void write(String name, String serial, String mac, int ability) {
         Log.d(TAG, "write() called with: name = [" + name + "], serial = [" + serial + "], mac = [" + mac + "], ability = [" + ability + "]");
+        if (TextUtils.isEmpty(serial) && TextUtils.isEmpty(mac)) {
+            Log.e(TAG, "serial and mac are both empty , do not write to database");
+        } else {
+            Device device = query(serial, mac);
+            Log.d(TAG, "query device : " + new Gson().toJson(device));
 
-        //if (TextUtils.isEmpty(serial) || TextUtils.isEmpty(mac)) return;
+            if (device != null) {
+                int historyAbility = device.getAbility();
 
-        Device device = query(serial, mac);
-        Log.d(TAG, "query device : " + new Gson().toJson(device));
+                if (TextUtils.isEmpty(name)) name = device.getName();
+                if (TextUtils.isEmpty(serial)) serial = device.getSerial();
+                if (TextUtils.isEmpty(mac)) mac = device.getMac();
 
-        if (device != null) {
-            int historyAbility = device.getAbility();
-
-            if (TextUtils.isEmpty(name)) name = device.getName();
-            if (TextUtils.isEmpty(serial)) serial = device.getSerial();
-            if (TextUtils.isEmpty(mac)) mac = device.getMac();
-
-            if (ability != historyAbility) {
-                if (ability == 1 || ability == 2) {// 1:usb android auto , 2: wifi android auto
-                    if (historyAbility != 3) {
-                        deleteBySerialMac(device.getSerial(), device.getMac());
-                        insert(name, serial, mac, 3);
-                    }
-                } else if (ability == 4 || ability == 8) {// 4:usb carplay , 8: wifi carplay
-                    if (historyAbility != 12) {
-                        deleteBySerialMac(device.getSerial(), device.getMac());
-                        insert(name, serial, mac, 12);
+                if (ability != historyAbility) {
+                    if (ability == 1 || ability == 2) {// 1:usb android auto , 2: wifi android auto
+                        if (historyAbility != 3) {
+                            deleteBySerialMac(device.getSerial(), device.getMac());
+                            insert(name, serial, mac, 3);
+                        }
+                    } else if (ability == 4 || ability == 8) {// 4:usb carplay , 8: wifi carplay
+                        if (historyAbility != 12) {
+                            deleteBySerialMac(device.getSerial(), device.getMac());
+                            insert(name, serial, mac, 12);
+                        }
                     }
                 }
+            } else {
+                if (queryAll().size() == 5) {
+                    delete(queryAll().get(0));
+                }
+                insert(name, serial, mac, ability);
             }
-        } else {
-            if (queryAll().size() == 5) {
-                delete(queryAll().get(0));
-            }
-            insert(name, serial, mac, ability);
+            read();
         }
-        read();
     }
 
     private void insert(String name, String serial, String mac, int ability) {
@@ -96,7 +97,9 @@ public class DeviceListHelper {
 
     public String getSerial(String mac) {
         Log.d(TAG, "getSerial() called with: mac = [" + mac + "]");
-        return mStorageHelper.queryByMac(mac).getSerial();
+        String serial = mStorageHelper.queryByMac(mac).getSerial();
+        Log.d(TAG, "getSerial: " + serial);
+        return serial;
     }
 
     public List<Device> queryAll() {
@@ -107,9 +110,11 @@ public class DeviceListHelper {
         List<Device> list = queryAll();
         Log.d(TAG, "read list size = " + list.size());
         list.forEach(d -> Log.d(TAG, d.toString()));
+        Log.d(TAG, "read: end");
     }
 
     public void clear() {
+        Log.d(TAG, "clear() called");
         mStorageHelper.clear();
     }
 

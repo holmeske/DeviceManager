@@ -27,6 +27,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 final class AppSupport {
@@ -158,7 +159,9 @@ final class AppSupport {
             Log.d(TAG, "device is null");
             return false;
         }
-        if (device.getVendorId() == APPLE_DEVICE_VENDOR_ID) {
+        if (device.getVendorId() == APPLE_DEVICE_VENDOR_ID
+                || device.getProductName().toLowerCase(Locale.ROOT).startsWith("iphone")
+                || device.getManufacturerName().toLowerCase(Locale.ROOT).startsWith("apple")) {
             return true;
         } else {
             Log.d(TAG, "is not ios device");

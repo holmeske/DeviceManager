@@ -40,13 +40,16 @@ public class UsbHostController {
             if (UsbHelper.Companion.isBluePort()) return;
 
             UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-            //Log.d(TAG, "onReceive: " + CommonUtilsKt.toJson(device));
+            Log.d(TAG, "onReceive: " + CommonUtilsKt.toJson(device));
             if (device != null) {
                 UsbInterface usbInterface = device.getInterface(0);
                 if (usbInterface != null) {
                     int mClass = usbInterface.getInterfaceClass();
-                    Log.d(TAG, "mClass = " + mClass + " mVendorId = " + device.getVendorId() + " mProductId = " + device.getProductId());
-                    if (mClass == 8 || mClass == 7) {
+                    Log.d(TAG, "mClass = " + mClass + " , mVendorId = " + device.getVendorId() + " , mProductId = " + device.getProductId()
+                            + " , mProductName = " + device.getProductName() + " , mName = " + device.getDeviceName()
+                            + " , mManufacturerName = " + device.getManufacturerName());
+                    if (mClass == 7) {//mClass == 8 ||
+                        Log.d(TAG, "the device is a printer");
                         return;
                     }
                 }
@@ -61,6 +64,7 @@ public class UsbHostController {
     };
 
     private boolean isBoundIAapReceiverService = false;
+    private boolean isBoundCarPlayService = false;
     private boolean isGetCarServiceValue = false;
 
     public UsbHostController(Context mContext, AppController mAppController, List<OnConnectListener> mOnConnectListeners) {
@@ -74,11 +78,20 @@ public class UsbHostController {
         registerReceiver();
 
         if (mAppController.getAapBinderClient() != null) {
+            Log.d(TAG, "setOnBindIAapReceiverServiceListener");
             mAppController.getAapBinderClient().setOnBindIAapReceiverServiceListener(() -> {
                 Log.d(TAG, "bind IAapReceiverService success");
                 isBoundIAapReceiverService = true;
                 connectFirstUsbDevice();
             });
+        } else {
+            Log.e(TAG, "AapBinderClient is null");
+        }
+        if (mAppController.CAR_PLAY_BIND_SUCCESS) {
+            isBoundCarPlayService = true;
+            connectFirstUsbDevice();
+        } else {
+            Log.e(TAG, "not bind success carplay service");
         }
     }
 
@@ -92,8 +105,10 @@ public class UsbHostController {
     }
 
     private void connectFirstUsbDevice() {
-        Log.d(TAG, "isBoundIAapReceiverService = " + isBoundIAapReceiverService + ", isGetCarServiceValue = " + isGetCarServiceValue);
-        if (isBoundIAapReceiverService && isGetCarServiceValue) {
+        Log.d(TAG, "isBoundIAapReceiverService = " + isBoundIAapReceiverService
+                + ", isBoundCarPlayService = " + isBoundCarPlayService
+                + ", isGetCarServiceValue = " + isGetCarServiceValue);
+        if (isGetCarServiceValue && (isBoundIAapReceiverService || isBoundCarPlayService)) {
             UsbDevice d = USBKt.firstUsbDevice(mContext);
             if (d != null) {
                 Log.d(TAG, "first Usb Device " + d.getSerialNumber());
