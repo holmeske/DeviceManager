@@ -148,45 +148,49 @@ public class CarHelper {
     private void setCarPowerStateListener() {
         mCarPowerManager = (CarPowerManager) mCar.getCarManager(Car.POWER_SERVICE);
         if (mCarPowerManager != null) {
-            mCarPowerManager.setListener(state -> {
-                // int PWR_MODE_NONE = 9;
-                // int PWR_MODE_OFF = 10;
-                // int PWR_MODE_STANDBY = 11;
-                // int PWR_MODE_RUN = 12;
-                // int PWR_MODE_SLEEP = 13;
-                // int PWR_MODE_ABNORMAL = 14;
-                // int PWR_MODE_TEMP_ON = 15;
-                // int PWR_MODE_OFF_USER = 16;
-                // int PWR_MODE_PARTIALRUN = 17;
-                // int PWR_MODE_PROTECTION = 18;
-                // int PWR_MODE_TEMPRUN_ENDING = 19;
-                // int PWR_REQ_SYSTEM_OFF = 20;
-                // int PWR_SCREEN_ON = 21;
-                // int PWR_SCREEN_OFF = 22;
-                //sometime will receive twice pwr_mode_standy without pwr_run
-                if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_STANDBY) {
-                    Log.d(TAG, "onStateChanged() called with: PWR_MODE_STANDBY");
-                    standby = true;
-                    Log.d(TAG, "standby == true");
-                    if (onCarPowerStateListener != null) {
-                        onCarPowerStateListener.standby();
+            try {
+                mCarPowerManager.setListener(state -> {
+                    // int PWR_MODE_NONE = 9;
+                    // int PWR_MODE_OFF = 10;
+                    // int PWR_MODE_STANDBY = 11;
+                    // int PWR_MODE_RUN = 12;
+                    // int PWR_MODE_SLEEP = 13;
+                    // int PWR_MODE_ABNORMAL = 14;
+                    // int PWR_MODE_TEMP_ON = 15;
+                    // int PWR_MODE_OFF_USER = 16;
+                    // int PWR_MODE_PARTIALRUN = 17;
+                    // int PWR_MODE_PROTECTION = 18;
+                    // int PWR_MODE_TEMPRUN_ENDING = 19;
+                    // int PWR_REQ_SYSTEM_OFF = 20;
+                    // int PWR_SCREEN_ON = 21;
+                    // int PWR_SCREEN_OFF = 22;
+                    //sometime will receive twice pwr_mode_standy without pwr_run
+                    if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_STANDBY) {
+                        Log.d(TAG, "onStateChanged() called with: PWR_MODE_STANDBY");
+                        standby = true;
+                        Log.d(TAG, "standby == true");
+                        if (onCarPowerStateListener != null) {
+                            onCarPowerStateListener.standby();
+                        }
+                    } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_RUN) {
+                        Log.d(TAG, "onStateChanged() called with: PWR_MODE_RUN");
+                        standby = false;
+                        Log.d(TAG, "standby == false");
+                        if (onCarPowerStateListener != null) {
+                            onCarPowerStateListener.run();
+                        }
+                    } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_TEMP_ON) {
+                        Log.d(TAG, "onStateChanged() called with: PWR_MODE_TEMP_ON");
+                        standby = false;
+                        Log.d(TAG, "standby == false");
+                        if (onCarPowerStateListener != null) {
+                            onCarPowerStateListener.run();
+                        }
                     }
-                } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_RUN) {
-                    Log.d(TAG, "onStateChanged() called with: PWR_MODE_RUN");
-                    standby = false;
-                    Log.d(TAG, "standby == false");
-                    if (onCarPowerStateListener != null) {
-                        onCarPowerStateListener.run();
-                    }
-                } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_TEMP_ON) {
-                    Log.d(TAG, "onStateChanged() called with: PWR_MODE_TEMP_ON");
-                    standby = false;
-                    Log.d(TAG, "standby == false");
-                    if (onCarPowerStateListener != null) {
-                        onCarPowerStateListener.run();
-                    }
-                }
-            });
+                });
+            } catch (NoSuchMethodError e) {
+                Log.e(TAG, "setCarPowerStateListener: ", e);
+            }
         } else {
             Log.e(TAG, "CarPowerManager is null");
         }

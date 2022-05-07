@@ -14,6 +14,15 @@ public class DeviceListHelper {
 
     public DeviceListHelper(Context c) {
         mStorageHelper = new StorageHelper(c);
+        /*DeviceInfo info = new DeviceInfo();
+        info.BluetoothMac = "123";
+        String s = info.BluetoothMac;
+
+        info.BluetoothMac = "null";
+        Log.d(TAG, "s: " + s);
+
+        info = null;
+        Log.d(TAG, "s: " + s);*/
     }
 
     public void write(String name, String serial, String mac, int ability) {

@@ -23,6 +23,7 @@ public class DeviceInfo {
     public int ConnectionType;
     public boolean[] AppAvailable = new boolean[Connectivity_AppType_MAX];
     private int lastConnectType;
+    private boolean isAttached;
 
     public DeviceInfo() {
     }
@@ -49,6 +50,14 @@ public class DeviceInfo {
         AppAvailable[Connectivity_AppType_AndroidAuto] = isSupAA;
         AppAvailable[Connectivity_AppType_CarLife] = isSupCL;
         AppAvailable[Connectivity_AppType_HiCar] = isSupHC;
+    }
+
+    public boolean isAttached() {
+        return isAttached;
+    }
+
+    public void setAttached(boolean attached) {
+        isAttached = attached;
     }
 
     public void update(String serial, String mac, String name, int conType) {

@@ -222,7 +222,8 @@ public class UsbHostController {
                         Log.d(TAG, "onArbitrationWirelessConnect: usb device serial number same as current device serial");
                         return;
                     }
-                    onNotification(device);
+                    //when session not null ,  attach android auto device , need notify users
+                    mAppController.onNotification(1, "", device.getSerialNumber(), "", 1);
                     return;
                 }
             }
@@ -238,7 +239,7 @@ public class UsbHostController {
             if (!mAppController.isAutoConnectUsbAndroidAuto()) return;
             if (!mDeviceHandlerResolver.isSupportedAOAP(device)) return;
             if (AppSupport.isDeviceInAoapMode(device)) {
-                mAppController.startAndroidAuto(device.getDeviceName());
+                mAppController.startUsbAndroidAuto(device.getDeviceName());
             } else {
                 mAppController.updatePreparingState();
                 mDeviceHandlerResolver.requestAoapSwitch(device);
@@ -280,21 +281,6 @@ public class UsbHostController {
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         mContext.registerReceiver(mBroadcastReceiver, filter);
-    }
-
-    /**
-     * when session not null ,  attach android auto device , need notify users
-     */
-    private void onNotification(UsbDevice device) {
-        Log.d(TAG, "onNotification() called with: UsbDevice = [" + device.getSerialNumber() + "]");
-        for (OnConnectListener listener : mOnConnectListeners) {
-            try {
-                String c = "There is available device  " + device.getProductName() + "  , do you want to start Android Auto ?";
-                listener.onNotification(1, c, device.getSerialNumber(), "", 1);
-            } catch (RemoteException e) {
-                Log.e(TAG, e.toString());
-            }
-        }
     }
 
     public void unRegisterReceiver() {
