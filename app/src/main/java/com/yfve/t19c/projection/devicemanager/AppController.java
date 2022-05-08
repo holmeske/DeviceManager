@@ -30,6 +30,7 @@ import com.yfve.t19c.projection.carplay.proxy.CarPlayClient;
 import com.yfve.t19c.projection.carplay.proxy.CarPlayListener;
 import com.yfve.t19c.projection.devicelist.Device;
 import com.yfve.t19c.projection.devicelist.OnConnectListener;
+import com.yfve.t19c.projection.devicemanager.callback.OnUpdateClientStsListener;
 import com.yfve.t19c.projection.devicemanager.constant.CacheHelperKt;
 import com.yfve.t19c.projection.devicemanager.constant.CommonUtilsKt;
 import com.yfve.t19c.projection.devicemanager.constant.Phone;
@@ -92,6 +93,7 @@ public final class AppController {
             }
         }
     };
+    private OnUpdateClientStsListener onUpdateClientStsListener;
     private List<OnConnectListener> mOnConnectListeners;
     private List<Device> aliveDeviceList = new ArrayList<>();
     private UsbHostController mUsbHostController;
@@ -366,6 +368,9 @@ public final class AppController {
                 super.onUpdateClientSts(sts);
                 Log.d(TAG, "onUpdateClientSts() called with: sts = [" + sts + "] , bind carplay service success");
                 CAR_PLAY_BIND_SUCCESS = true;
+                if (onUpdateClientStsListener != null) {
+                    onUpdateClientStsListener.bindSuccess();
+                }
             }
 
             @Override
@@ -467,6 +472,10 @@ public final class AppController {
             }
         };
         mCarPlayClient.registerListener(carPlayListener);
+    }
+
+    public void setOnUpdateClientStsListener(OnUpdateClientStsListener onUpdateClientStsListener) {
+        this.onUpdateClientStsListener = onUpdateClientStsListener;
     }
 
     public void resetIsSwitchingSession() {
