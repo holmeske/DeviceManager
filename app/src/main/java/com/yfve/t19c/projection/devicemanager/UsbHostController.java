@@ -31,6 +31,7 @@ public class UsbHostController {
     private final DeviceHandlerResolver mDeviceHandlerResolver;
     private final List<OnConnectListener> mOnConnectListeners;
     private List<Device> deviceList = new ArrayList<>();
+    private int mClass;
 
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -44,16 +45,12 @@ public class UsbHostController {
             if (device != null) {
                 UsbInterface usbInterface = device.getInterface(0);
                 if (usbInterface != null) {
-                    int mClass = usbInterface.getInterfaceClass();
+                    mClass = usbInterface.getInterfaceClass();
                     Log.d(TAG, "mClass = " + mClass + " , mVendorId = " + device.getVendorId() + " , mProductId = " + device.getProductId()
                             + " , mProductName = " + device.getProductName() + " , mName = " + device.getDeviceName()
                             + " , mManufacturerName = " + device.getManufacturerName());
                     if (mClass == 7) {
                         Log.d(TAG, "the device is a printer");
-                        return;
-                    }
-                    if (mClass == 8) {
-                        Log.d(TAG, "the device is a usb storage");
                         return;
                     }
                 }
@@ -216,6 +213,10 @@ public class UsbHostController {
                 return;
             }
         } else {
+            if (mClass == 8) {
+                Log.d(TAG, "the device is a usb storage");
+                return;
+            }
             if (CarHelper.isOpenQDLink()) return;
         }
         if (!mAppController.isSwitchingState()) {
