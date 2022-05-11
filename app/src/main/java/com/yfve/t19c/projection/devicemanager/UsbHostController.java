@@ -48,8 +48,12 @@ public class UsbHostController {
                     Log.d(TAG, "mClass = " + mClass + " , mVendorId = " + device.getVendorId() + " , mProductId = " + device.getProductId()
                             + " , mProductName = " + device.getProductName() + " , mName = " + device.getDeviceName()
                             + " , mManufacturerName = " + device.getManufacturerName());
-                    if (mClass == 7) {//mClass == 8 ||
+                    if (mClass == 7) {
                         Log.d(TAG, "the device is a printer");
+                        return;
+                    }
+                    if (mClass == 8) {
+                        Log.d(TAG, "the device is a usb storage");
                         return;
                     }
                 }
