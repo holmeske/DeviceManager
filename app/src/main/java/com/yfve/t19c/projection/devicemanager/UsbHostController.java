@@ -223,7 +223,7 @@ public class UsbHostController {
                         return;
                     }
                     //when session not null ,  attach android auto device , need notify users
-                    mAppController.onNotification(1, "", device.getSerialNumber(), "", 1);
+                    mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 1);
                     return;
                 }
             }
