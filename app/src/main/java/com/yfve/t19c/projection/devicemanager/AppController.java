@@ -104,63 +104,6 @@ public final class AppController {
         switchingPhone.clear();
         Log.d(TAG, "isSwitchingSession value has been revised to false");
     };
-    private final BroadcastReceiver receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "onReceive() called with: action = [" + intent.getAction() + "]");
-            Bundle bundle = intent.getExtras();
-            if (bundle.containsKey("aa")) {
-                String value = (String) bundle.get("aa");
-                if ("usb".equals(value)) {//Galaxy S9    4d4e484d44563398    30:6A:85:15:1D:35
-                    switchSession(1, "4d4e484d44563398", "");
-                } else if ("wifi".equals(value)) {//Pixel 5    58:24:29:80:66:A0
-                    switchSession(2, "", "58:24:29:80:66:A0");
-                }
-            } else if (bundle.containsKey("onNotification")) {
-                Log.d(TAG, "onReceive: " + bundle.get("onNotification"));
-                try {
-                    String id = (String) bundle.get("onNotification");
-                    if (id != null) {
-                        onNotification(Integer.parseInt(id));
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, e.toString());
-                }
-            } else if (bundle.containsKey("alive")) {
-                Log.d(TAG, "onReceive: " + bundle.get("alive"));
-                for (Device d : aliveDeviceList) {
-                    Log.d(TAG, "alive device " + d.toString());
-                }
-                onSessionStateUpdate(currentDevice.SerialNumber, currentDevice.BluetoothMac, 1, "disconnected");
-                updateIdleState();
-                Log.d(TAG, "onReceive: currentDevice == " + CommonUtilsKt.toJson(currentDevice));
-                Log.d(TAG, "onReceive: getUsbDeviceList size == " + USBKt.usbDeviceList(mContext.getApplicationContext()).size());
-            } else if (bundle.containsKey("handler")) {
-                Log.d(TAG, "onReceive: " + bundle.get("handler") + " send msg");
-                resetUsb(false);
-            } else if (bundle.containsKey("switch")) {
-                Log.d(TAG, "onReceive: " + bundle.get("switch"));
-                switchSession(null, "30:6A:85:15:1D:35");
-            } else if (bundle.containsKey("history")) {
-                Log.d(TAG, "onReceive: " + bundle.get("history"));
-                for (Device d : historyDeviceList) {
-                    Log.d(TAG, "history device " + d.toString());
-                }
-            } else if (bundle.containsKey("reason")) {
-                Log.d(TAG, "onReceive: " + bundle.get("reason"));
-                try {
-                    String reason = (String) bundle.get("reason");
-                    if (reason != null) {
-                        stopAndroidAuto();
-                        Thread.sleep(1000);
-                        mAapListener.sessionTerminated(false, Integer.parseInt(reason));
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, e.toString());
-                }
-            }
-        }
-    };
     private boolean isSessionStarted = false;
     private final AapListener mAapListener = new AapListener() {
         @Override
@@ -223,6 +166,63 @@ public final class AppController {
             }
             if (!currentDevice.isEmpty()) {
                 onSessionStateUpdate(b ? currentDevice.SerialNumber : "", b ? "" : mac, 1, "disconnected");
+            }
+        }
+    };
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "onReceive() called with: action = [" + intent.getAction() + "]");
+            Bundle bundle = intent.getExtras();
+            if (bundle.containsKey("aa")) {
+                String value = (String) bundle.get("aa");
+                if ("usb".equals(value)) {//Galaxy S9    4d4e484d44563398    30:6A:85:15:1D:35
+                    switchSession(1, "4d4e484d44563398", "");
+                } else if ("wifi".equals(value)) {//Pixel 5    58:24:29:80:66:A0
+                    switchSession(2, "", "58:24:29:80:66:A0");
+                }
+            } else if (bundle.containsKey("onNotification")) {
+                Log.d(TAG, "onReceive: " + bundle.get("onNotification"));
+                try {
+                    String id = (String) bundle.get("onNotification");
+                    if (id != null) {
+                        onNotification(Integer.parseInt(id));
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, e.toString());
+                }
+            } else if (bundle.containsKey("alive")) {
+                Log.d(TAG, "onReceive: " + bundle.get("alive"));
+                for (Device d : aliveDeviceList) {
+                    Log.d(TAG, "alive device " + d.toString());
+                }
+                onSessionStateUpdate(currentDevice.SerialNumber, currentDevice.BluetoothMac, 1, "disconnected");
+                updateIdleState();
+                Log.d(TAG, "onReceive: currentDevice == " + CommonUtilsKt.toJson(currentDevice));
+                Log.d(TAG, "onReceive: getUsbDeviceList size == " + USBKt.usbDeviceList(mContext.getApplicationContext()).size());
+            } else if (bundle.containsKey("handler")) {
+                Log.d(TAG, "onReceive: " + bundle.get("handler") + " send msg");
+                resetUsb(false);
+            } else if (bundle.containsKey("switch")) {
+                Log.d(TAG, "onReceive: " + bundle.get("switch"));
+                switchSession(null, "30:6A:85:15:1D:35");
+            } else if (bundle.containsKey("history")) {
+                Log.d(TAG, "onReceive: " + bundle.get("history"));
+                for (Device d : historyDeviceList) {
+                    Log.d(TAG, "history device " + d.toString());
+                }
+            } else if (bundle.containsKey("reason")) {
+                Log.d(TAG, "onReceive: " + bundle.get("reason"));
+                try {
+                    String reason = (String) bundle.get("reason");
+                    if (reason != null) {
+                        stopAndroidAuto();
+                        Thread.sleep(1000);
+                        mAapListener.sessionTerminated(false, Integer.parseInt(reason));
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, e.toString());
+                }
             }
         }
     };
@@ -549,6 +549,7 @@ public final class AppController {
     }
 
     public void setHistoryDeviceList(List<Device> list) {
+        list.clear();
         mDeviceListHelper.queryAll().forEach(d -> list.add(new Device(-1, d.getName(), d.getSerial(), d.getMac(),
                 1 == d.getAbility() || 3 == d.getAbility(),
                 2 == d.getAbility() || 3 == d.getAbility(),

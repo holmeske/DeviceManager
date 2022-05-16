@@ -95,7 +95,6 @@ class MainActivity : AppCompatActivity() {
         when (view.id) {
             R.id.tv -> {
                 Log.d(TAG, "onClick: ")
-                firstUsbDevice()
             }
         }
     }

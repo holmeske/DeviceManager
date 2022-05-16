@@ -83,7 +83,7 @@ public class UsbHostController {
             mAppController.getAapBinderClient().setOnBindIAapReceiverServiceListener(() -> {
                 Log.d(TAG, "bind IAapReceiverService success");
                 isBoundIAapReceiverService = true;
-                connectFirstUsbDevice();
+                connectLastUsbDevice();
             });
         } else {
             Log.e(TAG, "AapBinderClient is null");
@@ -92,7 +92,7 @@ public class UsbHostController {
         mAppController.setOnUpdateClientStsListener(() -> {
             Log.e(TAG, "bind CarPlay service success");
             isBoundCarPlayService = true;
-            connectFirstUsbDevice();
+            connectLastUsbDevice();
         });
     }
 
@@ -101,18 +101,18 @@ public class UsbHostController {
         mCarHelper.setOnGetValidValueListener(() -> {
             Log.d(TAG, "CarService returned valid value");
             isGetCarServiceValue = true;
-            connectFirstUsbDevice();
+            connectLastUsbDevice();
         });
     }
 
-    private void connectFirstUsbDevice() {
+    private void connectLastUsbDevice() {
         Log.d(TAG, "isBoundIAapReceiverService = " + isBoundIAapReceiverService
                 + ", isBoundCarPlayService = " + isBoundCarPlayService
                 + ", isGetCarServiceValue = " + isGetCarServiceValue);
         if (isGetCarServiceValue && (isBoundIAapReceiverService || isBoundCarPlayService)) {
-            UsbDevice d = USBKt.firstUsbDevice(mContext);
+            UsbDevice d = USBKt.lastUsbDevice(mContext);
             if (d != null) {
-                Log.d(TAG, "first usb device serial : " + d.getSerialNumber());
+                Log.d(TAG, "last usb device serial : " + d.getSerialNumber());
                 attach(d);
             } else {
                 Log.d(TAG, "current no attached usb device");
