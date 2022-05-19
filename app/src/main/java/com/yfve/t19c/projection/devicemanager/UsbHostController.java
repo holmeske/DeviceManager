@@ -30,7 +30,7 @@ public class UsbHostController {
     private final AppController mAppController;
     private final DeviceHandlerResolver mDeviceHandlerResolver;
     private final List<OnConnectListener> mOnConnectListeners;
-    private List<Device> deviceList = new ArrayList<>();
+    private List<Device> mAliveDeviceList = new ArrayList<>();
     private int mClass;
 
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
@@ -121,7 +121,7 @@ public class UsbHostController {
     }
 
     public void setDeviceList(List<Device> deviceList) {
-        this.deviceList = deviceList;
+        this.mAliveDeviceList = deviceList;
     }
 
     /**
@@ -132,6 +132,7 @@ public class UsbHostController {
      * @param ios       true: ios device
      */
     private void onDeviceUpdate(UsbDevice usbDevice, boolean attached, boolean ios) {
+        Log.d(TAG, "onDeviceUpdate() called with: serial = [" + usbDevice.getSerialNumber() + "], attached = [" + attached + "], ios = [" + ios + "]");
         Device device = new Device();
         device.setType(1);//1:usb , 2:wireless
         device.setName(usbDevice.getProductName());
@@ -160,20 +161,22 @@ public class UsbHostController {
 
         if (attached) {
             AtomicBoolean isContain = new AtomicBoolean(false);
-            deviceList.forEach(d -> {
+            mAliveDeviceList.forEach(d -> {
                 if (ObjectsCompat.equals(d.getSerial(), device.getSerial())) {
                     isContain.set(true);
                 }
             });
             if (!isContain.get()) {
-                deviceList.add(device);
+                mAliveDeviceList.add(device);
             } else {
                 Log.d(TAG, "list already contains the device, do not add");
             }
         } else {
-            deviceList.removeIf(d -> ObjectsCompat.equals(d.getSerial(), device.getSerial()));
+            mAliveDeviceList.removeIf(d -> ObjectsCompat.equals(d.getSerial(), device.getSerial()));
         }
-
+        for (int i = 0; i < mAliveDeviceList.size(); i++) {
+            Log.d(TAG, "alive device " + i + " : " + mAliveDeviceList.get(i));
+        }
         Log.d(TAG, "update usb " + device);
         for (OnConnectListener listener : mOnConnectListeners) {
             try {
@@ -181,10 +184,6 @@ public class UsbHostController {
             } catch (RemoteException e) {
                 Log.e(TAG, "onDeviceUpdate: ", e);
             }
-        }
-
-        for (int i = 0; i < deviceList.size(); i++) {
-            Log.d(TAG, "device list " + (i + 1) + " : " + deviceList.get(i));
         }
     }
 
@@ -223,8 +222,9 @@ public class UsbHostController {
             onDeviceUpdate(device, true, ios);
             if (!mAppController.isIdleState()) {
                 if (!ios) {
+                    Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(mAppController.currentDevice));
                     if (TextUtils.equals(mAppController.currentDevice.SerialNumber, device.getSerialNumber())) {
-                        Log.d(TAG, "onArbitrationWirelessConnect: usb device serial number same as current device serial");
+                        Log.d(TAG, "usb device serial number same as current device serial");
                         return;
                     }
                     //when session not null ,  attach android auto device , need notify users

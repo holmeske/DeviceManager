@@ -3,6 +3,8 @@ package com.yfve.t19c.projection.devicemanager;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -24,6 +26,7 @@ public class DeviceInfo {
     public boolean[] AppAvailable = new boolean[Connectivity_AppType_MAX];
     private int lastConnectType;
     private boolean isAttached;
+    private String instanceId;
 
     public DeviceInfo() {
     }
@@ -50,6 +53,46 @@ public class DeviceInfo {
         AppAvailable[Connectivity_AppType_AndroidAuto] = isSupAA;
         AppAvailable[Connectivity_AppType_CarLife] = isSupCL;
         AppAvailable[Connectivity_AppType_HiCar] = isSupHC;
+    }
+
+    public String getSerialNumber() {
+        return SerialNumber;
+    }
+
+    public void setSerialNumber(String serialNumber) {
+        SerialNumber = serialNumber;
+    }
+
+    public String getDeviceName() {
+        return DeviceName;
+    }
+
+    public void setDeviceName(String deviceName) {
+        DeviceName = deviceName;
+    }
+
+    public int getConnectionType() {
+        return ConnectionType;
+    }
+
+    public void setConnectionType(int connectionType) {
+        ConnectionType = connectionType;
+    }
+
+    public String getBluetoothMac() {
+        return BluetoothMac;
+    }
+
+    public void setBluetoothMac(String bluetoothMac) {
+        BluetoothMac = bluetoothMac;
+    }
+
+    public String getInstanceId() {
+        return instanceId;
+    }
+
+    public void setInstanceId(String instanceId) {
+        this.instanceId = instanceId;
     }
 
     public boolean isAttached() {
@@ -112,6 +155,7 @@ public class DeviceInfo {
         }
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "DeviceInfo{" +
@@ -121,6 +165,8 @@ public class DeviceInfo {
                 ", ConnectionType=" + ConnectionType +
                 ", AppAvailable=" + Arrays.toString(AppAvailable) +
                 ", lastConnectType=" + lastConnectType +
+                ", isAttached=" + isAttached +
+                ", instanceId='" + instanceId + '\'' +
                 '}';
     }
 }

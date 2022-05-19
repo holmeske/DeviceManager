@@ -2,6 +2,7 @@ package com.yfve.t19c.projection.devicemanager;
 
 import static androidx.core.app.NotificationCompat.PRIORITY_MIN;
 import static com.yfve.t19c.projection.devicemanager.BuildConfig.APPLICATION_ID;
+import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindMacBySerial;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -23,6 +24,7 @@ import com.yfve.t19c.projection.devicelist.DeviceListManager;
 import com.yfve.t19c.projection.devicelist.OnConnectListener;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class DeviceManagerService extends Service {
@@ -65,13 +67,21 @@ public class DeviceManagerService extends Service {
 
         @Override
         public List<Device> getAliveDevices() {
-            Log.d(TAG, "getAliveDevices() called" + " size = " + aliveDeviceList.size());
-            return aliveDeviceList;
+            Log.d(TAG, "getAliveDevices() called");
+            int i = 0;
+            for (Device d : aliveDeviceList) {
+                Log.d(TAG, "alive " + (i++) + " " + d);
+            }
+            return filteredAliveDeviceList();
         }
 
         @Override
         public List<Device> getHistoryDevices() {
-            Log.d(TAG, "getHistoryDevices() called" + " size = " + historyDeviceList.size());
+            Log.d(TAG, "getHistoryDevices() called");
+            int i = 0;
+            for (Device d : aliveDeviceList) {
+                Log.d(TAG, "history " + (i++) + " " + d);
+            }
             return historyDeviceList;
         }
 
@@ -86,7 +96,7 @@ public class DeviceManagerService extends Service {
                         retryCount = 0;
                     } else if (result == -1) {
                         Log.d(TAG, "onNotification -1");
-                        mAppController.resetIsSwitchingSession();
+                        mAppController.resetSwitchingSessionState();
                         l.onNotification(-1, "", "", mac, 0);
                         UsbDevice device = USBKt.queryUsbDevice(mContext, mAppController.switchingPhone.getSerial());
                         if (device != null) {
@@ -102,7 +112,7 @@ public class DeviceManagerService extends Service {
                             l.onRequestBluetoothPair(mac);
                         } else {
                             Log.d(TAG, "onNotification -2");
-                            mAppController.resetIsSwitchingSession();
+                            mAppController.resetSwitchingSessionState();
                             l.onNotification(-2, "", "", mac, 0);
                         }
                     }
@@ -113,6 +123,26 @@ public class DeviceManagerService extends Service {
         }
 
     };
+
+    public List<Device> filteredAliveDeviceList() {
+        Log.d(TAG, "aliveDeviceList size : " + aliveDeviceList.size());
+        List<Device> filteredDeviceList = new ArrayList<>(aliveDeviceList);
+        boolean hasIncompleteValue = filteredDeviceList.stream().allMatch(it -> TextUtils.isEmpty(it.getMac()) || TextUtils.equals(it.getMac(), "null"));
+        if (hasIncompleteValue) {
+            for (Iterator<Device> iterator = filteredDeviceList.iterator(); iterator.hasNext(); ) {
+                Device d = iterator.next();
+                if (TextUtils.isEmpty(d.getMac()) || TextUtils.equals(d.getMac(), "null")) {
+                    String mac = FindMacBySerial.get(d.getSerial());
+                    boolean repeat = filteredDeviceList.stream().allMatch(it -> TextUtils.equals(it.getMac(), mac));
+                    if (repeat) {
+                        iterator.remove();
+                    }
+                }
+            }
+            Log.d(TAG, "filteredDeviceList size : " + filteredDeviceList.size());
+        }
+        return filteredDeviceList;
+    }
 
     @Override
     public IBinder onBind(Intent intent) {
