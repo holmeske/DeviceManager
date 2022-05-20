@@ -173,7 +173,7 @@ public final class AppController {
                     startWirelessAndroidAuto(mac, 1);
                 }
             } else if (reason == 1) {
-                resetUsb(isSwitchingSession);
+                resetUsb(false);
             } else if (reason == 3) {
                 isReplugged = false;
                 isReplugged_id = -3;
@@ -251,9 +251,9 @@ public final class AppController {
         Log.d(TAG, "AppController() called  2022-05-17 19:55");
         this.mContext = context;
 
-//        IntentFilter intentFilter = new IntentFilter();
-//        intentFilter.addAction("com.klv.test");
-//        context.registerReceiver(receiver, intentFilter);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("com.klv.test");
+        context.registerReceiver(receiver, intentFilter);
 
         onBlueToothBroadcast();
         registerBluetoothReceiver();
@@ -542,13 +542,12 @@ public final class AppController {
     }
 
     public boolean isAutoConnectUsbAndroidAuto() {
-        if (!autoConnectUsbAndroidAuto) {
-            Log.d(TAG, "autoConnectUsbAndroidAuto == false");
-        }
+        Log.d(TAG, "autoConnectUsbAndroidAuto == " + autoConnectUsbAndroidAuto);
         return autoConnectUsbAndroidAuto;
     }
 
     public void setAutoConnectUsbAndroidAuto(boolean autoConnectUsbAndroidAuto) {
+        Log.d(TAG, "setAutoConnectUsbAndroidAuto() called with: autoConnectUsbAndroidAuto = [" + autoConnectUsbAndroidAuto + "]");
         this.autoConnectUsbAndroidAuto = autoConnectUsbAndroidAuto;
     }
 

@@ -276,7 +276,6 @@ public class UsbHostController {
                     mAppController.stopAndroidAuto();//sometimes android auto surface not exit, must invoke this method
                 }
             }
-            mAppController.setAutoConnectUsbAndroidAuto(true);
             onDeviceUpdate(device, false, ios);
         }
     }

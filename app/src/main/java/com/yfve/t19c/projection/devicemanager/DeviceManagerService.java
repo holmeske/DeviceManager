@@ -133,7 +133,8 @@ public class DeviceManagerService extends Service {
                 Device d = iterator.next();
                 if (TextUtils.isEmpty(d.getMac()) || TextUtils.equals(d.getMac(), "null")) {
                     String mac = FindMacBySerial.get(d.getSerial());
-                    boolean repeat = filteredDeviceList.stream().allMatch(it -> TextUtils.equals(it.getMac(), mac));
+                    Log.d(TAG, "mac : " + mac);
+                    boolean repeat = filteredDeviceList.stream().allMatch(it -> TextUtils.equals(it.getMac(), mac) && !TextUtils.isEmpty(it.getMac()) && !TextUtils.equals(it.getMac(), "null"));
                     if (repeat) {
                         iterator.remove();
                     }
