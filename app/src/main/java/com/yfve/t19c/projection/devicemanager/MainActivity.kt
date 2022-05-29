@@ -19,7 +19,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
 //        DeviceListHelper(this).test(this)
-        startForegroundService(Intent(this, DeviceManagerService::class.java))
+
+//        DeviceManagerService.filteredAliveDeviceList()
+
+//        startForegroundService(Intent(this, DeviceManagerService::class.java))
 
 //        Car.createCar(this, null, 10000) { car, b ->
 //            Log.d(TAG, "car == null : ${car == null}")

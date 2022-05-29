@@ -2,7 +2,6 @@ package com.yfve.t19c.projection.devicemanager;
 
 import static androidx.core.app.NotificationCompat.PRIORITY_MIN;
 import static com.yfve.t19c.projection.devicemanager.BuildConfig.APPLICATION_ID;
-import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindMacBySerial;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -24,13 +23,13 @@ import com.yfve.t19c.projection.devicelist.DeviceListManager;
 import com.yfve.t19c.projection.devicelist.OnConnectListener;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DeviceManagerService extends Service {
     public static final List<Device> historyDeviceList = new ArrayList<>();
+    public static final List<Device> aliveDeviceList = new ArrayList<>();
     private static final String TAG = "DeviceManagerService";
-    private static final List<Device> aliveDeviceList = new ArrayList<>();
     public static boolean isStarted = false;
     private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private int retryCount;
@@ -68,10 +67,6 @@ public class DeviceManagerService extends Service {
         @Override
         public List<Device> getAliveDevices() {
             Log.d(TAG, "getAliveDevices() called");
-            int i = 0;
-            for (Device d : aliveDeviceList) {
-                Log.d(TAG, "alive " + (i++) + " " + d);
-            }
             return filteredAliveDeviceList();
         }
 
@@ -124,24 +119,63 @@ public class DeviceManagerService extends Service {
 
     };
 
-    public List<Device> filteredAliveDeviceList() {
-        Log.d(TAG, "aliveDeviceList size : " + aliveDeviceList.size());
-        List<Device> filteredDeviceList = new ArrayList<>(aliveDeviceList);
-        boolean hasIncompleteValue = filteredDeviceList.stream().allMatch(it -> TextUtils.isEmpty(it.getMac()) || TextUtils.equals(it.getMac(), "null"));
-        if (hasIncompleteValue) {
-            for (Iterator<Device> iterator = filteredDeviceList.iterator(); iterator.hasNext(); ) {
+    private static boolean anyMatch(String oldSerial, String newSerial, String oldMac, String newMac) {
+        return (TextUtils.equals(oldSerial, newSerial) && !TextUtils.isEmpty(newSerial) && !TextUtils.equals(newSerial, "null"))
+                || (TextUtils.equals(oldMac, newMac) && !TextUtils.isEmpty(newMac) && !TextUtils.equals(newMac, "null"));
+    }
+
+    public static List<Device> filteredAliveDeviceList() {
+        List<Device> filteredDeviceList = new ArrayList<>();
+//        aliveDeviceList.add(new Device(1, "Pixel 4", "99041FFAZ006JS", "null", true, false, false, false, true));
+//        aliveDeviceList.add(new Device(1, "Pixel 4", "99041FFAZ006JS", "F0:5C:77:D8:37:0A", false, true, false, false, true));
+//        aliveDeviceList.add(new Device(1, "Pixel 4", "null", "F0:5C:77:D8:37:0a", false, true, false, false, true));
+//        aliveDeviceList.add(new Device(1, "Pixel 4", "asdaa", "null", false, true, false, false, true));
+
+        Log.d(TAG, "---start---");
+        aliveDeviceList.forEach(item -> Log.d(TAG, "alive " + item.toString()));
+        Log.d(TAG, "---end---");
+        aliveDeviceList.forEach(d -> {
+            boolean repeat = filteredDeviceList.stream().anyMatch(it -> anyMatch(it.getSerial(), d.getSerial(), it.getMac(), d.getMac()));
+
+            if (repeat) {
+                if (d.getSerial().length() > 4 && d.getMac().length() > 4) {
+                    filteredDeviceList.stream().filter(old ->
+                            anyMatch(old.getSerial(), d.getSerial(), old.getMac(), d.getMac())
+                    ).collect(Collectors.toList()).forEach(i -> {
+                        Log.d(TAG, "old : " + i);
+                        Log.d(TAG, "new : " + d);
+
+                        i.setType(d.getType());
+                        i.setName(d.getName());
+                        i.setSerial(d.getSerial());
+                        i.setMac(d.getMac());
+                        i.setUsbAA(d.isUsbAA());
+                        i.setWirelessAA(d.isWirelessAA());
+                        i.setUsbCP(d.isUsbCP());
+                        i.setWirelessCP(d.isWirelessCP());
+                        i.setAvailable(d.isAvailable());
+                    });
+                }
+            } else {
+                filteredDeviceList.add(d);
+                Log.d(TAG, "add : " + d);
+            }
+        });
+           /* for (Iterator<Device> iterator = filteredDeviceList.iterator(); iterator.hasNext(); ) {
                 Device d = iterator.next();
                 if (TextUtils.isEmpty(d.getMac()) || TextUtils.equals(d.getMac(), "null")) {
                     String mac = FindMacBySerial.get(d.getSerial());
                     Log.d(TAG, "mac : " + mac);
-                    boolean repeat = filteredDeviceList.stream().allMatch(it -> TextUtils.equals(it.getMac(), mac) && !TextUtils.isEmpty(it.getMac()) && !TextUtils.equals(it.getMac(), "null"));
+                    boolean repeat = filteredDeviceList.stream().allMatch(it -> TextUtils.equals(it.getMac(), mac) && !TextUtils.isEmpty(it.getMac())
+                            && !TextUtils.equals(it.getMac(), "null"));
                     if (repeat) {
                         iterator.remove();
                     }
                 }
-            }
-            Log.d(TAG, "filteredDeviceList size : " + filteredDeviceList.size());
-        }
+            }*/
+        Log.d(TAG, "---start---");
+        filteredDeviceList.forEach(item -> Log.d(TAG, "filtered " + item.toString()));
+        Log.d(TAG, "---end---");
         return filteredDeviceList;
     }
 

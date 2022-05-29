@@ -60,7 +60,7 @@ public final class AppController {
     private static final int TYPE_WIFI_CAR_PLAY = 4;
     public static boolean isCanConnectingCPWifi = false;
     public static boolean isStartingCarPlay = false;
-    public static boolean isCertifiedVersion = true;
+    public static boolean isCertifiedVersion = false;
     public static boolean isSOPVersion = false;
     public static boolean isReplugged = true;
     private static int isReplugged_id;
@@ -352,14 +352,17 @@ public final class AppController {
             public void onUpdateWirelessDevice(AAWDeviceInfo device) {
                 super.onUpdateWirelessDevice(device);
                 Log.d(TAG, "onUpdateWirelessDevice: " + CommonUtilsKt.toJson(device));
-                Log.d(TAG, "onUpdateWirelessDevice: " + device.getInstanceID());
-                if (device.getAvailable()) {
-                    FindInstanceIdByMac.put(device.getMacAddress(), device.getInstanceID());
-                    FindInstanceIdBySerial.put(device.getSerialNumber(), device.getInstanceID());
-                    FindSerialByInstanceId.put(device.getInstanceID(), device.getSerialNumber());
-                    FindMacByInstanceId.put(device.getInstanceID(), device.getMacAddress());
-                    FindMacBySerial.put(device.getSerialNumber(), device.getMacAddress());
+                String id = device.getInstanceID();
+                Log.d(TAG, "instanceId: " + id);
+                if (TextUtils.isEmpty(id) || TextUtils.equals("null", id)) {
+                    Log.d(TAG, "instanceId is invalid value");
+                } else {
+                    FindInstanceIdByMac.put(device.getMacAddress(), id);
+                    FindInstanceIdBySerial.put(device.getSerialNumber(), id);
+                    FindSerialByInstanceId.put(id, device.getSerialNumber());
+                    FindMacByInstanceId.put(id, device.getMacAddress());
                 }
+                FindMacBySerial.put(device.getSerialNumber(), device.getMacAddress());
                 noticeExternal(device, 2);
             }
 

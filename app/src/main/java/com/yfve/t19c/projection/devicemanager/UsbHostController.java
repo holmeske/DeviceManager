@@ -110,7 +110,13 @@ public class UsbHostController {
                 + ", isBoundCarPlayService = " + isBoundCarPlayService
                 + ", isGetCarServiceValue = " + isGetCarServiceValue);
         if (isGetCarServiceValue && (isBoundIAapReceiverService || isBoundCarPlayService)) {
-            UsbDevice d = USBKt.lastUsbDevice(mContext);
+            int size = USBKt.usbDeviceList(mContext).size();
+            UsbDevice d;
+            if (size == 1) {
+                d = USBKt.firstUsbDevice(mContext);
+            } else {
+                d = USBKt.lastUsbDevice(mContext);
+            }
             if (d != null) {
                 Log.d(TAG, "last usb device serial : " + d.getSerialNumber());
                 attach(d);
@@ -223,6 +229,7 @@ public class UsbHostController {
             if (!mAppController.isIdleState()) {
                 if (!ios) {
                     Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(mAppController.currentDevice));
+                    Log.d(TAG, "currentDevice.SerialNumber = " + mAppController.currentDevice.SerialNumber);
                     if (TextUtils.equals(mAppController.currentDevice.SerialNumber, device.getSerialNumber())) {
                         Log.d(TAG, "usb device serial number same as current device serial");
                         return;
