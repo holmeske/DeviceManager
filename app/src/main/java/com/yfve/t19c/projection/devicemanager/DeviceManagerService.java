@@ -66,16 +66,15 @@ public class DeviceManagerService extends Service {
 
         @Override
         public List<Device> getAliveDevices() {
-            Log.d(TAG, "getAliveDevices() called");
+            Log.d(TAG, "getAliveDevices() called 2022-06-13");
             return filteredAliveDeviceList();
         }
 
         @Override
         public List<Device> getHistoryDevices() {
             Log.d(TAG, "getHistoryDevices() called");
-            int i = 0;
             for (Device d : aliveDeviceList) {
-                Log.d(TAG, "history " + (i++) + " " + d);
+                Log.d(TAG, "history   " + d);
             }
             return historyDeviceList;
         }
@@ -131,9 +130,7 @@ public class DeviceManagerService extends Service {
 //        aliveDeviceList.add(new Device(1, "Pixel 4", "null", "F0:5C:77:D8:37:0a", false, true, false, false, true));
 //        aliveDeviceList.add(new Device(1, "Pixel 4", "asdaa", "null", false, true, false, false, true));
 
-        Log.d(TAG, "---start---");
-        aliveDeviceList.forEach(item -> Log.d(TAG, "alive " + item.toString()));
-        Log.d(TAG, "---end---");
+        aliveDeviceList.forEach(item -> Log.d(TAG, "alive     " + item.toString()));
         aliveDeviceList.forEach(d -> {
             boolean repeat = filteredDeviceList.stream().anyMatch(it -> anyMatch(it.getSerial(), d.getSerial(), it.getMac(), d.getMac()));
 
@@ -173,9 +170,7 @@ public class DeviceManagerService extends Service {
                     }
                 }
             }*/
-        Log.d(TAG, "---start---");
-        filteredDeviceList.forEach(item -> Log.d(TAG, "filtered " + item.toString()));
-        Log.d(TAG, "---end---");
+        filteredDeviceList.forEach(item -> Log.d(TAG, "filtered  " + item.toString()));
         return filteredDeviceList;
     }
 

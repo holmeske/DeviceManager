@@ -116,10 +116,7 @@ public class DeviceListHelper {
     }
 
     public void read() {
-        List<Device> list = queryAll();
-        Log.d(TAG, "read list size = " + list.size());
-        list.forEach(d -> Log.d(TAG, d.toString()));
-        Log.d(TAG, "read: end");
+        queryAll().forEach(d -> Log.d(TAG, d.toString()));
     }
 
     public void clear() {
