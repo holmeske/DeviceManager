@@ -189,7 +189,7 @@ public final class AppController {
             } else if (reason == 4) {
                 isReplugged = false;
                 isReplugged_id = -4;
-                onNotification(-4);
+                //onNotification(-4);
             }
             onSessionStateUpdate(b ? serial : "", b ? "" : mac, 1, "disconnected");
         }
@@ -419,6 +419,7 @@ public final class AppController {
                 if (sts == 0) {
                     handler.removeMessages(3);
                     handler.sendEmptyMessage(3);
+                    resetSwitchingSessionState();
 
                     CURRENT_SESSION_TYPE = isUsb ? TYPE_USB_CAR_PLAY : TYPE_WIFI_CAR_PLAY;
                     CURRENT_CONNECT_STATE = STATE_CONNECTED;
@@ -708,12 +709,12 @@ public final class AppController {
             Log.d(TAG, "same as current session bluetooth mac address");
             return;
         }
-        for (Device d : aliveDeviceList) {
+        /*for (Device d : aliveDeviceList) {
             if (TextUtils.equals(d.getMac(), mac) && (d.isWirelessCP() || d.isUsbCP())) {
                 Log.d(TAG, "now not support carplay from bluetooth list switch session");
                 return;
             }
-        }
+        }*/
         if (isSwitchingSession) {
             if (TextUtils.equals(serial, switchingPhone.getSerial()) || TextUtils.equals(serial, switchingPhone.getMac())) {
                 onSessionStateUpdate(serial, mac, -1, "switching");

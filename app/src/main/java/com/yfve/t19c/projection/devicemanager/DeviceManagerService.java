@@ -66,7 +66,7 @@ public class DeviceManagerService extends Service {
 
         @Override
         public List<Device> getAliveDevices() {
-            Log.d(TAG, "getAliveDevices() called 2022-06-13");
+            Log.d(TAG, "getAliveDevices() called 2022-06-15");
             return filteredAliveDeviceList();
         }
 
