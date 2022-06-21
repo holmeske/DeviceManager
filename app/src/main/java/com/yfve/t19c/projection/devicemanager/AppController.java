@@ -340,12 +340,11 @@ public final class AppController {
                                 name.set(d.getName());
                             }
                         });
-                        String c = "There is available device  " + name.get() + "  , do you want to start Android Auto ?";
                         if (isSwitchingSession) {
                             Log.d(TAG, "switching session do not display popup");
                         } else {
                             if (mDeviceListHelper.query("", btMac) == null) {
-                                onNotification(1, c, "", btMac, 2);//switch new session popup, yes or no
+                                onNotification(1, name.get(), "", btMac, 2);//switch new session popup, yes or no
                             } else {
                                 Log.d(TAG, "old device not notification 1 popup");
                             }
@@ -358,6 +357,7 @@ public final class AppController {
             public void onWirelessConnectionFailure(String btMac) {
                 super.onWirelessConnectionFailure(btMac);
                 Log.d(TAG, "onWirelessConnectionFailure() called with: btMac = [" + btMac + "]");
+                resetSwitchingSessionState();
             }
 
             @Override
@@ -709,12 +709,12 @@ public final class AppController {
             Log.d(TAG, "same as current session bluetooth mac address");
             return;
         }
-        /*for (Device d : aliveDeviceList) {
+        for (Device d : aliveDeviceList) {
             if (TextUtils.equals(d.getMac(), mac) && (d.isWirelessCP() || d.isUsbCP())) {
                 Log.d(TAG, "now not support carplay from bluetooth list switch session");
                 return;
             }
-        }*/
+        }
         if (isSwitchingSession) {
             if (TextUtils.equals(serial, switchingPhone.getSerial()) || TextUtils.equals(serial, switchingPhone.getMac())) {
                 onSessionStateUpdate(serial, mac, -1, "switching");
@@ -730,8 +730,14 @@ public final class AppController {
 
         stopLastSession();
 
+        int type = 0;
+        for (Device device : aliveDeviceList) {
+            if (Objects.equals(device.getMac(), mac)) {
+                type = (device.isWirelessAA() || device.isUsbAA()) ? 2 : 4;
+            }
+        }
         if (aliveDeviceList.stream().anyMatch(device -> Objects.equals(device.getMac(), mac))) {
-            connectSession(2, serial, mac);
+            connectSession(type, serial, mac);
         } else {
             if (mACLConnectedList.contains(mac)) {
                 Log.d(TAG, "ACLConnectedList: " + new Gson().toJson(mACLConnectedList));
@@ -819,10 +825,15 @@ public final class AppController {
     public void startWirelessAndroidAuto(String mac, int reason) {
         Log.d(TAG, "startWirelessAndroidAuto() called with: mac = [" + mac + "], reason = [" + reason + "]");
         if (TextUtils.isEmpty(mac)) return;
+        if (aliveDeviceList.stream().anyMatch(device -> Objects.equals(device.getMac(), mac))) {
+            Log.d(TAG, "AndroidAutoDeviceClient ConnectWirelessDevice");
+            mAndroidAutoDeviceClient.ConnectWirelessDevice(mac, reason);
+        } else {
+            Log.d(TAG, mac + " is not alive device , not connect wifi android auto");
+        }
         //USER_REQUEST_VALUE = 0;  user select
         //AUTO_LAUNCH_VALUE = 1;   boot auto reconnect old device
         //AUTOMATIC_RESTART_VALUE = 2; no identify exception disconnect, auto reconnect
-        mAndroidAutoDeviceClient.ConnectWirelessDevice(mac, reason);
     }
 
     public void startUsbAndroidAuto(String deviceName) {
@@ -832,8 +843,16 @@ public final class AppController {
         }
     }
 
+    public void stopUsbAndroidAuto() {
+        if (CURRENT_SESSION_TYPE == TYPE_USB_ANDROID_AUTO) {
+            Log.d(TAG, "stopUsbAndroidAuto() called");
+            mAapProxy.stopAndroidAuto();
+        } else {
+            Log.d(TAG, CURRENT_SESSION_TYPE + " isn't usb android auto, not need stop");
+        }
+    }
+
     public void stopAndroidAuto() {
-        Log.d(TAG, "stopAndroidAuto()");
         if (CURRENT_SESSION_TYPE == TYPE_USB_ANDROID_AUTO) {
             Log.d(TAG, "stop usb AndroidAuto ");
             mAapProxy.stopAndroidAuto();
@@ -841,7 +860,7 @@ public final class AppController {
             Log.d(TAG, "AndroidAutoDeviceClient.DisconnectWirelessDevice()");
             mAndroidAutoDeviceClient.DisconnectWirelessDevice();
         } else {
-            Log.d(TAG, "current session isn't android auto, no need stop");
+            Log.d(TAG, CURRENT_SESSION_TYPE + " isn't android auto, not need stop");
         }
     }
 
@@ -899,7 +918,7 @@ public final class AppController {
         if (CURRENT_CONNECT_STATE == STATE_IDLE || CURRENT_SESSION_TYPE == TYPE_NO_SESSION) {
             return true;
         } else {
-            Log.e(TAG, "current session type = " + CURRENT_SESSION_TYPE);
+            Log.e(TAG, "current session type is " + CURRENT_SESSION_TYPE);
             return false;
         }
     }
@@ -977,19 +996,27 @@ public final class AppController {
 //                int retVal = 0;
                 switch (action) {
                     case BluetoothDevice.ACTION_BOND_STATE_CHANGED:
-                        Log.d(TAG, "ACTION_BOND_STATE_CHANGED    " + device.getBondState() + "    " + device.getAddress());
-                        if (device.getBondState() == BluetoothDevice.BOND_NONE) {
-                            mDeviceListHelper.read();
-                            mDeviceListHelper.deleteByMac(device.getAddress());
-                            mDeviceListHelper.read();
-                            if (CURRENT_SESSION_TYPE == TYPE_WIFI_ANDROID_AUTO) {
-                                Log.d(TAG, "stop wifi android auto");
-                                mAndroidAutoDeviceClient.DisconnectWirelessDevice();
+                        if (null != device) {
+                            Log.d(TAG, "ACTION_BOND_STATE_CHANGED    " + device.getBondState() + "    " + device.getAddress());
+                            if (device.getBondState() == BluetoothDevice.BOND_NONE) {
+                                mDeviceListHelper.read();
+                                mDeviceListHelper.deleteByMac(device.getAddress());
+                                mDeviceListHelper.read();
+                                if (CURRENT_SESSION_TYPE == TYPE_WIFI_ANDROID_AUTO) {
+                                    Log.d(TAG, "stop wifi android auto");
+                                    mAndroidAutoDeviceClient.DisconnectWirelessDevice();
+                                }
                             }
+                        } else {
+                            Log.d(TAG, "ACTION_BOND_STATE_CHANGED    device==null");
                         }
                         break;
                     case BluetoothAdapter.ACTION_STATE_CHANGED:
-                        Log.d(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED   " + device.getAddress());
+                        if (null != device) {
+                            Log.d(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED   " + device.getAddress());
+                        } else {
+                            Log.d(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED    device == null");
+                        }
                         if (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) == BluetoothAdapter.STATE_ON) {
                             Log.d(TAG, "Bluetooth State ON");
 //                            retVal = mServerListener.startRfcommServer();

@@ -186,7 +186,11 @@ public class UsbHostController {
         Log.d(TAG, "update usb " + device);
         for (OnConnectListener listener : mOnConnectListeners) {
             try {
-                listener.onDeviceUpdate(device);
+                if (listener != null) {
+                    listener.onDeviceUpdate(device);
+                } else {
+                    Log.d(TAG, "onDeviceUpdate: listener == null");
+                }
             } catch (RemoteException e) {
                 Log.e(TAG, "onDeviceUpdate: ", e);
             }
@@ -282,6 +286,8 @@ public class UsbHostController {
                 if (TextUtils.equals(mAppController.currentDevice.SerialNumber, device.getSerialNumber()) && mAppController.currentDevice.ConnectionType == 1) {
                     mAppController.stopAndroidAuto();//sometimes android auto surface not exit, must invoke this method
                 }
+            } else {
+                mAppController.stopUsbAndroidAuto();
             }
             onDeviceUpdate(device, false, ios);
         }
