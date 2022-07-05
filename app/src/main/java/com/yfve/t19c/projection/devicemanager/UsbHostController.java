@@ -2,6 +2,7 @@ package com.yfve.t19c.projection.devicemanager;
 
 import static com.yfve.t19c.projection.devicemanager.AppController.isCertifiedVersion;
 import static com.yfve.t19c.projection.devicemanager.AppController.isReplugged;
+import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_REASON;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -173,12 +174,14 @@ public class UsbHostController {
                 }
             });
             if (!isContain.get()) {
+                Log.d(TAG, "add usb alive device  " + device.getSerial());
                 mAliveDeviceList.add(device);
             } else {
                 Log.d(TAG, "list already contains the device, do not add");
             }
         } else {
-            mAliveDeviceList.removeIf(d -> ObjectsCompat.equals(d.getSerial(), device.getSerial()));
+            Log.d(TAG, "remove usb alive device  " + device.getSerial());
+            mAliveDeviceList.removeIf(d -> ObjectsCompat.equals(d.getSerial(), device.getSerial()) && d.getType() == 1);
         }
         for (int i = 0; i < mAliveDeviceList.size(); i++) {
             Log.d(TAG, "alive device " + i + " : " + mAliveDeviceList.get(i));
@@ -228,7 +231,7 @@ public class UsbHostController {
             }
             if (CarHelper.isOpenQDLink()) return;
         }
-        if (!mAppController.isSwitchingState()) {
+        if (!mAppController.isSwitchingAOAState()) {
             onDeviceUpdate(device, true, ios);
             if (!mAppController.isIdleState()) {
                 if (!ios) {
@@ -255,6 +258,14 @@ public class UsbHostController {
             if (!mAppController.isAutoConnectUsbAndroidAuto()) return;
             if (!mDeviceHandlerResolver.isSupportedAOAP(device)) return;
             if (AppSupport.isDeviceInAoapMode(device)) {
+                if (LAST_REASON == 0) {
+                    try {
+                        Log.d(TAG, "attach: last reason = 0 , delay 2 second");
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
                 mAppController.startUsbAndroidAuto(device.getDeviceName());
             } else {
                 mAppController.updatePreparingState();
@@ -279,7 +290,7 @@ public class UsbHostController {
             if (CarHelper.isOpenQDLink()) return;
         }
         if (mAppController.isPreParingState()) {
-            mAppController.updateSwitchingState();
+            mAppController.updateSwitchingAOAState();
         } else {
             if (!ios) {
                 Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(mAppController.currentDevice));

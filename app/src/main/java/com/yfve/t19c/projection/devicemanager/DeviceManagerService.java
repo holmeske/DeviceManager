@@ -66,7 +66,7 @@ public class DeviceManagerService extends Service {
 
         @Override
         public List<Device> getAliveDevices() {
-            Log.d(TAG, "getAliveDevices() called 2022-06-21");
+            Log.d(TAG, "getAliveDevices() called 2022-07-04");
             return filteredAliveDeviceList();
         }
 
@@ -129,6 +129,10 @@ public class DeviceManagerService extends Service {
 //        aliveDeviceList.add(new Device(1, "Pixel 4", "99041FFAZ006JS", "F0:5C:77:D8:37:0A", false, true, false, false, true));
 //        aliveDeviceList.add(new Device(1, "Pixel 4", "null", "F0:5C:77:D8:37:0a", false, true, false, false, true));
 //        aliveDeviceList.add(new Device(1, "Pixel 4", "asdaa", "null", false, true, false, false, true));
+//        List<Device> aliveDeviceList = new ArrayList<>();
+//        aliveDeviceList.add(new Device(2, "Pixel 2 XL", "710KPRW0307710", "B4:F1:DA:27:7E:4F", false, true, false, false, true));
+//        aliveDeviceList.add(new Device(1, "Pixel 4", "98161FFAZ004S9", "null", true, false, false, false, true));
+//        aliveDeviceList.add(new Device(2, "Pixel 4", "98161FFAZ004S9", "F0:5C:77:F4:15:63", false, true, false, false, true));
 
         aliveDeviceList.forEach(item -> Log.d(TAG, "alive     " + item.toString()));
         aliveDeviceList.forEach(d -> {
@@ -154,9 +158,10 @@ public class DeviceManagerService extends Service {
                     });
                 }
             } else {
-                filteredDeviceList.add(d);
+                filteredDeviceList.add(new Device(d.getType(), d.getName(), d.getSerial(), d.getMac(), d.isUsbAA(), d.isWirelessAA(), d.isUsbCP(), d.isWirelessCP(), d.isAvailable()));
                 Log.d(TAG, "add : " + d);
             }
+
         });
            /* for (Iterator<Device> iterator = filteredDeviceList.iterator(); iterator.hasNext(); ) {
                 Device d = iterator.next();
@@ -170,6 +175,7 @@ public class DeviceManagerService extends Service {
                     }
                 }
             }*/
+        //aliveDeviceList.forEach(item -> Log.d(TAG, "aliveDeviceList  " + item.toString()));
         filteredDeviceList.forEach(item -> Log.d(TAG, "filtered  " + item.toString()));
         return filteredDeviceList;
     }
@@ -191,7 +197,6 @@ public class DeviceManagerService extends Service {
         Log.d(TAG, "onCreate() called");
         isStarted = true;
         mContext = this;
-        startForeground();
 
         mCarHelper = new CarHelper(this);
 
@@ -212,6 +217,7 @@ public class DeviceManagerService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand() called");
+        startForeground();
         return START_STICKY;
     }
 
@@ -232,6 +238,7 @@ public class DeviceManagerService extends Service {
     }
 
     private void startForeground() {
+        Log.d(TAG, "startForeground() called");
         String channelId;
         channelId = createNotificationChannel();
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId);
@@ -240,7 +247,7 @@ public class DeviceManagerService extends Service {
                 .setPriority(PRIORITY_MIN)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .build();
-        startForeground(1, notification);
+        startForeground(3839, notification);
     }
 
     private String createNotificationChannel() {

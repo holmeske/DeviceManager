@@ -3,6 +3,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+//        maven {
+//            allowInsecureProtocol = true
+//            url 'https://maven.aliyun.com/nexus/content/groups/public/'
+//        }
         jcenter() // Warning: this repository is going to shut down soon
     }
 }

@@ -23,4 +23,10 @@ public final class LocalData {
      * key: serial , value: mac
      */
     public final static HashMap<String, String> FindMacBySerial = new HashMap<>();
+
+    /**
+     * android auto session terminated type
+     */
+    public static int LAST_REASON = -1;
+
 }

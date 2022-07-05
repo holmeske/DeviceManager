@@ -20,8 +20,9 @@ class MainActivity : AppCompatActivity() {
 
 //        DeviceListHelper(this).test(this)
 
-//        DeviceManagerService.filteredAliveDeviceList()
+        //DeviceManagerService.filteredAliveDeviceList()
 
+        //stopService(Intent(this, DeviceManagerService::class.java))
 //        startForegroundService(Intent(this, DeviceManagerService::class.java))
 
 //        Car.createCar(this, null, 10000) { car, b ->
