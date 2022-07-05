@@ -159,9 +159,13 @@ final class AppSupport {
             Log.d(TAG, "device is null");
             return false;
         }
-        if (device.getVendorId() == APPLE_DEVICE_VENDOR_ID
-                || device.getProductName().toLowerCase(Locale.ROOT).startsWith("iphone")
-                || device.getManufacturerName().toLowerCase(Locale.ROOT).startsWith("apple")) {
+        if (device.getProductName() != null && device.getProductName().toLowerCase(Locale.ROOT).startsWith("iphone")) {
+            return true;
+        }
+        if (device.getManufacturerName() != null && device.getManufacturerName().toLowerCase(Locale.ROOT).startsWith("apple")) {
+            return true;
+        }
+        if (device.getVendorId() == APPLE_DEVICE_VENDOR_ID) {
             return true;
         } else {
             Log.d(TAG, "is not ios device");
