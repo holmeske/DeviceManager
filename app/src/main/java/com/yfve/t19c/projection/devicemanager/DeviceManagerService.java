@@ -41,14 +41,16 @@ public class DeviceManagerService extends Service {
 
         @Override
         public void registerListener(OnConnectListener listener) {
-            Log.d(TAG, "registerListener() called, " + mOnConnectListeners.size());
+            Log.d(TAG, "registerListener() called");
             mOnConnectListeners.add(listener);
+            Log.d(TAG, "OnConnectListener size = " + mOnConnectListeners.size());
         }
 
         @Override
         public void unregisterListener(OnConnectListener listener) {
-            Log.d(TAG, "unregisterListener() called, " + mOnConnectListeners.size());
+            Log.d(TAG, "unregisterListener() called");
             mOnConnectListeners.remove(listener);
+            Log.d(TAG, "OnConnectListener size = " + mOnConnectListeners.size());
         }
 
         @Override
@@ -66,16 +68,16 @@ public class DeviceManagerService extends Service {
 
         @Override
         public List<Device> getAliveDevices() {
-            Log.d(TAG, "getAliveDevices() called 2022-07-04");
+            Log.d(TAG, "getAliveDevices() called 2022-07-07");
             return filteredAliveDeviceList();
         }
 
         @Override
         public List<Device> getHistoryDevices() {
-            Log.d(TAG, "getHistoryDevices() called");
-            for (Device d : aliveDeviceList) {
+            Log.d(TAG, "getHistoryDevices() called 2022-07-07");
+            historyDeviceList.forEach(d -> {
                 Log.d(TAG, "history   " + d);
-            }
+            });
             return historyDeviceList;
         }
 

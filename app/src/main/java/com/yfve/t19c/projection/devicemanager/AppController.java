@@ -87,15 +87,14 @@ public final class AppController {
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
             int what = msg.what;
-            Log.d(TAG, "msg.what == " + what);
             if (what == 0) {
                 setAutoConnectUsbAndroidAuto(false);
             } else if (what == 1) {
                 setAutoConnectUsbAndroidAuto(true);
                 currentDevice.reset();
             } else if (what == 3) {
+                Log.d(TAG, "isStartingCarPlay = false");
                 isStartingCarPlay = false;
-                Log.d(TAG, "isStartingCarPlay == false");
             }
         }
     };
@@ -107,9 +106,9 @@ public final class AppController {
     private boolean canConnectUsbCarPlay = true;
     private boolean isSwitchingSession;
     private final Runnable switchRunnable = () -> {
+        Log.d(TAG, "isSwitchingSession = false");
         isSwitchingSession = false;
         switchingPhone.clear();
-        Log.d(TAG, "isSwitchingSession == false");
     };
     private final AapListener mAapListener = new AapListener() {
         @Override
@@ -125,6 +124,7 @@ public final class AppController {
                 UsbDevice d = USBKt.firstUsbDevice(mContext);
                 String serial = d == null ? "" : d.getSerialNumber();
                 currentDevice.setSerialNumber(serial);
+                FindSerialByInstanceId.put(instanceId, serial);
                 String mac = FindMacBySerial.get(serial);
                 Log.d(TAG, "FindMacBySerial : " + mac);
                 if (TextUtils.isEmpty(mac) || TextUtils.equals(mac, "null")) {
@@ -168,6 +168,15 @@ public final class AppController {
             if (b) {
                 Log.d(TAG, "release session");
                 mAapProxy.stopAndroidAuto();
+                int attached = USBKt.usbDeviceList(mContext).size();
+                Log.d(TAG, "attached size = " + attached + ", current mac = " + mac + ", current serial = " + serial);
+                if (attached == 0) {
+                    if (aliveDeviceList.stream().anyMatch(device -> Objects.equals(device.getMac(), mac))) {
+                        startWirelessAndroidAuto(mac, 1);
+                    } else {
+                        Log.d(TAG, "device not available , not start wifi android auto");
+                    }
+                }
             }
             updateIdleState();
             if (reason == 0) {
@@ -190,7 +199,7 @@ public final class AppController {
                 isReplugged_id = -4;
                 //onNotification(-4);
             }
-            onSessionStateUpdate(b ? serial : "", b ? "" : mac, 1, "disconnected");
+            onSessionStateUpdate(serial, mac, 1, "disconnected");
         }
     };
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -226,7 +235,7 @@ public final class AppController {
                 Log.d(TAG, "onReceive: getUsbDeviceList size == " + USBKt.usbDeviceList(mContext.getApplicationContext()).size());
             } else if (bundle.containsKey("handler")) {
                 Log.d(TAG, "onReceive: " + bundle.get("handler") + " send msg");
-                resetUsb(false);
+                //resetUsb(false);
             } else if (bundle.containsKey("switch")) {
                 Log.d(TAG, "onReceive: " + bundle.get("switch"));
                 switchSession(null, "30:6A:85:15:1D:35");
@@ -297,9 +306,6 @@ public final class AppController {
                             startCarPlay(lastDevice.SerialNumber, true);
                         }
                     }
-//                    if (lastDevice.getLastConnectType() == TYPE_WIFI_CAR_PLAY) {
-//                        startCarPlay(CacheHelperKt.toHexString(lastDevice.BluetoothMac), false);
-//                    }
                 }
             }
         });
@@ -320,8 +326,7 @@ public final class AppController {
                             }
                         } else {
                             if (mDeviceListHelper.query("", btMac) == null) {
-                                //start new session popup, start or not now
-                                onNotification(2, "", "", btMac, 2);
+                                onNotification(2, "", "", btMac, 2);//start or not now popup
                             } else {
                                 Log.d(TAG, "old device not notification 2 popup, directly connect");
                                 startWirelessAndroidAuto(btMac, 1);
@@ -379,6 +384,32 @@ public final class AppController {
                 }
                 FindMacBySerial.put(device.getSerialNumber(), device.getMacAddress());
                 noticeExternal(device, 2);
+            }
+
+            @Override
+            public void onUpdateMDBtMac(String id, String btMac) {
+                super.onUpdateMDBtMac(id, btMac);
+                Log.d(TAG, "onUpdateMDBtMac() called with: id = [" + id + "], btMac = [" + btMac + "]");
+                Log.d(TAG, "currentDevice ConnectionType = " + currentDevice.getConnectionType());
+                if (currentDevice.getConnectionType() == 1) {
+                    if (TextUtils.isEmpty(id) || TextUtils.equals(id, "null") || TextUtils.isEmpty(btMac) || TextUtils.equals(btMac, "null")) {
+                        return;
+                    }
+                    String serial = FindSerialByInstanceId.get(id);
+                    Log.d(TAG, "serial = " + serial);
+                    if (!TextUtils.isEmpty(serial)) {
+                        Device device = new Device(1, currentDevice.getDeviceName(), currentDevice.getSerialNumber()
+                                , currentDevice.getBluetoothMac(), true, false, false, false, true);
+                        onDeviceUpdate(device);
+                        aliveDeviceList.forEach(item -> {
+                            if (TextUtils.equals(item.getSerial(), serial)) {
+                                Log.d(TAG, "old alive device = " + new Gson().toJson(item));
+                                item.setMac(btMac);
+                                Log.d(TAG, "new alive device = " + new Gson().toJson(item));
+                            }
+                        });
+                    }
+                }
             }
         });
 
@@ -453,7 +484,7 @@ public final class AppController {
                 if (connectType != 1) {
                     isCanConnectingCPWifi = true;
                     handler.removeCallbacks(runnable);
-                    Log.d(TAG, "after 30 seconds, isCanConnectingCPWifi is changed to false");
+                    Log.d(TAG, "after 30 seconds, isCanConnectingCPWifi = false");
                     handler.postDelayed(runnable, 30000);
                 }
                 sessionType = connectType;
@@ -531,6 +562,7 @@ public final class AppController {
     }
 
     private void onNotification(int id) {
+        if (id == -6) return;
         Log.d(TAG, "onNotification() called with: id = [" + id + "]" + ", OnConnectListener size == " + mOnConnectListeners.size());
         for (OnConnectListener listener : mOnConnectListeners) {
             try {
@@ -559,7 +591,7 @@ public final class AppController {
         if (canConnectUsbCarPlay) {
             return true;
         } else {
-            Log.e(TAG, "canConnectUSB == false");
+            Log.e(TAG, "AuthType != 1 && state != 15 , can not connect usb carplay");
             return false;
         }
     }
@@ -569,6 +601,7 @@ public final class AppController {
     }
 
     public void setHistoryDeviceList(List<Device> list) {
+        Log.d(TAG, "setHistoryDeviceList() called with: list = [" + list + "]");
         list.clear();
         mDeviceListHelper.queryAll().forEach(d -> list.add(new Device(-1, d.getName(), d.getSerial(), d.getMac(),
                 1 == d.getAbility() || 3 == d.getAbility(),
@@ -577,6 +610,7 @@ public final class AppController {
                 8 == d.getAbility() || 12 == d.getAbility(),
                 false))
         );
+        historyDeviceList.forEach(d -> Log.d(TAG, "history   " + d));
         Log.d(TAG, "----------------------------------------HistoryDeviceList size = " + list.size());
     }
 
@@ -629,7 +663,8 @@ public final class AppController {
         Log.d(TAG, "onSessionStateUpdate() end");
     }
 
-    public void onNotification(int id, String content, String serial, String mac, int connectType) {
+    public void onNotification(int id, String content, String serial, String mac,
+                               int connectType) {
         Log.d(TAG, "onNotification() called with: id = [" + id + "], content = [" + content + "], mac = [" + mac + "], connectType = [" + connectType + "]"
                 + ", OnConnectListener size == " + mOnConnectListeners.size());
         for (OnConnectListener listener : mOnConnectListeners) {
@@ -795,17 +830,17 @@ public final class AppController {
         }
         device.setAvailable(aawDeviceInfo.getAvailable());
 
-        AtomicBoolean isContain = new AtomicBoolean(false);
-        aliveDeviceList.forEach(d -> {
-            if (ObjectsCompat.equals(d.getMac(), device.getMac())) {
-                isContain.set(true);
-            }
-        });
+//        AtomicBoolean isContain = new AtomicBoolean(false);
+//        aliveDeviceList.forEach(d -> {
+//            if (ObjectsCompat.equals(d.getMac(), device.getMac())) {
+//                isContain.set(true);
+//            }
+//        });
         if (aawDeviceInfo.getAvailable()) {
-            if (!isContain.get()) {
+//            if (!isContain.get()) {
                 Log.d(TAG, "add wifi alive device  " + device.getMac());
                 aliveDeviceList.add(device);
-            }
+//            }
         } else {
             Log.d(TAG, "remove wifi alive device  " + device.getMac());
             aliveDeviceList.removeIf(d -> Objects.equals(d.getMac(), device.getMac()) && d.getType() == 2);
@@ -1072,6 +1107,7 @@ public final class AppController {
         };
     }
 
+
     private void registerBluetoothReceiver() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
@@ -1085,5 +1121,12 @@ public final class AppController {
             Log.e(TAG, "Couldn't register notifier into bt with nul context.");
         }
     }
-
 }
+
+
+
+
+
+
+
+

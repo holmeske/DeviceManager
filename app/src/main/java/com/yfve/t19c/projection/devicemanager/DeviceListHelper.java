@@ -14,15 +14,6 @@ public class DeviceListHelper {
 
     public DeviceListHelper(Context c) {
         mStorageHelper = new StorageHelper(c);
-        /*DeviceInfo info = new DeviceInfo();
-        info.BluetoothMac = "123";
-        String s = info.BluetoothMac;
-
-        info.BluetoothMac = "null";
-        Log.d(TAG, "s: " + s);
-
-        info = null;
-        Log.d(TAG, "s: " + s);*/
     }
 
     public void write(String name, String serial, String mac, int ability) {
@@ -101,14 +92,15 @@ public class DeviceListHelper {
 
     public String getMac(String serial) {
         Log.d(TAG, "getMac() called with: serial = [" + serial + "]");
-        return mStorageHelper.queryBySerial(serial).getMac();
+//        return mStorageHelper.queryBySerial(serial).getMac();//todo not exception
+        Device device = mStorageHelper.queryBySerial(serial);
+        return device == null ? "" : device.getMac();
     }
 
     public String getSerial(String mac) {
         Log.d(TAG, "getSerial() called with: mac = [" + mac + "]");
-        String serial = mStorageHelper.queryByMac(mac).getSerial();
-        Log.d(TAG, "getSerial: " + serial);
-        return serial;
+        Device device = mStorageHelper.queryByMac(mac);
+        return device == null ? "" : device.getSerial();
     }
 
     public List<Device> queryAll() {
@@ -133,12 +125,20 @@ public class DeviceListHelper {
 //        write("5", "5", "5", 1);
 //        write("6", "6", "6", 2);
 //        write("7", "7", "7", 2);
-        clear();
+//        clear();
 //        write("11111111", "11111111", "", 1);
 //        write("1:1:1:1:1:1:1:1", "", "1:1:1:1:1:1:1:1", 2);
 //        write("2:2:2:2:2:2:2:2", "", ":2:2:2:2:2:2:2", 8);
 //        write("iphone", "22222222", ":2:2:2:2:2:2:2", 4);
         read();
+//        Log.d(TAG, CommonUtilsKt.toJson(query("", "68:144:187:220:107:181")));
+//        Log.d(TAG, CommonUtilsKt.toJson(query("", "00:3D:E8:39:FD:63")));
+//        if (query("", btMac) == null) {
+//            onNotification(2, "", "", btMac, 2);//start or not now popup
+//        } else {
+//            Log.d(TAG, "old device not notification 2 popup, directly connect");
+//            startWirelessAndroidAuto(btMac, 1);
+//        }
 //        CacheHelperKt.saveLastConnectDeviceInfo(c, "name", "serial", "mac", 3);
         //Log.d(TAG, "test: " + CommonUtilsKt.toJson(CacheHelperKt.getLastConnectDeviceInfo(c)));
     }

@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        DeviceListHelper(this).test(this)
+        DeviceListHelper(this).test(this)
 
         //DeviceManagerService.filteredAliveDeviceList()
 

@@ -167,18 +167,18 @@ public class UsbHostController {
         }
 
         if (attached) {
-            AtomicBoolean isContain = new AtomicBoolean(false);
-            mAliveDeviceList.forEach(d -> {
-                if (ObjectsCompat.equals(d.getSerial(), device.getSerial())) {
-                    isContain.set(true);
-                }
-            });
-            if (!isContain.get()) {
+//            AtomicBoolean isContain = new AtomicBoolean(false);
+//            mAliveDeviceList.forEach(d -> {
+//                if (ObjectsCompat.equals(d.getSerial(), device.getSerial())) {
+//                    isContain.set(true);
+//                }
+//            });
+//            if (!isContain.get()) {
                 Log.d(TAG, "add usb alive device  " + device.getSerial());
                 mAliveDeviceList.add(device);
-            } else {
-                Log.d(TAG, "list already contains the device, do not add");
-            }
+//            } else {
+//                Log.d(TAG, "list already contains the device, do not add");
+//            }
         } else {
             Log.d(TAG, "remove usb alive device  " + device.getSerial());
             mAliveDeviceList.removeIf(d -> ObjectsCompat.equals(d.getSerial(), device.getSerial()) && d.getType() == 1);
@@ -217,11 +217,10 @@ public class UsbHostController {
                 return;
             }
             if (AppController.isCanConnectingCPWifi) {
-                Log.e(TAG, "attach: cp wifi connecting");
+                Log.e(TAG, "cp wifi connecting, not connect usb carplay");
                 return;
             }
             if (!mAppController.canConnectUsbCarPlay()) {
-                Log.d(TAG, "attach: don't connect usb car play");
                 return;
             }
         } else {

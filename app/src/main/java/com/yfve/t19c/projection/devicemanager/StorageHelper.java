@@ -22,6 +22,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.yfve.t19c.projection.devicemanager.constant.CommonUtilsKt;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -152,6 +154,7 @@ public final class StorageHelper {
             Log.e(TAG, e.toString());
         }
         db.close();
+        Log.d(TAG, "queryBySerial device "+ CommonUtilsKt.toJson(device));
         return device;
     }
 
@@ -173,6 +176,7 @@ public final class StorageHelper {
             Log.e(TAG, e.toString());
         }
         db.close();
+        Log.d(TAG, "queryByMac device "+ CommonUtilsKt.toJson(device));
         return device;
     }
 
@@ -194,6 +198,7 @@ public final class StorageHelper {
             Log.e(TAG, e.toString());
         }
         db.close();
+        Log.d(TAG, "query device "+ CommonUtilsKt.toJson(device));
         return device;
     }
 

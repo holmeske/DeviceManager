@@ -79,7 +79,7 @@ public class CarHelper {
 
     public static boolean isOpenCarPlay() {
         if ("1".equals(CarPlaySwitch)) {
-            Log.d(TAG, "CarPlay Switch is open");
+            //Log.d(TAG, "CarPlay Switch is open");
             return true;
         } else {
             Log.d(TAG, "CarPlay Switch is close");
