@@ -774,6 +774,7 @@ public final class AppController {
             if (mACLConnectedList.contains(mac)) {
                 Log.d(TAG, "ACLConnectedList: " + new Gson().toJson(mACLConnectedList));
                 onNotification(-5);
+                resetSwitchingSessionState();
             } else {
                 for (OnConnectListener l : mOnConnectListeners) {
                     try {
