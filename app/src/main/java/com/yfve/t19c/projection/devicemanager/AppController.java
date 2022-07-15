@@ -44,7 +44,6 @@ import com.yfve.t19c.projection.devicemanager.constant.Phone;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public final class AppController {
@@ -566,7 +565,11 @@ public final class AppController {
         Log.d(TAG, "onNotification() called with: id = [" + id + "]" + ", OnConnectListener size == " + mOnConnectListeners.size());
         for (OnConnectListener listener : mOnConnectListeners) {
             try {
-                listener.onNotification(id, "", "", "", 0);
+                if (listener != null) {
+                    listener.onNotification(id, "", "", "", 0);
+                } else {
+                    Log.d(TAG, "listener == null ");
+                }
             } catch (RemoteException e) {
                 Log.e(TAG, "onNotification: ", e);
             }
@@ -649,7 +652,11 @@ public final class AppController {
                 + ", OnConnectListener size == " + mOnConnectListeners.size());
         for (OnConnectListener listener : mOnConnectListeners) {
             try {
-                listener.onSessionStateUpdate(serial, mac, state, msg);
+                if (listener != null) {
+                    listener.onSessionStateUpdate(serial, mac, state, msg);
+                } else {
+                    Log.d(TAG, "listener == null ");
+                }
             } catch (RemoteException e) {
                 Log.e(TAG, "onSessionStateUpdate: ", e);
             } finally {
@@ -669,7 +676,11 @@ public final class AppController {
                 + ", OnConnectListener size == " + mOnConnectListeners.size());
         for (OnConnectListener listener : mOnConnectListeners) {
             try {
-                listener.onNotification(id, content, serial, mac, connectType);
+                if (listener != null) {
+                    listener.onNotification(id, content, serial, mac, connectType);
+                } else {
+                    Log.d(TAG, "listener == null ");
+                }
             } catch (RemoteException e) {
                 Log.e(TAG, "onNotification: ", e);
             }
@@ -779,7 +790,11 @@ public final class AppController {
                 for (OnConnectListener l : mOnConnectListeners) {
                     try {
                         Log.d(TAG, "onRequestBluetoothPair " + mac);
-                        l.onRequestBluetoothPair(mac);
+                        if (l != null) {
+                            l.onRequestBluetoothPair(mac);
+                        } else {
+                            Log.d(TAG, "listener == null ");
+                        }
                     } catch (RemoteException e) {
                         Log.e(TAG, "switchSession: ", e);
                     }
@@ -839,8 +854,8 @@ public final class AppController {
 //        });
         if (aawDeviceInfo.getAvailable()) {
 //            if (!isContain.get()) {
-                Log.d(TAG, "add wifi alive device  " + device.getMac());
-                aliveDeviceList.add(device);
+            Log.d(TAG, "add wifi alive device  " + device.getMac());
+            aliveDeviceList.add(device);
 //            }
         } else {
             Log.d(TAG, "remove wifi alive device  " + device.getMac());
@@ -871,7 +886,7 @@ public final class AppController {
     }
 
     public void startUsbAndroidAuto(String deviceName) {
-        Log.d(TAG, "startAndroidAuto() called with: deviceName = [" + deviceName + "]");
+        Log.d(TAG, "startUsbAndroidAuto() called with: deviceName = [" + deviceName + "]");
         if (isIdleState()) {
             mAapProxy.startAndroidAuto(deviceName);
         }
@@ -969,7 +984,11 @@ public final class AppController {
         Log.d(TAG, "onDeviceUpdate() called with: " + device.toString() + ", OnConnectListener size == " + mOnConnectListeners.size());
         for (OnConnectListener listener : mOnConnectListeners) {
             try {
-                listener.onDeviceUpdate(device);
+                if (listener != null) {
+                    listener.onDeviceUpdate(device);
+                } else {
+                    Log.d(TAG, "listener == null ");
+                }
             } catch (RemoteException e) {
                 Log.e(TAG, "onDeviceUpdate: ", e);
             }

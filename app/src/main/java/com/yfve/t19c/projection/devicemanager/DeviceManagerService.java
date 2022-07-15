@@ -87,33 +87,37 @@ public class DeviceManagerService extends Service {
             if (TextUtils.isEmpty(mac)) return;
             //0:success  -1:scan not  -2:connect failed(retry three)
             for (OnConnectListener l : mOnConnectListeners) {
-                try {
-                    if (result == 0) {
-                        retryCount = 0;
-                    } else if (result == -1) {
-                        Log.d(TAG, "onNotification -1");
-                        mAppController.resetSwitchingSessionState();
-                        l.onNotification(-1, "", "", mac, 0);
-                        UsbDevice device = USBKt.queryUsbDevice(mContext, mAppController.switchingPhone.getSerial());
-                        if (device != null) {
-                            Log.d(TAG, "onBluetoothPairResult: UsbHostController.attach");
-                            mUsbHostController.attach(device);
-                        } else {
-                            Log.d(TAG, "no find attached usb device");
-                        }
-                    } else if (result == -2) {
-                        if (retryCount > 0) {
-                            retryCount--;
-                            Log.d(TAG, "onRequestBluetoothPair " + mac);
-                            l.onRequestBluetoothPair(mac);
-                        } else {
-                            Log.d(TAG, "onNotification -2");
+                if (l != null) {
+                    try {
+                        if (result == 0) {
+                            retryCount = 0;
+                        } else if (result == -1) {
+                            Log.d(TAG, "onNotification -1");
                             mAppController.resetSwitchingSessionState();
-                            l.onNotification(-2, "", "", mac, 0);
+                            l.onNotification(-1, "", "", mac, 0);
+                            UsbDevice device = USBKt.queryUsbDevice(mContext, mAppController.switchingPhone.getSerial());
+                            if (device != null) {
+                                Log.d(TAG, "onBluetoothPairResult: UsbHostController.attach");
+                                mUsbHostController.attach(device);
+                            } else {
+                                Log.d(TAG, "no find attached usb device");
+                            }
+                        } else if (result == -2) {
+                            if (retryCount > 0) {
+                                retryCount--;
+                                Log.d(TAG, "onRequestBluetoothPair " + mac);
+                                l.onRequestBluetoothPair(mac);
+                            } else {
+                                Log.d(TAG, "onNotification -2");
+                                mAppController.resetSwitchingSessionState();
+                                l.onNotification(-2, "", "", mac, 0);
+                            }
                         }
+                    } catch (RemoteException e) {
+                        Log.e(TAG, e.toString());
                     }
-                } catch (RemoteException e) {
-                    Log.e(TAG, e.toString());
+                } else {
+                    Log.d(TAG, "listener == null ");
                 }
             }
         }
