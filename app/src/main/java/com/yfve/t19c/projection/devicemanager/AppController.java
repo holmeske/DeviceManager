@@ -142,11 +142,19 @@ public final class AppController {
 
                 onSessionStateUpdate(serial, mac, 0, "connected");
             } else {
+                currentDevice.setConnectionType(2);
+
                 String mac = FindMacByInstanceId.get(instanceId);
                 String serial = FindSerialByInstanceId.get(instanceId);
+                Log.d(TAG, "mac = " + mac + "  ,  serial  =  " + serial);
                 currentDevice.setSerialNumber(serial);
-                currentDevice.setBluetoothMac(mac);
-                currentDevice.setConnectionType(2);
+
+                if (!TextUtils.isEmpty(mac)) {
+                    currentDevice.setBluetoothMac(mac);
+                } else {
+                    mac = currentDevice.getBluetoothMac();
+                }
+
                 Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(currentDevice));
 
                 CacheHelperKt.saveLastConnectDeviceInfo(mContext, deviceName, serial == null ? "" : serial, mac == null ? "" : mac, 2);
@@ -183,7 +191,7 @@ public final class AppController {
                 if (b) {
                     resetUsb(true);
                 } else {//"30:6A:85:15:1D:35"
-                    startWirelessAndroidAuto(mac, 1);
+                    startWirelessAndroidAuto(mac, 2);
                 }
             } else if (reason == 1) {
                 if (b) {
@@ -408,6 +416,9 @@ public final class AppController {
                             }
                         });
                     }
+                } else {
+                    Log.d(TAG, "setBluetoothMac " + btMac);
+                    currentDevice.setBluetoothMac(btMac);
                 }
             }
         });
