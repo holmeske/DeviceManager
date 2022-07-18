@@ -857,17 +857,9 @@ public final class AppController {
         }
         device.setAvailable(aawDeviceInfo.getAvailable());
 
-//        AtomicBoolean isContain = new AtomicBoolean(false);
-//        aliveDeviceList.forEach(d -> {
-//            if (ObjectsCompat.equals(d.getMac(), device.getMac())) {
-//                isContain.set(true);
-//            }
-//        });
         if (aawDeviceInfo.getAvailable()) {
-//            if (!isContain.get()) {
             Log.d(TAG, "add wifi alive device  " + device.getMac());
             aliveDeviceList.add(device);
-//            }
         } else {
             Log.d(TAG, "remove wifi alive device  " + device.getMac());
             aliveDeviceList.removeIf(d -> Objects.equals(d.getMac(), device.getMac()) && d.getType() == 2);

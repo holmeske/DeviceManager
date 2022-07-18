@@ -68,13 +68,13 @@ public class DeviceManagerService extends Service {
 
         @Override
         public List<Device> getAliveDevices() {
-            Log.d(TAG, "getAliveDevices() called 2022-07-16");
+            Log.d(TAG, "getAliveDevices() called 2022-07-18");
             return filteredAliveDeviceList();
         }
 
         @Override
         public List<Device> getHistoryDevices() {
-            Log.d(TAG, "getHistoryDevices() called 2022-07-16");
+            Log.d(TAG, "getHistoryDevices() called 2022-07-18");
             historyDeviceList.forEach(d -> {
                 Log.d(TAG, "history   " + d);
             });
@@ -145,7 +145,7 @@ public class DeviceManagerService extends Service {
             boolean repeat = filteredDeviceList.stream().anyMatch(it -> anyMatch(it.getSerial(), d.getSerial(), it.getMac(), d.getMac()));
 
             if (repeat) {
-                if (d.getSerial().length() > 4 && d.getMac().length() > 4) {
+                if (d.getSerial() != null && d.getSerial().length() > 4 && d.getMac() != null && d.getMac().length() > 4) {
                     filteredDeviceList.stream().filter(old ->
                             anyMatch(old.getSerial(), d.getSerial(), old.getMac(), d.getMac())
                     ).collect(Collectors.toList()).forEach(i -> {
