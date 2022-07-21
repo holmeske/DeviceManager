@@ -23,7 +23,6 @@ import com.yfve.t19c.projection.devicemanager.constant.CommonUtilsKt;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class UsbHostController {
     private static final String TAG = "UsbHostController";
@@ -78,6 +77,10 @@ public class UsbHostController {
 
         mDeviceHandlerResolver = new DeviceHandlerResolver(mContext);
         registerReceiver();
+
+        USBKt.usbDeviceList(mContext).values().forEach(d -> {
+            Log.d(TAG, "attached usb device contain " + d.getSerialNumber() + "  " + d.getProductName());
+        });
 
         if (mAppController.getAapBinderClient() != null) {
             Log.e(TAG, "waiting for the callback of the Android Auto service to bind successfully");
@@ -167,18 +170,8 @@ public class UsbHostController {
         }
 
         if (attached) {
-//            AtomicBoolean isContain = new AtomicBoolean(false);
-//            mAliveDeviceList.forEach(d -> {
-//                if (ObjectsCompat.equals(d.getSerial(), device.getSerial())) {
-//                    isContain.set(true);
-//                }
-//            });
-//            if (!isContain.get()) {
-                Log.d(TAG, "add usb alive device  " + device.getSerial());
-                mAliveDeviceList.add(device);
-//            } else {
-//                Log.d(TAG, "list already contains the device, do not add");
-//            }
+            Log.d(TAG, "add usb alive device  " + device.getSerial());
+            mAliveDeviceList.add(device);
         } else {
             Log.d(TAG, "remove usb alive device  " + device.getSerial());
             mAliveDeviceList.removeIf(d -> ObjectsCompat.equals(d.getSerial(), device.getSerial()) && d.getType() == 1);
@@ -241,8 +234,10 @@ public class UsbHostController {
                         return;
                     }
                     //when session not null ,  attach android auto device , need notify users
-                    mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 1);
-                    return;
+                    if (!mAppController.isSwitchingSession()) {
+                        mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 1);
+                        return;
+                    }
                 }
             }
         }

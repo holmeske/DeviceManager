@@ -447,11 +447,12 @@ public final class AppController {
                 super.onSessionStsUpdate(sts, btMac, deviceName);
                 Log.d(TAG, "onSessionStsUpdate() called with: sts = [" + sts + "], btMac = [" + btMac + "], deviceName = [" + deviceName + "]");
                 boolean isUsb = sessionType == 1;
-                if (sts == 0) {
-                    handler.removeMessages(3);
-                    handler.sendEmptyMessage(3);
-                    resetSwitchingSessionState();
 
+                handler.removeMessages(3);
+                handler.sendEmptyMessage(3);
+                resetSwitchingSessionState();
+
+                if (sts == 0) {
                     CURRENT_SESSION_TYPE = isUsb ? TYPE_USB_CAR_PLAY : TYPE_WIFI_CAR_PLAY;
                     CURRENT_CONNECT_STATE = STATE_CONNECTED;
 
@@ -542,6 +543,10 @@ public final class AppController {
             }
         };
         mCarPlayClient.registerListener(carPlayListener);
+    }
+
+    public boolean isSwitchingSession() {
+        return isSwitchingSession;
     }
 
     public void setOnUpdateClientStsListener(OnUpdateClientStsListener onUpdateClientStsListener) {
@@ -707,7 +712,7 @@ public final class AppController {
 
     public void resetSwitchingSessionState() {
         Log.d(TAG, "resetSwitchingSessionState() called");
-        if (isSwitchingSession) {//reset switching state
+        if (isSwitchingSession) {
             handler.removeCallbacks(switchRunnable);
             handler.removeCallbacks(connectingPopupRunnable);
             handler.postDelayed(switchRunnable, 0);
@@ -882,6 +887,9 @@ public final class AppController {
             mAndroidAutoDeviceClient.ConnectWirelessDevice(mac, reason);
         } else {
             Log.d(TAG, mac + " is not alive device , not connect wifi android auto");
+            if (reason == 0) {
+                resetSwitchingSessionState();
+            }
         }
         //USER_REQUEST_VALUE = 0;  user select
         //AUTO_LAUNCH_VALUE = 1;   boot auto reconnect old device

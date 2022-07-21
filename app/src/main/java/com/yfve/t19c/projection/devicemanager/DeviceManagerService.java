@@ -68,16 +68,14 @@ public class DeviceManagerService extends Service {
 
         @Override
         public List<Device> getAliveDevices() {
-            Log.d(TAG, "getAliveDevices() called 2022-07-18");
+            Log.d(TAG, "getAliveDevices() called 2022-07-20");
             return filteredAliveDeviceList();
         }
 
         @Override
         public List<Device> getHistoryDevices() {
-            Log.d(TAG, "getHistoryDevices() called 2022-07-18");
-            historyDeviceList.forEach(d -> {
-                Log.d(TAG, "history   " + d);
-            });
+            Log.d(TAG, "getHistoryDevices() called 2022-07-20");
+            historyDeviceList.forEach(d -> Log.d(TAG, "history   " + d));
             return historyDeviceList;
         }
 

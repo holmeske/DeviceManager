@@ -84,6 +84,7 @@ public class DeviceHandlerResolver {
         } else {
             Log.d(TAG, "isDeviceCarPlayPossible: UsbDeviceConnection is null");
         }
+        Log.d(TAG, "isDeviceCarPlayPossible() called with: carplaySupported = [" + carplaySupported + "]");
         return carplaySupported;
     }
 
