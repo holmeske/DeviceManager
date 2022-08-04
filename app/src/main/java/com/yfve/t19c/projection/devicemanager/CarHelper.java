@@ -212,10 +212,6 @@ public class CarHelper {
 
     private void processValidValue() {
         Log.d(TAG, "processValidValue() called");
-        if (onGetValidValueListener != null) {
-            onGetValidValueListener.callback();
-        }
-
         for (int i = 0; i < property.length; i++) {
             Log.d(TAG, "property[" + i + "] = " + byteToBit(property[i]));
         }
@@ -230,6 +226,10 @@ public class CarHelper {
 
             QDLinkSwitch = byte2.substring(2, 3);//第6个bit
             Log.d(TAG, "QDLinkSwitch: " + QDLinkSwitch);
+
+            if (onGetValidValueListener != null) {
+                onGetValidValueListener.callback();
+            }
         } else {
             Log.e(TAG, "CarService returned value is invalid");
         }

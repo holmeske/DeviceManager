@@ -31,6 +31,7 @@ public class DeviceManagerService extends Service {
     public static final List<Device> aliveDeviceList = new ArrayList<>();
     private static final String TAG = "DeviceManagerService";
     public static boolean isStarted = false;
+    private final String Data = "2022-08-04 14:04";
     private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private int retryCount;
     private CarHelper mCarHelper;
@@ -68,13 +69,13 @@ public class DeviceManagerService extends Service {
 
         @Override
         public List<Device> getAliveDevices() {
-            Log.d(TAG, "getAliveDevices() called 2022-07-20");
+            Log.d(TAG, "getAliveDevices() called " + Data);
             return filteredAliveDeviceList();
         }
 
         @Override
         public List<Device> getHistoryDevices() {
-            Log.d(TAG, "getHistoryDevices() called 2022-07-20");
+            Log.d(TAG, "getHistoryDevices() called " + Data);
             historyDeviceList.forEach(d -> Log.d(TAG, "history   " + d));
             return historyDeviceList;
         }
@@ -186,7 +187,7 @@ public class DeviceManagerService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(TAG, "onBind() called");
+        Log.d(TAG, "onBind() called " + Data);
         return binder;
     }
 
@@ -198,7 +199,7 @@ public class DeviceManagerService extends Service {
 
     @Override
     public void onCreate() {
-        Log.d(TAG, "onCreate() called");
+        Log.d(TAG, "onCreate() called " + Data);
         isStarted = true;
         mContext = this;
 
@@ -220,7 +221,7 @@ public class DeviceManagerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand() called");
+        Log.d(TAG, "onStartCommand() called " + Data);
         startForeground();
         return START_STICKY;
     }

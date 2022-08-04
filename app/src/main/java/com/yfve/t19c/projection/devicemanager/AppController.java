@@ -39,6 +39,7 @@ import com.yfve.t19c.projection.devicelist.OnConnectListener;
 import com.yfve.t19c.projection.devicemanager.callback.OnUpdateClientStsListener;
 import com.yfve.t19c.projection.devicemanager.constant.CacheHelperKt;
 import com.yfve.t19c.projection.devicemanager.constant.CommonUtilsKt;
+import com.yfve.t19c.projection.devicemanager.constant.LocalData;
 import com.yfve.t19c.projection.devicemanager.constant.Phone;
 
 import java.util.ArrayList;
@@ -58,6 +59,7 @@ public final class AppController {
     private static final int TYPE_WIFI_ANDROID_AUTO = 2;
     private static final int TYPE_USB_CAR_PLAY = 3;
     private static final int TYPE_WIFI_CAR_PLAY = 4;
+    public static boolean isResettingUsb = false;
     public static boolean isCanConnectingCPWifi = false;
     public static boolean isStartingCarPlay = false;
     public static boolean isCertifiedVersion = true;  //certify version
@@ -91,6 +93,9 @@ public final class AppController {
             } else if (what == 1) {
                 setAutoConnectUsbAndroidAuto(true);
                 currentDevice.reset();
+            } else if (what == 2) {
+                isResettingUsb = false;
+                Log.d(TAG, "isResettingUsb = false");
             } else if (what == 3) {
                 Log.d(TAG, "isStartingCarPlay = false");
                 isStartingCarPlay = false;
@@ -122,6 +127,7 @@ public final class AppController {
                 currentDevice.setConnectionType(1);
                 UsbDevice d = USBKt.firstUsbDevice(mContext);
                 String serial = d == null ? "" : d.getSerialNumber();
+                LocalData.LAST_ANDROID_AUTO_DEVICE_SERIAL = serial;
                 currentDevice.setSerialNumber(serial);
                 FindSerialByInstanceId.put(instanceId, serial);
                 String mac = FindMacBySerial.get(serial);
@@ -240,9 +246,8 @@ public final class AppController {
                 updateIdleState();
                 Log.d(TAG, "onReceive: currentDevice == " + CommonUtilsKt.toJson(currentDevice));
                 Log.d(TAG, "onReceive: getUsbDeviceList size == " + USBKt.usbDeviceList(mContext.getApplicationContext()).size());
-            } else if (bundle.containsKey("handler")) {
-                Log.d(TAG, "onReceive: " + bundle.get("handler") + " send msg");
-                //resetUsb(false);
+            } else if (bundle.containsKey("reset")) {
+                resetUsb(false);
             } else if (bundle.containsKey("switch")) {
                 Log.d(TAG, "onReceive: " + bundle.get("switch"));
                 switchSession(null, "30:6A:85:15:1D:35");
@@ -272,9 +277,9 @@ public final class AppController {
         Log.d(TAG, "AppController() called");
         this.mContext = context;
 
-//        IntentFilter intentFilter = new IntentFilter();
-//        intentFilter.addAction("com.klv.test");
-//        context.registerReceiver(receiver, intentFilter);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("com.klv.test");
+        context.registerReceiver(receiver, intentFilter);
 
         onBlueToothBroadcast();
         registerBluetoothReceiver();
@@ -553,6 +558,11 @@ public final class AppController {
         this.onUpdateClientStsListener = onUpdateClientStsListener;
     }
 
+    public void removeResetUsbMessages() {
+        Log.d(TAG, "removeResetUsbMessages() called");
+        handler.removeMessages(2);
+    }
+
     private void resetUsb(boolean autoConnect) {
         Log.d(TAG, "resetUsb() called with: autoConnect = [" + autoConnect + "]");
         int attached = USBKt.usbDeviceList(mContext).size();
@@ -561,13 +571,19 @@ public final class AppController {
             if (!autoConnect) {
                 handler.sendEmptyMessage(0);
             }
+            Log.d(TAG, "isResettingUsb = true");
+            isResettingUsb = true;
+            Log.d(TAG, "sys usb otg power 0");
             SystemProperties.set("sys.usbotg.power", "0");
             try {
                 Thread.sleep(50);
             } catch (InterruptedException e) {
                 Log.e(TAG, e.toString());
             }
+            Log.d(TAG, "sys usb otg power 1");
             SystemProperties.set("sys.usbotg.power", "1");
+            handler.sendEmptyMessageDelayed(2, 4000);
+            Log.d(TAG, "after 3 second , isResettingUsb value will be reset");
             if (!autoConnect) {
                 handler.sendEmptyMessageDelayed(1, 3000);
             }

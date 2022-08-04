@@ -2,6 +2,8 @@ package com.yfve.t19c.projection.devicemanager;
 
 import static com.yfve.t19c.projection.devicemanager.AppController.isCertifiedVersion;
 import static com.yfve.t19c.projection.devicemanager.AppController.isReplugged;
+import static com.yfve.t19c.projection.devicemanager.AppController.isResettingUsb;
+import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_ANDROID_AUTO_DEVICE_SERIAL;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_REASON;
 
 import android.content.BroadcastReceiver;
@@ -101,7 +103,7 @@ public class UsbHostController {
     }
 
     public void setCarHelper(CarHelper mCarHelper) {
-        Log.d(TAG, "setCarHelper() called");
+        Log.e(TAG, "waiting for the callback of the car power service to bind successfully");
         mCarHelper.setOnGetValidValueListener(() -> {
             Log.d(TAG, "CarService returned valid value");
             isGetCarServiceValue = true;
@@ -110,8 +112,7 @@ public class UsbHostController {
     }
 
     private void connectLastUsbDevice() {
-        Log.d(TAG, "isBoundIAapReceiverService = " + isBoundIAapReceiverService
-                + ", isBoundCarPlayService = " + isBoundCarPlayService
+        Log.d(TAG, "isBoundIAapReceiverService = " + isBoundIAapReceiverService + ", isBoundCarPlayService = " + isBoundCarPlayService
                 + ", isGetCarServiceValue = " + isGetCarServiceValue);
         if (isGetCarServiceValue && (isBoundIAapReceiverService || isBoundCarPlayService)) {
             int size = USBKt.usbDeviceList(mContext).size();
@@ -123,7 +124,15 @@ public class UsbHostController {
             }
             if (d != null) {
                 Log.d(TAG, "last usb device serial : " + d.getSerialNumber());
-                attach(d);
+                if (AppSupport.isIOSDevice(d)) {
+                    if (isBoundCarPlayService) {
+                        attach(d);
+                    }
+                } else {
+                    if (isBoundIAapReceiverService) {
+                        attach(d);
+                    }
+                }
             } else {
                 Log.d(TAG, "current no attached usb device");
             }
@@ -235,6 +244,14 @@ public class UsbHostController {
                     }
                     //when session not null ,  attach android auto device , need notify users
                     if (!mAppController.isSwitchingSession()) {
+                        Log.d(TAG, "isResettingUsb = " + mAppController.isResettingUsb);
+                        Log.d(TAG, "LAST_ANDROID_AUTO_DEVICE_SERIAL = " + LAST_ANDROID_AUTO_DEVICE_SERIAL);
+                        if (mAppController.isResettingUsb && TextUtils.equals(LAST_ANDROID_AUTO_DEVICE_SERIAL, device.getSerialNumber())) {
+                            isResettingUsb = false;
+                            mAppController.removeResetUsbMessages();
+                            Log.d(TAG, "usb reset end");
+                            return;
+                        }
                         mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 1);
                         return;
                     }

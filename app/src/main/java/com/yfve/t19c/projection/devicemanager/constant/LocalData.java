@@ -36,6 +36,14 @@ public final class LocalData {
      * android auto session terminated type
      */
     public static int LAST_REASON = -1;
+    /**
+     * reset usb resetting state handler msg id
+     */
+    public static int reset_usb_resetting_state = 2;
+    /**
+     * last connect successfully android auto device serial number
+     */
+    public static String LAST_ANDROID_AUTO_DEVICE_SERIAL;
 
     public static void updateLocalDeviceInfo(String instanceId, Device device) {
         Log.d(TAG, "updateLocalDeviceInfo() called with: instanceId = [" + instanceId + "], device = [" + device + "]");
