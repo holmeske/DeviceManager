@@ -92,7 +92,7 @@ public final class AppController {
                 setAutoConnectUsbAndroidAuto(false);
             } else if (what == 1) {
                 setAutoConnectUsbAndroidAuto(true);
-                currentDevice.reset();
+                //currentDevice.reset();
             } else if (what == 2) {
                 isResettingUsb = false;
                 Log.d(TAG, "isResettingUsb = false");
@@ -848,7 +848,7 @@ public final class AppController {
             }
         }
         Device finalDevice = device;
-        Log.d(TAG, "remove carplay usb alive device  " + device.getMac());
+        Log.d(TAG, "remove carplay usb alive device  " + device.getSerial());
         aliveDeviceList.removeIf(d -> Objects.equals(d.getSerial(), finalDevice == null ? "" : finalDevice.getSerial()) && d.getType() == 1);
 
         onDeviceUpdate(device);

@@ -80,9 +80,7 @@ public class UsbHostController {
         mDeviceHandlerResolver = new DeviceHandlerResolver(mContext);
         registerReceiver();
 
-        USBKt.usbDeviceList(mContext).values().forEach(d -> {
-            Log.d(TAG, "attached usb device contain " + d.getSerialNumber() + "  " + d.getProductName());
-        });
+        USBKt.usbDeviceList(mContext).values().forEach(d -> Log.d(TAG, "attached usb device contain " + d.getSerialNumber() + "  " + d.getProductName()));
 
         if (mAppController.getAapBinderClient() != null) {
             Log.e(TAG, "waiting for the callback of the Android Auto service to bind successfully");
@@ -165,12 +163,12 @@ public class UsbHostController {
                 return;
             }
             if (!CarHelper.isOpenCarPlay()) {
-                Log.d(TAG, "onDeviceUpdate: carplay is close , do not notice external");
+                Log.d(TAG, "carplay is close , do not notice external");
                 return;
             }
         } else {
             if (!CarHelper.isOpenAndroidAuto()) {
-                Log.d(TAG, "onDeviceUpdate: android auto is close , do not notice external");
+                Log.d(TAG, "android auto is close , do not notice external");
                 return;
             }
             if (attached) {
@@ -190,16 +188,18 @@ public class UsbHostController {
         }
         Log.d(TAG, "update usb " + device);
         for (OnConnectListener listener : mOnConnectListeners) {
+            Log.d(TAG, "onDeviceUpdate " + System.identityHashCode(listener));
             try {
                 if (listener != null) {
                     listener.onDeviceUpdate(device);
                 } else {
-                    Log.d(TAG, "onDeviceUpdate: listener == null");
+                    Log.d(TAG, "onDeviceUpdate listener == null");
                 }
             } catch (RemoteException e) {
                 Log.e(TAG, "onDeviceUpdate: ", e);
             }
         }
+        Log.d(TAG, "onDeviceUpdate end");
     }
 
     public void attach(UsbDevice device) {
@@ -244,9 +244,9 @@ public class UsbHostController {
                     }
                     //when session not null ,  attach android auto device , need notify users
                     if (!mAppController.isSwitchingSession()) {
-                        Log.d(TAG, "isResettingUsb = " + mAppController.isResettingUsb);
+                        Log.d(TAG, "isResettingUsb = " + isResettingUsb);
                         Log.d(TAG, "LAST_ANDROID_AUTO_DEVICE_SERIAL = " + LAST_ANDROID_AUTO_DEVICE_SERIAL);
-                        if (mAppController.isResettingUsb && TextUtils.equals(LAST_ANDROID_AUTO_DEVICE_SERIAL, device.getSerialNumber())) {
+                        if (isResettingUsb && TextUtils.equals(LAST_ANDROID_AUTO_DEVICE_SERIAL, device.getSerialNumber())) {
                             isResettingUsb = false;
                             mAppController.removeResetUsbMessages();
                             Log.d(TAG, "usb reset end");
