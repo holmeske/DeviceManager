@@ -62,8 +62,8 @@ public final class AppController {
     public static boolean isResettingUsb = false;
     public static boolean isCanConnectingCPWifi = false;
     public static boolean isStartingCarPlay = false;
-    public static boolean isCertifiedVersion = true;  //certify version
-    public static boolean isSOPVersion = false;
+    public static boolean isCertifiedVersion = false;  //certify version
+    public static boolean isSOPVersion = true;
     public static boolean isReplugged = true;
     private static int isReplugged_id;
     private static int CURRENT_CONNECT_STATE = 0;
@@ -277,9 +277,9 @@ public final class AppController {
         Log.d(TAG, "AppController() called");
         this.mContext = context;
 
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("com.klv.test");
-        context.registerReceiver(receiver, intentFilter);
+//        IntentFilter intentFilter = new IntentFilter();
+//        intentFilter.addAction("com.klv.test");
+//        context.registerReceiver(receiver, intentFilter);
 
         onBlueToothBroadcast();
         registerBluetoothReceiver();

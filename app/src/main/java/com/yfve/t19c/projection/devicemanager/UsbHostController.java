@@ -215,7 +215,7 @@ public class UsbHostController {
         boolean ios = AppSupport.isIOSDevice(device);
         if (ios) {
             if (isCertifiedVersion) {
-                Log.d(TAG, "attach: certified version not attach usb carplay");
+                Log.d(TAG, "certified version not attach usb carplay");
                 return;
             }
             if (AppController.isCanConnectingCPWifi) {
