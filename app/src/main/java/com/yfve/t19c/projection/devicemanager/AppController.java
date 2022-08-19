@@ -346,7 +346,7 @@ public final class AppController {
                         }
                     } else {
                         Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(currentDevice));
-                        Log.d(TAG, "FindInstanceIdByMac = " + FindInstanceIdByMac.get(btMac)));
+                        Log.d(TAG, "FindInstanceIdByMac = " + FindInstanceIdByMac.get(btMac));
                         if (TextUtils.equals(currentDevice.getInstanceId(), FindInstanceIdByMac.get(btMac))) {
                             Log.d(TAG, "btMac same as current device mac");
                             return;

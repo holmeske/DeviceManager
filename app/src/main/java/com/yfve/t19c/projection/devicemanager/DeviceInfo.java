@@ -121,6 +121,7 @@ public class DeviceInfo {
         ConnectionType = 0;
         AppAvailable = new boolean[]{false, false, false, false};
         lastConnectType = 0;
+        instanceId = "";
     }
 
     public int getLastConnectType() {
