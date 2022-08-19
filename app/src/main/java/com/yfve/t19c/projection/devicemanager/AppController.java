@@ -62,8 +62,8 @@ public final class AppController {
     public static boolean isResettingUsb = false;
     public static boolean isCanConnectingCPWifi = false;
     public static boolean isStartingCarPlay = false;
-    public static boolean isCertifiedVersion = false;  //certify version
-    public static boolean isSOPVersion = true;
+    public static boolean isCertifiedVersion = true;  //certify version
+    public static boolean isSOPVersion = false;
     public static boolean isReplugged = true;
     private static int isReplugged_id;
     private static int CURRENT_CONNECT_STATE = 0;
@@ -345,6 +345,8 @@ public final class AppController {
                             }
                         }
                     } else {
+                        Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(currentDevice));
+                        Log.d(TAG, "FindInstanceIdByMac = " + FindInstanceIdByMac.get(btMac)));
                         if (TextUtils.equals(currentDevice.getInstanceId(), FindInstanceIdByMac.get(btMac))) {
                             Log.d(TAG, "btMac same as current device mac");
                             return;
@@ -720,7 +722,7 @@ public final class AppController {
     }
 
     private void updateSwitchingSessionState(String serial, String mac) {
-        Log.d(TAG, "updateSwitchingSessionState() called");
+        Log.d(TAG, "updateSwitchingSessionState() called with: serial = [" + serial + "], mac = [" + mac + "]");
         handler.postDelayed(switchRunnable, 60000);
         handler.postDelayed(connectingPopupRunnable, 500);
         switchingPhone.update(serial, mac);
@@ -1082,9 +1084,15 @@ public final class AppController {
                                 mDeviceListHelper.read();
                                 mDeviceListHelper.deleteByMac(device.getAddress());
                                 mDeviceListHelper.read();
-                                if (CURRENT_SESSION_TYPE == TYPE_WIFI_ANDROID_AUTO && !TextUtils.isEmpty(device.getAddress()) && TextUtils.equals(device.getAddress(), currentDevice.BluetoothMac)) {
-                                    Log.d(TAG, "stop wifi android auto");
-                                    mAndroidAutoDeviceClient.DisconnectWirelessDevice();
+                                if (!TextUtils.isEmpty(device.getAddress())) {
+                                    if (CURRENT_SESSION_TYPE == TYPE_WIFI_ANDROID_AUTO && TextUtils.equals(device.getAddress(), currentDevice.BluetoothMac)) {
+                                        Log.d(TAG, "stop wifi android auto");
+                                        mAndroidAutoDeviceClient.DisconnectWirelessDevice();
+                                    }
+                                    Log.d(TAG, "switchingPhone getMac = " + switchingPhone.getMac());
+                                    if (TextUtils.equals(device.getAddress(), switchingPhone.getMac())) {
+                                        resetSwitchingSessionState();
+                                    }
                                 }
                             }
                         } else {
