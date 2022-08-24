@@ -64,8 +64,8 @@ public final class AppController {
     public static boolean isResettingUsb = false;
     public static boolean isCanConnectingCPWifi = false;
     public static boolean isStartingCarPlay = false;
-    public static boolean isCertifiedVersion = true;  //certify version
-    public static boolean isSOPVersion = false;
+    public static boolean isCertifiedVersion = false;  //certify version
+    public static boolean isSOPVersion = true;
     public static boolean isReplugged = true;
     private static int isReplugged_id;
     private static int CURRENT_CONNECT_STATE = 0;
@@ -343,8 +343,8 @@ public final class AppController {
                             if (mDeviceListHelper.query("", btMac) == null) {
                                 onNotification(2, "", "", btMac, 2);//start or not now popup
                             } else {
-                                Log.d(TAG, "find current "+FindCurrentAvailableByMac.get(btMac));
-                                Log.d(TAG, "find pre     "+FindPreAvailableByMac.get(btMac));
+                                Log.d(TAG, "find current " + FindCurrentAvailableByMac.get(btMac));
+                                Log.d(TAG, "find pre     " + FindPreAvailableByMac.get(btMac));
                                 if (Boolean.TRUE.equals(FindCurrentAvailableByMac.get(btMac)) && Boolean.FALSE.equals(FindPreAvailableByMac.get(btMac))) {
                                     onNotification(2, "", "", btMac, 2);//start or not now popup
                                     return;
@@ -496,6 +496,10 @@ public final class AppController {
                 } else if (sts == 1) {
                     onSessionStateUpdate(isUsb ? currentDevice.SerialNumber : "", isUsb ? "" : currentDevice.BluetoothMac, sts, "disconnected");
                     updateIdleState();
+                    if (isSOPVersion) {
+                        USBKt.usbDeviceList(mContext).values().forEach(d -> Log.d(TAG, "attached usb device  " + d.getSerialNumber() + "  " + d.getProductName()));
+                        resetUsb();
+                    }
                 }
                 isCanConnectingCPWifi = false;
             }
@@ -582,6 +586,18 @@ public final class AppController {
         handler.removeMessages(2);
     }
 
+    private void resetUsb() {
+        Log.d(TAG, "sys usb otg power 0");
+        SystemProperties.set("sys.usbotg.power", "0");
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            Log.e(TAG, e.toString());
+        }
+        Log.d(TAG, "sys usb otg power 1");
+        SystemProperties.set("sys.usbotg.power", "1");
+    }
+
     private void resetUsb(boolean autoConnect) {
         Log.d(TAG, "resetUsb() called with: autoConnect = [" + autoConnect + "]");
         int attached = USBKt.usbDeviceList(mContext).size();
@@ -592,15 +608,7 @@ public final class AppController {
             }
             Log.d(TAG, "isResettingUsb = true");
             isResettingUsb = true;
-            Log.d(TAG, "sys usb otg power 0");
-            SystemProperties.set("sys.usbotg.power", "0");
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                Log.e(TAG, e.toString());
-            }
-            Log.d(TAG, "sys usb otg power 1");
-            SystemProperties.set("sys.usbotg.power", "1");
+            resetUsb();
             handler.sendEmptyMessageDelayed(2, 4000);
             Log.d(TAG, "after 3 second , isResettingUsb value will be reset");
             if (!autoConnect) {
