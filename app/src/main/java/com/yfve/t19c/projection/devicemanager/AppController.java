@@ -1,10 +1,12 @@
 package com.yfve.t19c.projection.devicemanager;
 
 import static com.yfve.t19c.projection.devicemanager.DeviceManagerService.historyDeviceList;
+import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindCurrentAvailableByMac;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindInstanceIdByMac;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindInstanceIdBySerial;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindMacByInstanceId;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindMacBySerial;
+import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindPreAvailableByMac;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindSerialByInstanceId;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_REASON;
 
@@ -325,6 +327,7 @@ public final class AppController {
         mAndroidAutoDeviceClient = new AndroidAutoDeviceClient();
         mAndroidAutoDeviceClient.initialise(context);
         mAndroidAutoDeviceClient.registerListener(new AAProxyDeviceListener() {
+
             @Override
             public void onArbitrationWirelessConnect(String btMac) {
                 super.onArbitrationWirelessConnect(btMac);
@@ -340,6 +343,12 @@ public final class AppController {
                             if (mDeviceListHelper.query("", btMac) == null) {
                                 onNotification(2, "", "", btMac, 2);//start or not now popup
                             } else {
+                                Log.d(TAG, "find current "+FindCurrentAvailableByMac.get(btMac));
+                                Log.d(TAG, "find pre     "+FindPreAvailableByMac.get(btMac));
+                                if (Boolean.TRUE.equals(FindCurrentAvailableByMac.get(btMac)) && Boolean.FALSE.equals(FindPreAvailableByMac.get(btMac))) {
+                                    onNotification(2, "", "", btMac, 2);//start or not now popup
+                                    return;
+                                }
                                 Log.d(TAG, "old device not notification 2 popup, directly connect");
                                 startWirelessAndroidAuto(btMac, 1);
                             }
@@ -396,8 +405,16 @@ public final class AppController {
                     FindSerialByInstanceId.put(id, device.getSerialNumber());
                     FindMacByInstanceId.put(id, device.getMacAddress());
                 }
+
+                if (!FindPreAvailableByMac.containsKey(device.getMacAddress())) {
+                    FindPreAvailableByMac.put(device.getMacAddress(), false);
+                } else {
+                    FindPreAvailableByMac.put(device.getMacAddress(), FindCurrentAvailableByMac.get(device.getMacAddress()));
+                }
+                FindCurrentAvailableByMac.put(device.getMacAddress(), device.getAvailable());
                 FindMacBySerial.put(device.getSerialNumber(), device.getMacAddress());
                 noticeExternal(device, 2);
+
             }
 
             @Override

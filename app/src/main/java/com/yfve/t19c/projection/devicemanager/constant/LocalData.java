@@ -31,6 +31,17 @@ public final class LocalData {
      * key: instanceId , value: Device
      */
     public final static HashMap<String, Device> GlobalDeviceMap = new HashMap<>();
+
+    /**
+     * key: mac , value: pre available
+     */
+    public final static HashMap<String, Boolean> FindPreAvailableByMac = new HashMap<>();
+
+    /**
+     * key: mac , value: current available
+     */
+    public final static HashMap<String, Boolean> FindCurrentAvailableByMac = new HashMap<>();
+
     private static final String TAG = "LocalData";
     /**
      * android auto session terminated type
