@@ -64,8 +64,8 @@ public final class AppController {
     public static boolean isResettingUsb = false;
     public static boolean isCanConnectingCPWifi = false;
     public static boolean isStartingCarPlay = false;
-    public static boolean isCertifiedVersion = false;  //certify version
-    public static boolean isSOPVersion = true;
+    public static boolean isCertifiedVersion = true;  //certify version
+    public static boolean isSOPVersion = false;
     public static boolean isReplugged = true;
     private static int isReplugged_id;
     private static int CURRENT_CONNECT_STATE = 0;
@@ -337,7 +337,7 @@ public final class AppController {
                         if (isSwitchingSession) {
                             if (TextUtils.equals(btMac, switchingPhone.getMac())) {
                                 Log.d(TAG, "idle state, switching device mac same as btMac, directly connect");
-                                startWirelessAndroidAuto(btMac, 1);
+                                startWirelessAndroidAuto(btMac, 0);
                             }
                         } else {
                             if (mDeviceListHelper.query("", btMac) == null) {
