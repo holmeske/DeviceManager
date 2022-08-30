@@ -13,6 +13,7 @@ import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_REA
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothHeadsetClient;
+import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -65,7 +66,7 @@ public final class AppController {
     public static boolean isCanConnectingCPWifi = false;
     public static boolean isStartingCarPlay = false;
     public static boolean isCertifiedVersion = true;  //certify version
-    public static boolean isSOPVersion = false;
+    public static boolean isSOPVersion = false;        //sop version
     public static boolean isReplugged = true;
     private static int isReplugged_id;
     private static int CURRENT_CONNECT_STATE = 0;
@@ -101,6 +102,8 @@ public final class AppController {
             } else if (what == 3) {
                 Log.d(TAG, "isStartingCarPlay = false");
                 isStartingCarPlay = false;
+            } else if (what == 4) {
+                stopCarPlay();
             }
         }
     };
@@ -298,7 +301,9 @@ public final class AppController {
                     Log.d(TAG, "sop version not stop carplay");
                 } else {
                     if (isCertifiedVersion) {
-                        Log.d(TAG, "certified version not stop carplay");
+                        //Log.d(TAG, "certified version not stop carplay");
+                        Log.d(TAG, "delay 20s stop carplay");
+                        handler.sendEmptyMessageDelayed(4, 20000);
                     } else {
                         stopCarPlay();
                     }
@@ -311,6 +316,8 @@ public final class AppController {
                 Log.d(TAG, "standby == " + CarHelper.isStandby());
                 Log.d(TAG, "last device bt mac = " + lastDevice.BluetoothMac);
                 Log.d(TAG, "last device serial = " + lastDevice.SerialNumber);
+                Log.d(TAG, "handler remove msg 4");
+                handler.removeMessages(4);
                 if (isSOPVersion) {
                     Log.d(TAG, "sop version not start carplay");
                 } else {
@@ -345,12 +352,12 @@ public final class AppController {
                             } else {
                                 Log.d(TAG, "find current " + FindCurrentAvailableByMac.get(btMac));
                                 Log.d(TAG, "find pre     " + FindPreAvailableByMac.get(btMac));
-                                if (Boolean.TRUE.equals(FindCurrentAvailableByMac.get(btMac)) && Boolean.FALSE.equals(FindPreAvailableByMac.get(btMac))) {
+                                /*if (Boolean.TRUE.equals(FindCurrentAvailableByMac.get(btMac)) && Boolean.FALSE.equals(FindPreAvailableByMac.get(btMac))) {
                                     onNotification(2, "", "", btMac, 2);//start or not now popup
                                     return;
-                                }
+                                }*/
                                 Log.d(TAG, "old device not notification 2 popup, directly connect");
-                                startWirelessAndroidAuto(btMac, 1);
+                                startWirelessAndroidAuto(btMac, 0);
                             }
                         }
                     } else {
@@ -1144,23 +1151,20 @@ public final class AppController {
                         }
                         break;
                     case BluetoothHeadsetClient.ACTION_CONNECTION_STATE_CHANGED:
-                        Log.d(TAG, "BluetoothHeadsetClient.ACTION_CONNECTION_STATE_CHANGED");
-//                        if (intent.getIntExtra(BluetoothProfile.EXTRA_STATE, -1) == BluetoothProfile.STATE_CONNECTED) {
-//                            Log.d(TAG, "HFP connection to device");
-//                            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-//                            Log.d(TAG, "+++++ device : " + device.getName() + " connected with address:" + device.getAddress());
-//                            //checkConnectedDevice(device.getAddress());
-//                            mHfpDeviceHeadsetClient = device.getAddress();
-//                            updateAvailableDeviceInfo(device.getName(), device.getAddress());
-//                        } else if (intent.getIntExtra(BluetoothProfile.EXTRA_STATE, -1) == BluetoothProfile.STATE_DISCONNECTED) {
-//                            Log.d(TAG, "current bt device disconnect with remote");
-//                            BluetoothDevice disDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-//                            Log.d(TAG, "----- device : " + disDevice.getName() + " disconnect with address:" + disDevice.getAddress());
-//                            /*if (null != mServerListener) {
-//                                mServerListener.hfpDisconnect(disDevice.getAddress());
-//                                removeAvailableDevice(disDevice.getAddress());
-//                            }*/
-//                        }
+                        if (null != device) {
+                            Log.d(TAG, "BluetoothHeadsetClient.ACTION_CONNECTION_STATE_CHANGED    " + device.getName() + "    " + device.getAddress());
+                            if (intent.getIntExtra(BluetoothProfile.EXTRA_STATE, -1) == BluetoothProfile.STATE_CONNECTED) {
+                                Log.d(TAG, "+++++ HFP device : " + device.getName() + " connected with address:" + device.getAddress());
+                                if (isIdleState() && aliveDeviceList.stream().anyMatch(d -> Objects.equals(d.getMac(), device.getAddress()))) {
+                                    Log.d(TAG, "AndroidAutoDeviceClient ConnectWirelessDevice 0 ");
+                                    mAndroidAutoDeviceClient.ConnectWirelessDevice(device.getAddress(), 0);
+                                }
+                            } else if (intent.getIntExtra(BluetoothProfile.EXTRA_STATE, -1) == BluetoothProfile.STATE_DISCONNECTED) {
+                                Log.d(TAG, "----- HFP device : " + device.getName() + " disconnect with address:" + device.getAddress());
+                            }
+                        } else {
+                            Log.d(TAG, "BluetoothHeadsetClient.ACTION_CONNECTION_STATE_CHANGED    device == null");
+                        }
                         break;
                     case BluetoothDevice.ACTION_ACL_CONNECTED:
                         if (null != device) {
