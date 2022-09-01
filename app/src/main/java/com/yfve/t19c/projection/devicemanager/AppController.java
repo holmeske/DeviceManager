@@ -66,7 +66,7 @@ public final class AppController {
     public static boolean isCanConnectingCPWifi = false;
     public static boolean isStartingCarPlay = false;
     public static boolean isCertifiedVersion = true;  //certify version
-    public static boolean isSOPVersion = false;        //sop version
+    public static boolean isSOPVersion = false;       //sop version
     public static boolean isReplugged = true;
     private static int isReplugged_id;
     private static int CURRENT_CONNECT_STATE = 0;
@@ -357,7 +357,7 @@ public final class AppController {
                                     return;
                                 }*/
                                 Log.d(TAG, "old device not notification 2 popup, directly connect");
-                                startWirelessAndroidAuto(btMac, 0);
+                                startWirelessAndroidAuto(btMac, 1);
                             }
                         }
                     } else {
