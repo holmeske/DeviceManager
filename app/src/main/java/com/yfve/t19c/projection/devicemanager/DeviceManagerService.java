@@ -18,6 +18,7 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import com.android.internal.R;
 import com.yfve.t19c.projection.devicelist.Device;
 import com.yfve.t19c.projection.devicelist.DeviceListManager;
 import com.yfve.t19c.projection.devicelist.OnConnectListener;
@@ -31,7 +32,7 @@ public class DeviceManagerService extends Service {
     public static final List<Device> aliveDeviceList = new ArrayList<>();
     private static final String TAG = "DeviceManagerService";
     public static boolean isStarted = false;
-    private final String Data = "2022-08-31 17:40 cp aa"; //cp aa   sop    base
+    private final String Data = "2022-09-29 15:26 cp aa"; //cp aa   sop    base
     private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private int retryCount;
     private CarHelper mCarHelper;
@@ -91,7 +92,7 @@ public class DeviceManagerService extends Service {
                         if (result == 0) {
                             retryCount = 0;
                         } else if (result == -1) {
-                            Log.d(TAG, "onNotification -1");
+                            Log.d(TAG, "onNotification -1 , not scanned");
                             mAppController.resetSwitchingSessionState();
                             l.onNotification(-1, "", "", mac, 0);
                             UsbDevice device = USBKt.queryUsbDevice(mContext, mAppController.switchingPhone.getSerial());
@@ -107,7 +108,7 @@ public class DeviceManagerService extends Service {
                                 Log.d(TAG, "onRequestBluetoothPair " + mac);
                                 l.onRequestBluetoothPair(mac);
                             } else {
-                                Log.d(TAG, "onNotification -2");
+                                Log.d(TAG, "onNotification -2 , connection failed");
                                 mAppController.resetSwitchingSessionState();
                                 l.onNotification(-2, "", "", mac, 0);
                             }
@@ -248,7 +249,7 @@ public class DeviceManagerService extends Service {
         channelId = createNotificationChannel();
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId);
         Notification notification = builder.setOngoing(true)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.mipmap.sym_def_app_icon)
                 .setPriority(PRIORITY_MIN)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .build();

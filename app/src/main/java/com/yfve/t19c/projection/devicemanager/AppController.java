@@ -109,7 +109,7 @@ public final class AppController {
     };
     private OnUpdateClientStsListener onUpdateClientStsListener;
     private List<OnConnectListener> mOnConnectListeners;
-    private final Runnable connectingPopupRunnable = () -> onNotification(-6);
+    private final Runnable connectingPopupRunnable = () -> onNotification(-6); //unused old code
     private List<Device> aliveDeviceList = new ArrayList<>();
     private UsbHostController mUsbHostController;
     private boolean canConnectUsbCarPlay = true;
@@ -755,6 +755,7 @@ public final class AppController {
 
     private void updateSwitchingSessionState(String serial, String mac) {
         Log.d(TAG, "updateSwitchingSessionState() called with: serial = [" + serial + "], mac = [" + mac + "]");
+        isSwitchingSession = true;
         handler.postDelayed(switchRunnable, 60000);
         handler.postDelayed(connectingPopupRunnable, 500);
         switchingPhone.update(serial, mac);
@@ -935,6 +936,7 @@ public final class AppController {
         if (aliveDeviceList.stream().anyMatch(device -> Objects.equals(device.getMac(), mac))) {
             Log.d(TAG, "AndroidAutoDeviceClient ConnectWirelessDevice");
             mAndroidAutoDeviceClient.ConnectWirelessDevice(mac, reason);
+            updateSwitchingSessionState("", mac);
         } else {
             Log.d(TAG, mac + " is not alive device , not connect wifi android auto");
             if (reason == 0) {
@@ -949,7 +951,11 @@ public final class AppController {
     public void startUsbAndroidAuto(String deviceName) {
         Log.d(TAG, "startUsbAndroidAuto() called with: deviceName = [" + deviceName + "]");
         if (isIdleState()) {
-            mAapProxy.startAndroidAuto(deviceName);
+            if (isSwitchingSession) {
+                Log.d(TAG, "isSwitchingSession = true, not start usb android auto");
+            } else {
+                mAapProxy.startAndroidAuto(deviceName);
+            }
         }
     }
 
