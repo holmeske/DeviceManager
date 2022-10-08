@@ -65,8 +65,8 @@ public final class AppController {
     public static boolean isResettingUsb = false;
     public static boolean isCanConnectingCPWifi = false;
     public static boolean isStartingCarPlay = false;
-    public static boolean isCertifiedVersion = true;  //certify version
-    public static boolean isSOPVersion = false;       //sop version
+    public static boolean isCertifiedVersion = false;  //certify version
+    public static boolean isSOPVersion = false;        //sop version
     public static boolean isReplugged = true;
     private static int isReplugged_id;
     private static int CURRENT_CONNECT_STATE = 0;
@@ -948,11 +948,16 @@ public final class AppController {
         //AUTOMATIC_RESTART_VALUE = 2; no identify exception disconnect, auto reconnect
     }
 
-    public void startUsbAndroidAuto(String deviceName) {
-        Log.d(TAG, "startUsbAndroidAuto() called with: deviceName = [" + deviceName + "]");
+    public void startUsbAndroidAuto(String deviceName, String serial) {
+        Log.d(TAG, "startUsbAndroidAuto() called with: deviceName = [" + deviceName + "], serial = [" + serial + "]");
         if (isIdleState()) {
             if (isSwitchingSession) {
-                Log.d(TAG, "isSwitchingSession = true, not start usb android auto");
+                if (Objects.equals(serial, switchingPhone.getSerial())) {
+                    Log.d(TAG, "attached device serial same as switching device serial , auto connect");
+                    mAapProxy.startAndroidAuto(deviceName);
+                } else {
+                    Log.d(TAG, "isSwitchingSession = true, not start usb android auto");
+                }
             } else {
                 mAapProxy.startAndroidAuto(deviceName);
             }

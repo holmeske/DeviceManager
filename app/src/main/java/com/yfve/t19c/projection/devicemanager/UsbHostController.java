@@ -277,7 +277,7 @@ public class UsbHostController {
                         e.printStackTrace();
                     }
                 }
-                mAppController.startUsbAndroidAuto(device.getDeviceName());
+                mAppController.startUsbAndroidAuto(device.getDeviceName(), device.getSerialNumber());
             } else {
                 mAppController.updatePreparingState();
                 mDeviceHandlerResolver.requestAoapSwitch(device);

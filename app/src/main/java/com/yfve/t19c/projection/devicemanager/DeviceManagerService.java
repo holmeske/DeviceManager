@@ -32,7 +32,7 @@ public class DeviceManagerService extends Service {
     public static final List<Device> aliveDeviceList = new ArrayList<>();
     private static final String TAG = "DeviceManagerService";
     public static boolean isStarted = false;
-    private final String Data = "2022-09-29 15:26 cp aa"; //cp aa   sop    base
+    private final String Data = "2022-10-08 15:28 base"; //cp aa   sop    base
     private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private int retryCount;
     private CarHelper mCarHelper;
@@ -189,6 +189,11 @@ public class DeviceManagerService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "onBind() called " + Data);
+        if (mContext == null) {
+            mContext = App.INSTANCE;
+        } else {
+            Log.d(TAG, "mContext is already init");
+        }
         return binder;
     }
 
@@ -202,18 +207,22 @@ public class DeviceManagerService extends Service {
     public void onCreate() {
         Log.d(TAG, "onCreate() called " + Data);
         isStarted = true;
-        mContext = this;
+        if (mContext == null) {
+            mContext = App.INSTANCE;
+        } else {
+            Log.d(TAG, "mContext is already init");
+        }
 
-        mCarHelper = new CarHelper(this);
+        mCarHelper = new CarHelper(mContext);
 
         new UsbHelper();
 
-        mAppController = new AppController(this, mCarHelper);
+        mAppController = new AppController(mContext, mCarHelper);
         mAppController.setOnConnectListener(mOnConnectListeners);
         mAppController.setDeviceList(aliveDeviceList);
         mAppController.setHistoryDeviceList(historyDeviceList);
 
-        mUsbHostController = new UsbHostController(this, mAppController, mOnConnectListeners);
+        mUsbHostController = new UsbHostController(mContext, mAppController, mOnConnectListeners);
         mUsbHostController.setCarHelper(mCarHelper);
         mUsbHostController.setDeviceList(aliveDeviceList);
 
@@ -223,6 +232,11 @@ public class DeviceManagerService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand() called " + Data);
+        if (mContext == null) {
+            mContext = App.INSTANCE;
+        } else {
+            Log.d(TAG, "mContext is already init");
+        }
         startForeground();
         return START_STICKY;
     }
