@@ -83,7 +83,7 @@ public class UsbHostController {
         USBKt.usbDeviceList(mContext).values().forEach(d -> Log.d(TAG, "attached usb device contain " + d.getSerialNumber() + "  " + d.getProductName()));
 
         if (mAppController.getAapBinderClient() != null) {
-            Log.e(TAG, "waiting for the callback of the Android Auto service to bind successfully");
+            Log.e(TAG, "Wait for the callback that binds the Android Auto service successfully");
             mAppController.getAapBinderClient().setOnBindIAapReceiverServiceListener(() -> {
                 Log.d(TAG, "bind IAapReceiverService success");
                 isBoundIAapReceiverService = true;
@@ -92,7 +92,7 @@ public class UsbHostController {
         } else {
             Log.e(TAG, "AapBinderClient is null");
         }
-        Log.e(TAG, "waiting for the callback of the CarPlay service to bind successfully");
+        Log.e(TAG, "Wait for the callback that binds the CarPlay service successfully");
         mAppController.setOnUpdateClientStsListener(() -> {
             Log.e(TAG, "bind CarPlay service success");
             isBoundCarPlayService = true;
@@ -101,9 +101,9 @@ public class UsbHostController {
     }
 
     public void setCarHelper(CarHelper mCarHelper) {
-        Log.e(TAG, "waiting for the callback of the car power service to bind successfully");
+        Log.e(TAG, "Wait for the callback that binds the Car service successfully");
         mCarHelper.setOnGetValidValueListener(() -> {
-            Log.d(TAG, "CarService returned valid value");
+            Log.d(TAG, "Car Service returned valid value");
             isGetCarServiceValue = true;
             connectLastUsbDevice();
         });

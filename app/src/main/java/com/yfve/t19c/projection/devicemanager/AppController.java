@@ -9,6 +9,7 @@ import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindMacB
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindPreAvailableByMac;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindSerialByInstanceId;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_REASON;
+import static com.yfve.t19c.projection.devicemanager.constant.LocalData.availableDeviceBtMacList;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -65,7 +66,7 @@ public final class AppController {
     public static boolean isResettingUsb = false;
     public static boolean isCanConnectingCPWifi = false;
     public static boolean isStartingCarPlay = false;
-    public static boolean isCertifiedVersion = false;  //certify version
+    public static boolean isCertifiedVersion = true;  //certify version
     public static boolean isSOPVersion = false;        //sop version
     public static boolean isReplugged = true;
     private static int isReplugged_id;
@@ -404,6 +405,12 @@ public final class AppController {
                 Log.d(TAG, "onUpdateWirelessDevice: " + CommonUtilsKt.toJson(device));
                 String id = device.getInstanceID();
                 Log.d(TAG, "instanceId: " + id);
+                if (device.getAvailable()) {
+                    availableDeviceBtMacList.add(device.getMacAddress());
+                } else {
+                    availableDeviceBtMacList.remove(device.getMacAddress());
+                }
+                Log.d(TAG, "availableDeviceBtMacList = " + CommonUtilsKt.toJson(availableDeviceBtMacList));
                 if (TextUtils.isEmpty(id) || TextUtils.equals("null", id)) {
                     Log.d(TAG, "instanceId is invalid value");
                 } else {
@@ -933,6 +940,10 @@ public final class AppController {
     public void startWirelessAndroidAuto(String mac, int reason) {
         Log.d(TAG, "startWirelessAndroidAuto() called with: mac = [" + mac + "], reason = [" + reason + "]");
         if (TextUtils.isEmpty(mac)) return;
+        if (!availableDeviceBtMacList.contains(mac)) {
+            Log.d(TAG, "is not available device");
+            return;
+        }
         if (aliveDeviceList.stream().anyMatch(device -> Objects.equals(device.getMac(), mac))) {
             Log.d(TAG, "AndroidAutoDeviceClient ConnectWirelessDevice");
             mAndroidAutoDeviceClient.ConnectWirelessDevice(mac, reason);

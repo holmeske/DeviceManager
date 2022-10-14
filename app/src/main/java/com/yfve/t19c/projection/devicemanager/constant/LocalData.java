@@ -4,7 +4,9 @@ import android.util.Log;
 
 import com.yfve.t19c.projection.devicelist.Device;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public final class LocalData {
     /**
@@ -60,4 +62,6 @@ public final class LocalData {
         Log.d(TAG, "updateLocalDeviceInfo() called with: instanceId = [" + instanceId + "], device = [" + device + "]");
         GlobalDeviceMap.put(instanceId, device);
     }
+
+    public static List<String> availableDeviceBtMacList = new ArrayList<>();
 }
