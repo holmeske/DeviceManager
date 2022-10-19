@@ -66,8 +66,8 @@ public final class AppController {
     public static boolean isResettingUsb = false;
     public static boolean isCanConnectingCPWifi = false;
     public static boolean isStartingCarPlay = false;
-    public static boolean isCertifiedVersion = true;  //certify version
-    public static boolean isSOPVersion = false;        //sop version
+    public static boolean isCertifiedVersion = false;  //certify version
+    public static boolean isSOPVersion = true;        //sop version
     public static boolean isReplugged = true;
     private static int isReplugged_id;
     private static int CURRENT_CONNECT_STATE = 0;
@@ -512,7 +512,9 @@ public final class AppController {
                     updateIdleState();
                     if (isSOPVersion) {
                         USBKt.usbDeviceList(mContext).values().forEach(d -> Log.d(TAG, "attached usb device  " + d.getSerialNumber() + "  " + d.getProductName()));
-                        resetUsb();
+                        if(USBKt.usbDeviceList(mContext).values().stream().anyMatch(AppSupport::isIOSDevice)){
+                            resetUsb();
+                        }
                     }
                 }
                 isCanConnectingCPWifi = false;
