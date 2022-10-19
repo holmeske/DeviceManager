@@ -10,6 +10,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
@@ -45,14 +46,20 @@ public class UsbHostController {
             UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
             Log.d(TAG, "onReceive: " + CommonUtilsKt.toJson(device));
             if (device != null) {
+                if (TextUtils.isEmpty(device.getSerialNumber())) return;
+                if (device.getSerialNumber().contains(".")) return;
                 UsbInterface usbInterface = device.getInterface(0);
                 if (usbInterface != null) {
                     mClass = usbInterface.getInterfaceClass();
                     Log.d(TAG, "mClass = " + mClass + " , mVendorId = " + device.getVendorId() + " , mProductId = " + device.getProductId()
                             + " , mProductName = " + device.getProductName() + " , mName = " + device.getDeviceName()
                             + " , mManufacturerName = " + device.getManufacturerName());
-                    if (mClass == 7) {
-                        Log.d(TAG, "the device is a printer");
+                    if (mClass == UsbConstants.USB_CLASS_PRINTER) {
+                        Log.d(TAG, "USB class for printers");
+                        return;
+                    }
+                    if (mClass == UsbConstants.USB_CLASS_MASS_STORAGE) {
+                        Log.d(TAG, "USB class for mass storage device");
                         return;
                     }
                 }
