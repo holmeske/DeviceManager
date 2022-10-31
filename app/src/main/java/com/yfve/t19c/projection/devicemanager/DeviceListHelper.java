@@ -92,7 +92,7 @@ public class DeviceListHelper {
 
     public String getMac(String serial) {
         Log.d(TAG, "getMac() called with: serial = [" + serial + "]");
-//        return mStorageHelper.queryBySerial(serial).getMac();//todo not exception
+//        return mStorageHelper.queryBySerial(serial).getMac();
         Device device = mStorageHelper.queryBySerial(serial);
         return device == null ? "" : device.getMac();
     }

@@ -238,6 +238,10 @@ public class UsbHostController {
                 return;
             }
             if (CarHelper.isOpenQDLink()) return;
+            if (!mDeviceHandlerResolver.isSupportedAOAP(device)) {
+                Log.d(TAG, "isSupportedAOAP is false");
+                return;
+            }
         }
         if (!mAppController.isSwitchingAOAState()) {
             onDeviceUpdate(device, true, ios);
