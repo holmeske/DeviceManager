@@ -351,13 +351,13 @@ public final class AppController {
                             if (mDeviceListHelper.query("", btMac) == null) {
                                 onNotification(2, "", "", btMac, 2);//start or not now popup
                             } else {
-                                Log.d(TAG, "find current " + FindCurrentAvailableByMac.get(btMac));
-                                Log.d(TAG, "find pre     " + FindPreAvailableByMac.get(btMac));
+                                Log.i(TAG, "find current " + FindCurrentAvailableByMac.get(btMac));
+                                Log.i(TAG, "find pre     " + FindPreAvailableByMac.get(btMac));
                                 /*if (Boolean.TRUE.equals(FindCurrentAvailableByMac.get(btMac)) && Boolean.FALSE.equals(FindPreAvailableByMac.get(btMac))) {
                                     onNotification(2, "", "", btMac, 2);//start or not now popup
                                     return;
                                 }*/
-                                Log.d(TAG, "old device not notification 2 popup, directly connect");
+                                Log.i(TAG, "old device not notification 2 popup, directly connect");
                                 startWirelessAndroidAuto(btMac, 1);
                             }
                         }
@@ -592,6 +592,7 @@ public final class AppController {
     }
 
     public boolean isSwitchingSession() {
+        Log.d(TAG, "isSwitchingSession == " + isSwitchingSession);
         return isSwitchingSession;
     }
 
@@ -945,18 +946,18 @@ public final class AppController {
     }
 
     public void startWirelessAndroidAuto(String mac, int reason) {
-        Log.d(TAG, "startWirelessAndroidAuto() called with: mac = [" + mac + "], reason = [" + reason + "]");
+        Log.i(TAG, "startWirelessAndroidAuto() called with: mac = [" + mac + "], reason = [" + reason + "]");
         if (TextUtils.isEmpty(mac)) return;
         if (!availableDeviceBtMacList.contains(mac)) {
-            Log.d(TAG, "is not available device");
+            Log.i(TAG, "is not available device");
             return;
         }
         if (aliveDeviceList.stream().anyMatch(device -> Objects.equals(device.getMac(), mac))) {
-            Log.d(TAG, "AndroidAutoDeviceClient ConnectWirelessDevice");
+            Log.i(TAG, "AndroidAutoDeviceClient ConnectWirelessDevice");
             mAndroidAutoDeviceClient.ConnectWirelessDevice(mac, reason);
             updateSwitchingSessionState("", mac);
         } else {
-            Log.d(TAG, mac + " is not alive device , not connect wifi android auto");
+            Log.i(TAG, mac + " is not alive device , not connect wifi android auto");
             if (reason == 0) {
                 resetSwitchingSessionState();
             }
@@ -1045,21 +1046,13 @@ public final class AppController {
     }
 
     private boolean carPlayProxyValid() {
-        if (CAR_PLAY_BIND_SUCCESS) {
-            return true;
-        } else {
-            Log.e(TAG, "carplay proxy invalid");
-            return false;
-        }
+        Log.d(TAG, "CAR_PLAY_BIND_SUCCESS == " + CAR_PLAY_BIND_SUCCESS);
+        return CAR_PLAY_BIND_SUCCESS;
     }
 
     public boolean isIdleState() {
-        if (CURRENT_CONNECT_STATE == STATE_IDLE || CURRENT_SESSION_TYPE == TYPE_NO_SESSION) {
-            return true;
-        } else {
-            Log.e(TAG, CURRENT_SESSION_TYPE + " is not idle state");
-            return false;
-        }
+        Log.d(TAG, "CURRENT_SESSION_TYPE == " + CURRENT_SESSION_TYPE);
+        return CURRENT_CONNECT_STATE == STATE_IDLE || CURRENT_SESSION_TYPE == TYPE_NO_SESSION;
     }
 
     public boolean isPreParingState() {

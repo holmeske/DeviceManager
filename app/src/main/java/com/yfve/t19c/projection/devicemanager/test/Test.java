@@ -12,7 +12,7 @@ public class Test {
         /*for (int i = 0; i < 3; i++) {
             a(i);
         }*/
-
+        System.out.println("xhci-hcd.1.auto".contains("."));
         try {
             String mac = "160:59:227:164:74:196";
             String[] strings = mac.split(":");

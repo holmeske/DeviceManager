@@ -272,8 +272,10 @@ public class UsbHostController {
         if (ios) {
             if (!CarHelper.isOpenCarPlay()) return;
             if (!mDeviceHandlerResolver.isDeviceCarPlayPossible(device)) return;
-            if (mDeviceHandlerResolver.roleSwitch(device)) {
-                mAppController.roleSwitchComplete(device.getSerialNumber());
+            if (mAppController.isIdleState() || !mAppController.isSwitchingSession()) {
+                if (mDeviceHandlerResolver.roleSwitch(device)) {
+                    mAppController.roleSwitchComplete(device.getSerialNumber());
+                }
             }
         } else {
             if (!CarHelper.isOpenAndroidAuto()) return;
