@@ -52,10 +52,10 @@ fun Context.saveLastConnectDeviceInfo(
         .putString("name", name).putString("serial", serial).putString("mac", mac)
         .putInt("ability", ability)
         .apply()
-    //getSharedPreferences("last_connect_device", Context.MODE_PRIVATE).edit().clear().apply()
 }
 
 fun Context.getLastConnectDeviceInfo(): Device {
+    getSharedPreferences("last_connect_device", Context.MODE_PRIVATE).edit().clear().apply()
     val device: Device
     val sp = getSharedPreferences("last_connect_device", Context.MODE_PRIVATE)
     device = Device(

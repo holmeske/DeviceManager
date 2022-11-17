@@ -121,7 +121,6 @@ final class AppSupport {
     }
 
     public static int getProtocol(UsbDeviceConnection conn) {
-        Log.d(TAG, "getProtocol() called");
         byte[] buffer = new byte[2];
 
         int len = transfer(conn, READ, ACCESSORY_GET_PROTOCOL, 0, buffer, buffer.length);
@@ -135,7 +134,9 @@ final class AppSupport {
                 return -1;
             }
         }
-        return (buffer[1] << 8) | buffer[0];
+        int protocol = (buffer[1] << 8) | buffer[0];
+        Log.d(TAG, "protocol == " + protocol);
+        return protocol;
     }
 
     private static boolean getCarPlaySupport(UsbDeviceConnection conn) {
@@ -168,7 +169,7 @@ final class AppSupport {
         if (device.getVendorId() == APPLE_DEVICE_VENDOR_ID) {
             return true;
         } else {
-            Log.d(TAG, "is not ios device");
+            Log.d(TAG, device.getSerialNumber() + " is not ios device");
             return false;
         }
     }
@@ -206,18 +207,13 @@ final class AppSupport {
         }
     }
 
-    public static boolean isDeviceInAoapMode(UsbDevice device) {
-        if (device == null) {
-            return false;
-        }
+    public static boolean isDeviceInAOAMode(UsbDevice device) {//Android Open Accessory Protocol
+        if (device == null) return false;
         final int vid = device.getVendorId();
         final int pid = device.getProductId();
-        if (USB_ACCESSORY_VENDOR_ID.contains(vid) && USB_ACCESSORY_MODE_PRODUCT_ID.contains(pid)) {
-            Log.d(TAG, "device is in AOA mode");
-        } else {
-            Log.d(TAG, "device is not in AOA mode");
-        }
-        return USB_ACCESSORY_VENDOR_ID.contains(vid) && USB_ACCESSORY_MODE_PRODUCT_ID.contains(pid);
+        boolean isDeviceInAOAMode = USB_ACCESSORY_VENDOR_ID.contains(vid) && USB_ACCESSORY_MODE_PRODUCT_ID.contains(pid);
+        Log.d(TAG, device.getSerialNumber() + " isDeviceInAOAMode == " + isDeviceInAOAMode);
+        return isDeviceInAOAMode;
     }
 
     public static synchronized boolean isDeviceBlacklisted(Context context, UsbDevice device) {
@@ -244,8 +240,9 @@ final class AppSupport {
             }
             */
         }
-
-        return sBlacklistedVidPidPairs.contains(Pair.create(device.getVendorId(), device.getProductId()));
+        boolean isDeviceBlacklisted = sBlacklistedVidPidPairs.contains(Pair.create(device.getVendorId(), device.getProductId()));
+        Log.d(TAG, device.getSerialNumber() + " isDeviceBlacklisted == " + isDeviceBlacklisted);
+        return isDeviceBlacklisted;
     }
 
     private static int transfer(UsbDeviceConnection conn, @Direction int direction, int string, int index, byte[] buffer, int length) {

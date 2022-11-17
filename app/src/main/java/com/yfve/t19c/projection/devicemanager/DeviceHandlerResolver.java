@@ -32,7 +32,7 @@ public class DeviceHandlerResolver {
     }
 
     public boolean isSupportedAOAP(UsbDevice device) {
-        if (AppSupport.isDeviceInAoapMode(device)) {
+        if (AppSupport.isDeviceInAOAMode(device)) {
             return true;
         }
         UsbManager usbManager = mContext.getSystemService(UsbManager.class);
@@ -84,7 +84,7 @@ public class DeviceHandlerResolver {
         } else {
             Log.d(TAG, "isDeviceCarPlayPossible: UsbDeviceConnection is null");
         }
-        Log.d(TAG, "isDeviceCarPlayPossible() called with: carplaySupported = [" + carplaySupported + "]");
+        Log.d(TAG, device.getSerialNumber() +" support carplay is " + carplaySupported);
         return carplaySupported;
     }
 

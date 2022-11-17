@@ -1,12 +1,12 @@
 package com.yfve.t19c.projection.devicemanager
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.yfve.t19c.projection.devicemanager.constant.toHexString
 import com.yfve.t19c.projection.devicemanager.database.DeviceDatabase
 
 
@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         DeviceListHelper(this).test(this)
 
         //DeviceManagerService.filteredAliveDeviceList()
-
+        //toHexString("btMac")
         //stopService(Intent(this, DeviceManagerService::class.java))
 //        startForegroundService(Intent(this, DeviceManagerService::class.java))
 

@@ -3,6 +3,7 @@ package com.yfve.t19c.projection.devicemanager;
 import static com.yfve.t19c.projection.devicemanager.AppController.isCertifiedVersion;
 import static com.yfve.t19c.projection.devicemanager.AppController.isReplugged;
 import static com.yfve.t19c.projection.devicemanager.AppController.isResettingUsb;
+import static com.yfve.t19c.projection.devicemanager.constant.CacheHelperKt.getLastConnectDeviceInfo;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_ANDROID_AUTO_DEVICE_SERIAL;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_REASON;
 
@@ -20,6 +21,7 @@ import android.util.Log;
 
 import androidx.core.util.ObjectsCompat;
 
+import com.google.gson.Gson;
 import com.yfve.t19c.projection.devicelist.Device;
 import com.yfve.t19c.projection.devicelist.OnConnectListener;
 import com.yfve.t19c.projection.devicemanager.constant.CommonUtilsKt;
@@ -86,15 +88,15 @@ public class UsbHostController {
 
         mDeviceHandlerResolver = new DeviceHandlerResolver(mContext);
         registerReceiver();
-
-        USBKt.usbDeviceList(mContext).values().forEach(d -> Log.d(TAG, "attached usb device contain " + d.getSerialNumber() + "  " + d.getProductName()));
+        Log.d(TAG, "LastConnectDeviceInfo = " + new Gson().toJson(getLastConnectDeviceInfo(mContext)));
+        USBKt.usbDeviceList(mContext).values().forEach(d -> Log.d(TAG, "attached " + d.getSerialNumber() + ", " + d.getProductName()));
 
         if (mAppController.getAapBinderClient() != null) {
             Log.e(TAG, "Wait for the callback that binds the Android Auto service successfully");
             mAppController.getAapBinderClient().setOnBindIAapReceiverServiceListener(() -> {
                 Log.d(TAG, "bind IAapReceiverService success");
                 isBoundIAapReceiverService = true;
-                connectLastUsbDevice();
+                connectProjectionUsbDevice();
             });
         } else {
             Log.e(TAG, "AapBinderClient is null");
@@ -103,7 +105,7 @@ public class UsbHostController {
         mAppController.setOnUpdateClientStsListener(() -> {
             Log.e(TAG, "bind CarPlay service success");
             isBoundCarPlayService = true;
-            connectLastUsbDevice();
+            connectProjectionUsbDevice();
         });
     }
 
@@ -112,34 +114,25 @@ public class UsbHostController {
         mCarHelper.setOnGetValidValueListener(() -> {
             Log.d(TAG, "Car Service returned valid value");
             isGetCarServiceValue = true;
-            connectLastUsbDevice();
+            connectProjectionUsbDevice();
         });
     }
 
-    private void connectLastUsbDevice() {
+    private void connectProjectionUsbDevice() {
         Log.d(TAG, "isBoundIAapReceiverService = " + isBoundIAapReceiverService + ", isBoundCarPlayService = " + isBoundCarPlayService
                 + ", isGetCarServiceValue = " + isGetCarServiceValue);
         if (isGetCarServiceValue && (isBoundIAapReceiverService || isBoundCarPlayService)) {
-            int size = USBKt.usbDeviceList(mContext).size();
-            UsbDevice d;
-            if (size == 1) {
-                d = USBKt.firstUsbDevice(mContext);
-            } else {
-                d = USBKt.lastUsbDevice(mContext);
-            }
-            if (d != null) {
-                Log.d(TAG, "last usb device serial : " + d.getSerialNumber());
-                if (AppSupport.isIOSDevice(d)) {
-                    if (isBoundCarPlayService) {
-                        attach(d);
-                    }
-                } else {
-                    if (isBoundIAapReceiverService) {
-                        attach(d);
-                    }
+            UsbDevice d = USBKt.getProjectionDevice(mContext);
+            Log.d(TAG, "getProjectionDevice = " + new Gson().toJson(d));
+            if (d == null) Log.d(TAG, "no projective usb device");
+            if (AppSupport.isIOSDevice(d)) {
+                if (isBoundCarPlayService) {
+                    attach(d);
                 }
             } else {
-                Log.d(TAG, "current no attached usb device");
+                if (isBoundIAapReceiverService) {
+                    attach(d);
+                }
             }
         }
     }
@@ -184,7 +177,7 @@ public class UsbHostController {
         }
 
         if (attached) {
-            Log.d(TAG, "add usb alive device  " + device.getSerial());
+            Log.d(TAG, "add usb alive device  " + device);
             mAliveDeviceList.add(device);
         } else {
             Log.d(TAG, "remove usb alive device  " + device.getSerial());
@@ -193,7 +186,6 @@ public class UsbHostController {
         for (int i = 0; i < mAliveDeviceList.size(); i++) {
             Log.d(TAG, "alive device " + i + " : " + mAliveDeviceList.get(i));
         }
-        Log.d(TAG, "update usb " + device);
         for (OnConnectListener listener : mOnConnectListeners) {
             Log.d(TAG, "onDeviceUpdate " + System.identityHashCode(listener));
             try {
@@ -281,7 +273,7 @@ public class UsbHostController {
             if (!CarHelper.isOpenAndroidAuto()) return;
             if (!mAppController.isAutoConnectUsbAndroidAuto()) return;
             if (!mDeviceHandlerResolver.isSupportedAOAP(device)) return;
-            if (AppSupport.isDeviceInAoapMode(device)) {
+            if (AppSupport.isDeviceInAOAMode(device)) {
                 if (LAST_REASON == 0) {
                     try {
                         Log.d(TAG, "attach: last reason = 0 , delay 2 second");
