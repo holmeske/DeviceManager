@@ -3,6 +3,7 @@ package com.yfve.t19c.projection.devicemanager;
 import static com.yfve.t19c.projection.devicemanager.AppController.isCertifiedVersion;
 import static com.yfve.t19c.projection.devicemanager.AppController.isReplugged;
 import static com.yfve.t19c.projection.devicemanager.AppController.isResettingUsb;
+import static com.yfve.t19c.projection.devicemanager.AppController.isStartingCarPlay;
 import static com.yfve.t19c.projection.devicemanager.constant.CacheHelperKt.getLastConnectDeviceInfo;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_ANDROID_AUTO_DEVICE_SERIAL;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_REASON;
@@ -264,7 +265,8 @@ public class UsbHostController {
         if (ios) {
             if (!CarHelper.isOpenCarPlay()) return;
             if (!mDeviceHandlerResolver.isDeviceCarPlayPossible(device)) return;
-            if (mAppController.isIdleState() || !mAppController.isSwitchingSession()) {
+            Log.d(TAG, "isStartingCarPlay == " + isStartingCarPlay);
+            if (mAppController.isIdleState() || !mAppController.isSwitchingSession() || !isStartingCarPlay) {
                 if (mDeviceHandlerResolver.roleSwitch(device)) {
                     mAppController.roleSwitchComplete(device.getSerialNumber());
                 }

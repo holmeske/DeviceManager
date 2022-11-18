@@ -55,7 +55,6 @@ public final class AppController {
     private static final int STATE_IDLE = 0;
     private static final int STATE_CONNECTED = 2;
     private static final int STATE_PREPARING = 3;
-    private static final int STATE_SWITCHING = 4;
     private static final int STATE_AOA_SWITCHING = 4;
     private static final int TYPE_NO_SESSION = 0;
     private static final int TYPE_USB_ANDROID_AUTO = 1;
@@ -66,7 +65,7 @@ public final class AppController {
     public static boolean isCanConnectingCPWifi = false;
     public static boolean isStartingCarPlay = false;
     public static boolean isCertifiedVersion = false;   //certify version
-    public static boolean isSOPVersion = false;         //sop version
+    public static boolean isSOPVersion = true;         //sop version
     public static boolean isReplugged = true;
     private static int isReplugged_id;
     private static int CURRENT_CONNECT_STATE = 0;
@@ -86,6 +85,7 @@ public final class AppController {
     public Phone switchingPhone = new Phone();
     public boolean CAR_PLAY_BIND_SUCCESS = false;
     private boolean autoConnectUsbAndroidAuto = true;
+
     private final Handler handler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(@NonNull Message msg) {
@@ -95,13 +95,12 @@ public final class AppController {
                 setAutoConnectUsbAndroidAuto(false);
             } else if (what == 1) {
                 setAutoConnectUsbAndroidAuto(true);
-                //currentDevice.reset();
             } else if (what == 2) {
                 isResettingUsb = false;
-                Log.d(TAG, "isResettingUsb = false");
+                Log.d(TAG, "isResettingUsb == false");
             } else if (what == 3) {
-                Log.d(TAG, "isStartingCarPlay = false");
                 isStartingCarPlay = false;
+                Log.d(TAG, "isStartingCarPlay == false");
             } else if (what == 4) {
                 stopCarPlay();
             }
@@ -114,7 +113,7 @@ public final class AppController {
     private UsbHostController mUsbHostController;
     private boolean canConnectUsbCarPlay = true;
     private boolean isSwitchingSession;
-    private final Runnable switchRunnable = () -> {
+    private final Runnable SwitchingEndRunnable = () -> {
         Log.d(TAG, "isSwitchingSession = false");
         isSwitchingSession = false;
         switchingPhone.clear();
@@ -215,6 +214,7 @@ public final class AppController {
             onSessionStateUpdate(serial, mac, 1, "disconnected");
         }
     };
+
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -271,6 +271,7 @@ public final class AppController {
             }
         }
     };
+
     private BroadcastReceiver mBlueToothBroadcastReceiver;
 
     public AppController(Context context, CarHelper carHelper) {
@@ -351,10 +352,6 @@ public final class AppController {
                             } else {
                                 Log.i(TAG, "find current " + FindCurrentAvailableByMac.get(btMac));
                                 Log.i(TAG, "find pre     " + FindPreAvailableByMac.get(btMac));
-                                /*if (Boolean.TRUE.equals(FindCurrentAvailableByMac.get(btMac)) && Boolean.FALSE.equals(FindPreAvailableByMac.get(btMac))) {
-                                    onNotification(2, "", "", btMac, 2);//start or not now popup
-                                    return;
-                                }*/
                                 Log.i(TAG, "old device not notification 2 popup, directly connect");
                                 startWirelessAndroidAuto(btMac, 1);
                             }
@@ -623,8 +620,8 @@ public final class AppController {
             if (!autoConnect) {
                 handler.sendEmptyMessage(0);
             }
-            Log.d(TAG, "isResettingUsb = true");
             isResettingUsb = true;
+            Log.d(TAG, "isResettingUsb = true");
             resetUsb();
             handler.sendEmptyMessageDelayed(2, 4000);
             Log.d(TAG, "after 3 second , isResettingUsb value will be reset");
@@ -766,7 +763,7 @@ public final class AppController {
     private void updateSwitchingSessionState(String serial, String mac) {
         Log.d(TAG, "updateSwitchingSessionState() called with: serial = [" + serial + "], mac = [" + mac + "]");
         isSwitchingSession = true;
-        handler.postDelayed(switchRunnable, 60000);
+        handler.postDelayed(SwitchingEndRunnable, 60000);
         handler.postDelayed(connectingPopupRunnable, 500);
         switchingPhone.update(serial, mac);
     }
@@ -774,9 +771,9 @@ public final class AppController {
     public void resetSwitchingSessionState() {
         Log.d(TAG, "resetSwitchingSessionState() called");
         if (isSwitchingSession) {
-            handler.removeCallbacks(switchRunnable);
+            handler.removeCallbacks(SwitchingEndRunnable);
             handler.removeCallbacks(connectingPopupRunnable);
-            handler.postDelayed(switchRunnable, 0);
+            handler.postDelayed(SwitchingEndRunnable, 0);
         }
     }
 
@@ -1002,19 +999,6 @@ public final class AppController {
         }
     }
 
-    public void roleSwitchComplete(String serialNumber) {
-        Log.d(TAG, "roleSwitchComplete() called with: serialNumber = [" + serialNumber + "]");
-        if (CAR_PLAY_BIND_SUCCESS) {
-            mCarPlayClient.roleSwitchComplete(serialNumber);
-        } else {
-            Log.d(TAG, "delay 1 second, again role switch");
-            handler.postDelayed(() -> {
-                Log.d(TAG, "roleSwitchComplete: CarPlayBindSuccess == " + CAR_PLAY_BIND_SUCCESS);
-                mCarPlayClient.roleSwitchComplete(serialNumber);
-            }, 1000);
-        }
-    }
-
     public void connectSession(int type, String serial, String mac) {
         Log.d(TAG, "connectSession() called with: type = [" + type + "], serial = [" + serial + "], mac = [" + mac + "]");
         if (type == 1 || type == 3) {
@@ -1074,6 +1058,23 @@ public final class AppController {
                 Log.e(TAG, "onDeviceUpdate: ", e);
             }
         }
+    }
+
+    public void roleSwitchComplete(String serialNumber) {
+        Log.d(TAG, "roleSwitchComplete() called with: serialNumber = [" + serialNumber + "]");
+        if (CAR_PLAY_BIND_SUCCESS) {
+            mCarPlayClient.roleSwitchComplete(serialNumber);
+        } else {
+            Log.d(TAG, "delay 1 second, again role switch");
+            handler.postDelayed(() -> {
+                Log.d(TAG, "roleSwitchComplete: CarPlayBindSuccess == " + CAR_PLAY_BIND_SUCCESS);
+                mCarPlayClient.roleSwitchComplete(serialNumber);
+            }, 1000);
+        }
+        isStartingCarPlay = true;
+        Log.d(TAG, "isStartingCarPlay = true");
+        handler.sendEmptyMessageDelayed(3, 30000);
+        Log.d(TAG, "sendEmptyMessageDelayed 30s");
     }
 
     public void startCarPlay(String uniqueInfo, boolean isUSB) {
@@ -1164,13 +1165,13 @@ public final class AppController {
                             Log.d(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED    device == null");
                         }
                         if (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) == BluetoothAdapter.STATE_ON) {
-                            Log.d(TAG, "Bluetooth State ON");
+                            Log.d(TAG, "Bluetooth CarPlayState ON");
 //                            retVal = mServerListener.startRfcommServer();
 //                            if (0 != retVal) {
 //                                Log.e(TAG, "Couldn't start RFCOMM server");
 //                            }
                         } else if (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) == BluetoothAdapter.STATE_OFF) {
-                            Log.d(TAG, "Bluetooth State OFF");
+                            Log.d(TAG, "Bluetooth CarPlayState OFF");
 //                            mServerListener.stopRfcommServer();
 //                            clearAllAuthDeviceFromQueue();
 //                            clearAllAvailableDevice();
