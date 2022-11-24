@@ -65,7 +65,7 @@ public final class AppController {
     public static boolean isCanConnectingCPWifi = false;
     public static boolean isStartingCarPlay = false;
     public static boolean isCertifiedVersion = false;   //certify version
-    public static boolean isSOPVersion = true;         //sop version
+    public static boolean isSOPVersion = false;         //sop version
     public static boolean isReplugged = true;
     private static int isReplugged_id;
     private static int CURRENT_CONNECT_STATE = 0;

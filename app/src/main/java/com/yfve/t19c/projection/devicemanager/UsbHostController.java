@@ -266,7 +266,7 @@ public class UsbHostController {
             if (!CarHelper.isOpenCarPlay()) return;
             if (!mDeviceHandlerResolver.isDeviceCarPlayPossible(device)) return;
             Log.d(TAG, "isStartingCarPlay == " + isStartingCarPlay);
-            if (mAppController.isIdleState() || !mAppController.isSwitchingSession() || !isStartingCarPlay) {
+            if (mAppController.isIdleState() && !mAppController.isSwitchingSession() && !isStartingCarPlay) {
                 if (mDeviceHandlerResolver.roleSwitch(device)) {
                     mAppController.roleSwitchComplete(device.getSerialNumber());
                 }
