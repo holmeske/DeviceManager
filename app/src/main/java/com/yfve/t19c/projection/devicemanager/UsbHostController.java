@@ -230,7 +230,7 @@ public class UsbHostController {
                 Log.d(TAG, "the device is a usb storage");
                 return;
             }
-            if (CarHelper.isOpenQDLink()) return;
+            if (CarHelper.isOpenQDLink() || !CarHelper.isOpenAndroidAuto()) return;
             if (!mDeviceHandlerResolver.isSupportedAOAP(device)) {
                 Log.d(TAG, "isSupportedAOAP is false");
                 return;

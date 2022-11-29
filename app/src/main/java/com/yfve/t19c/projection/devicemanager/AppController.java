@@ -422,8 +422,9 @@ public final class AppController {
                 }
                 FindCurrentAvailableByMac.put(device.getMacAddress(), device.getAvailable());
                 FindMacBySerial.put(device.getSerialNumber(), device.getMacAddress());
-                noticeExternal(device, 2);
-
+                if (CarHelper.isOpenAndroidAuto()) {
+                    noticeExternal(device, 2);
+                }
             }
 
             @Override
@@ -567,7 +568,9 @@ public final class AppController {
                 aawDeviceInfo.setDeviceName(deviceName);
                 aawDeviceInfo.setMacAddress(uniqueInfo);
                 aawDeviceInfo.setAvailable(available);
-                noticeExternal(aawDeviceInfo, 4);
+                if (CarHelper.isOpenCarPlay()) {
+                    noticeExternal(aawDeviceInfo, 4);
+                }
             }
 
 
