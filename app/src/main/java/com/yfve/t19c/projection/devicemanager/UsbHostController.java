@@ -29,6 +29,7 @@ import com.yfve.t19c.projection.devicemanager.constant.CommonUtilsKt;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class UsbHostController {
     private static final String TAG = "UsbHostController";
@@ -178,8 +179,12 @@ public class UsbHostController {
         }
 
         if (attached) {
-            Log.d(TAG, "add usb alive device  " + device);
-            mAliveDeviceList.add(device);
+            if (mAliveDeviceList.stream().anyMatch(d -> d.getType() == 1 || Objects.equals(d.getSerial(), device.getSerial()))) {
+                Log.d(TAG, "already contained  " + device);
+            } else {
+                Log.d(TAG, "add usb alive device  " + device);
+                mAliveDeviceList.add(device);
+            }
         } else {
             Log.d(TAG, "remove usb alive device  " + device.getSerial());
             mAliveDeviceList.removeIf(d -> ObjectsCompat.equals(d.getSerial(), device.getSerial()) && d.getType() == 1);

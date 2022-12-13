@@ -250,7 +250,7 @@ public final class AppController {
                 resetUsb(false);
             } else if (bundle.containsKey("switch")) {
                 Log.d(TAG, "onReceive: " + bundle.get("switch"));
-                switchSession(null, "30:6A:85:15:1D:35");
+                switchSession("802KPVH1524647", "");
             } else if (bundle.containsKey("history")) {
                 Log.d(TAG, "onReceive: " + bundle.get("history"));
                 for (Device d : historyDeviceList) {
@@ -276,6 +276,7 @@ public final class AppController {
 
     public AppController(Context context, CarHelper carHelper) {
         Log.d(TAG, "AppController() called");
+
         this.mContext = context;
 
 //        IntentFilter intentFilter = new IntentFilter();
@@ -286,7 +287,7 @@ public final class AppController {
         registerBluetoothReceiver();
 
         mDeviceListHelper = new DeviceListHelper(context);
-        //mDeviceListHelper.clear();
+//        mDeviceListHelper.clear();
         mDeviceListHelper.read();
         carHelper.setOnCarPowerStateListener(new CarHelper.OnCarPowerStateListener() {
             @Override
@@ -721,6 +722,7 @@ public final class AppController {
             }
             cnt++;
         }
+        Log.d(TAG, "stopLastSession end");
     }
 
     private void onSessionStateUpdate(String serial, String mac, int state, String msg) {
@@ -826,7 +828,7 @@ public final class AppController {
      */
     public void switchSession(String serial, String mac) {
         Log.d(TAG, "switchSession() called with: serial = [" + serial + "], mac = [" + mac + "]");
-        if (TextUtils.equals(currentDevice.BluetoothMac, mac)) {
+        if (TextUtils.equals(currentDevice.BluetoothMac, mac) && !TextUtils.isEmpty(mac)) {
             Log.d(TAG, "same as current session bluetooth mac address");
             return;
         }
@@ -849,16 +851,25 @@ public final class AppController {
         }
         updateSwitchingSessionState(serial, mac);
         stopLastSession();
-
+        Log.d(TAG, "switchSession go on");
         int type = 0;
         for (Device device : aliveDeviceList) {
             if (Objects.equals(device.getMac(), mac)) {
                 type = (device.isWirelessAA() || device.isUsbAA()) ? 2 : 4;
             }
+            if (TextUtils.isEmpty(mac)) {
+                if (TextUtils.isEmpty(serial)) {
+                    Log.d(TAG, "switchSession interrupt");
+                    return;
+                } else {
+                    type = 1;
+                }
+            }
         }
-        if (aliveDeviceList.stream().anyMatch(device -> Objects.equals(device.getMac(), mac))) {
+        if (aliveDeviceList.stream().anyMatch(device -> Objects.equals(device.getMac(), mac) || Objects.equals(device.getSerial(), serial))) {
             connectSession(type, serial, mac);
         } else {
+            if (TextUtils.isEmpty(mac)) return;
             if (mACLConnectedList.contains(mac)) {
                 Log.d(TAG, "ACLConnectedList: " + new Gson().toJson(mACLConnectedList));
                 onNotification(-5);
@@ -1013,8 +1024,16 @@ public final class AppController {
                 onNotification(isReplugged_id);
             }
         } else if (type == 2) {
+            if (TextUtils.isEmpty(mac)) {
+                Log.d(TAG, "mac == " + mac);
+                return;
+            }
             startWirelessAndroidAuto(mac, 0);
         } else if (type == 4) {
+            if (TextUtils.isEmpty(mac)) {
+                Log.d(TAG, "mac == " + mac);
+                return;
+            }
             startCarPlay(mac, false);
         }
     }
@@ -1036,8 +1055,8 @@ public final class AppController {
     }
 
     public boolean isIdleState() {
-        Log.d(TAG, "CURRENT_SESSION_TYPE == " + CURRENT_SESSION_TYPE);
-        return CURRENT_CONNECT_STATE == STATE_IDLE || CURRENT_SESSION_TYPE == TYPE_NO_SESSION;
+        Log.d(TAG, CURRENT_CONNECT_STATE + " " + CURRENT_SESSION_TYPE + " " + isSwitchingSession + " " + isCanConnectingCPWifi + " " + isStartingCarPlay);
+        return (CURRENT_CONNECT_STATE == STATE_IDLE || CURRENT_SESSION_TYPE == TYPE_NO_SESSION) && !isCanConnectingCPWifi && !isStartingCarPlay;
     }
 
     public boolean isPreParingState() {
@@ -1077,7 +1096,7 @@ public final class AppController {
         isStartingCarPlay = true;
         Log.d(TAG, "isStartingCarPlay = true");
         handler.sendEmptyMessageDelayed(3, 30000);
-        Log.d(TAG, "sendEmptyMessageDelayed 30s");
+        Log.d(TAG, "30s connecting protect start");
     }
 
     public void startCarPlay(String uniqueInfo, boolean isUSB) {

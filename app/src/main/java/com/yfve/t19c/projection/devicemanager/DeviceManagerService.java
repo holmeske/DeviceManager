@@ -32,7 +32,7 @@ public class DeviceManagerService extends Service {
     public static final List<Device> aliveDeviceList = new ArrayList<>();
     private static final String TAG = "DeviceManagerService";
     public static boolean isStarted = false;
-    private final String Data = "2022-11-29 10:00 base"; //auth   sop   base
+    private final String Data = "2022-12-13 10:32 base"; //auth   sop   base
     private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private int retryCount;
     private CarHelper mCarHelper;
@@ -61,7 +61,7 @@ public class DeviceManagerService extends Service {
             if (mAppController != null) {
                 if (connectType > 4 || connectType < 1) {
                     retryCount = 3;
-                    mAppController.switchSession(serial, mac);
+                    mAppController.switchSession(serial, mac);//bluetooth connectType params only transport zero
                 } else {
                     mAppController.switchSession(connectType, serial, mac);
                 }
