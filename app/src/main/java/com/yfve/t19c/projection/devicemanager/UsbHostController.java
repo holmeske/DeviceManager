@@ -109,11 +109,9 @@ public class UsbHostController {
             isBoundCarPlayService = true;
             connectProjectionUsbDevice();
         });
-    }
 
-    public void setCarHelper(CarHelper mCarHelper) {
         Log.e(TAG, "Wait for the callback that binds the Car service successfully");
-        mCarHelper.setOnGetValidValueListener(() -> {
+        CarHelper.INSTANCE.setOnGetValidValueListener(() -> {
             Log.d(TAG, "Car Service returned valid value");
             isGetCarServiceValue = true;
             connectProjectionUsbDevice();
@@ -179,10 +177,10 @@ public class UsbHostController {
         }
 
         if (attached) {
-            if (mAliveDeviceList.stream().anyMatch(d -> d.getType() == 1 || Objects.equals(d.getSerial(), device.getSerial()))) {
-                Log.d(TAG, "already contained  " + device);
+            if (mAliveDeviceList.stream().anyMatch(d -> d.getType() == 1 && Objects.equals(d.getSerial(), device.getSerial()))) {
+                Log.d(TAG, "already contained  device " + device.getSerial());
             } else {
-                Log.d(TAG, "add usb alive device  " + device);
+                Log.d(TAG, "add usb alive " + device);
                 mAliveDeviceList.add(device);
             }
         } else {
@@ -252,7 +250,7 @@ public class UsbHostController {
                         return;
                     }
                     //when session not null ,  attach android auto device , need notify users
-                    if (!mAppController.isSwitchingSession()) {
+                    if (mAppController.isNotSwitchingSession()) {
                         Log.d(TAG, "isResettingUsb = " + isResettingUsb);
                         Log.d(TAG, "LAST_ANDROID_AUTO_DEVICE_SERIAL = " + LAST_ANDROID_AUTO_DEVICE_SERIAL);
                         if (isResettingUsb && TextUtils.equals(LAST_ANDROID_AUTO_DEVICE_SERIAL, device.getSerialNumber())) {
@@ -271,7 +269,7 @@ public class UsbHostController {
             if (!CarHelper.isOpenCarPlay()) return;
             if (!mDeviceHandlerResolver.isDeviceCarPlayPossible(device)) return;
             Log.d(TAG, "isStartingCarPlay == " + isStartingCarPlay);
-            if (mAppController.isIdleState() && !mAppController.isSwitchingSession() && !isStartingCarPlay) {
+            if (mAppController.isIdleState() && mAppController.isNotSwitchingSession() && !isStartingCarPlay) {
                 if (mDeviceHandlerResolver.roleSwitch(device)) {
                     mAppController.roleSwitchComplete(device.getSerialNumber());
                 }

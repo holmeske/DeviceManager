@@ -3,14 +3,16 @@ package com.yfve.t19c.projection.devicemanager;
 import android.car.Car;
 import android.car.CarInfoManager;
 import android.car.hardware.power.CarPowerManager;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.ServiceConnection;
 import android.os.Handler;
-import android.os.IBinder;
 import android.util.Log;
 
-public class CarHelper {
+import com.yfve.t19c.projection.devicemanager.constant.CarPowerState;
+
+public enum CarHelper {
+
+    INSTANCE;
+
     private static final String TAG = "CarHelper";
     private static String AndroidAutoSwitch = "";
     private static String CarPlaySwitch = "";
@@ -38,11 +40,6 @@ public class CarHelper {
         }
     };
     private OnCarPowerStateListener onCarPowerStateListener;
-
-    public CarHelper(Context mContext) {
-        Log.d(TAG, "CarHelper() called");
-        initCar(mContext);
-    }
 
     public static boolean isStandby() {
         return standby;
@@ -97,6 +94,14 @@ public class CarHelper {
         }
     }
 
+    public void sendPROModeExit() {
+        Log.d(TAG, "sendPROModeExit() called");
+        if (mCarPowerManager != null) {
+            Log.d(TAG, "PROModeExit  true");
+            mCarPowerManager.sendPROModeExit(true);
+        }
+    }
+
     public void setOnCarPowerStateListener(OnCarPowerStateListener onCarPowerStateListener) {
         this.onCarPowerStateListener = onCarPowerStateListener;
     }
@@ -105,47 +110,35 @@ public class CarHelper {
         this.onGetValidValueListener = onGetValidValueListener;
     }
 
-    private void initCar(Context context) {
-        mCar = Car.createCar(context, new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                Log.d(TAG, "onServiceConnected() called with: name = [" + name.getPackageName() + "]");
-                if (mCar != null) {
-                    try {
-                        setCarPowerStateListener();
-                        mCarInfoManager = (CarInfoManager) mCar.getCarManager(Car.INFO_SERVICE);
-                        if (mCarInfoManager != null) {
-                            property = mCarInfoManager.getByteProperty(CarInfoManager.ID_DIAGNOSTIC_CONFIG_701A);
-
-                            if (property.length != 8) {
-                                Log.d(TAG, "onServiceConnected: postDelayed  1000");
-                                mHandler.postDelayed(runnable, 1000);
-                            } else {
-                                processValidValue();
-                            }
-
-                        } else {
-                            Log.e(TAG, "CarInfoManager is null");
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, e.toString());
-                    }
-                } else {
-                    Log.e(TAG, "Car is null");
-                }
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                Log.d(TAG, "onServiceDisconnected() called with: name = [" + name.getPackageName() + "]");
-            }
-        });
+    public void initCar(Context context) {
+        mCar = Car.createCar(context);
         if (mCar != null) {
-            mCar.connect();
+            try {
+                initCarPowerStateListener();
+                mCarInfoManager = (CarInfoManager) mCar.getCarManager(Car.INFO_SERVICE);
+                if (mCarInfoManager != null) {
+                    property = mCarInfoManager.getByteProperty(CarInfoManager.ID_DIAGNOSTIC_CONFIG_701A);
+
+                    if (property.length != 8) {
+                        Log.d(TAG, "onServiceConnected: postDelayed  1000");
+                        mHandler.postDelayed(runnable, 1000);
+                    } else {
+                        processValidValue();
+                    }
+
+                } else {
+                    Log.e(TAG, "CarInfoManager is null");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            Log.e(TAG, "Car is null");
         }
     }
 
-    private void setCarPowerStateListener() {
+    private void initCarPowerStateListener() {
+        Log.d(TAG, "initCarPowerStateListener() called");
         mCarPowerManager = (CarPowerManager) mCar.getCarManager(Car.POWER_SERVICE);
         if (mCarPowerManager != null) {
             try {
@@ -186,6 +179,15 @@ public class CarHelper {
                         if (onCarPowerStateListener != null) {
                             onCarPowerStateListener.run();
                         }
+                    } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_PROTECTION) {
+                        Log.d(TAG, "onStateChanged() called with: PWR_MODE_PROTECTION");
+                        CarPowerState.PWR_MODE_PROTECTION = true;
+                    } else if (state == CarPowerManager.CarPowerStateListener.PWR_SCREEN_ON) {
+                        Log.d(TAG, "onStateChanged() called with: PWR_SCREEN_ON");
+                        CarPowerState.PWR_SCREEN_ON = true;
+                    } else if (state == CarPowerManager.CarPowerStateListener.PWR_SCREEN_OFF) {
+                        Log.d(TAG, "onStateChanged() called with: PWR_SCREEN_OFF");
+                        CarPowerState.PWR_SCREEN_ON = false;
                     }
                 });
             } catch (NoSuchMethodError e) {

@@ -32,10 +32,9 @@ public class DeviceManagerService extends Service {
     public static final List<Device> aliveDeviceList = new ArrayList<>();
     private static final String TAG = "DeviceManagerService";
     public static boolean isStarted = false;
-    private final String Data = "2022-12-13 10:32 base"; //auth   sop   base
+    private final String Data = "2022-12-16 15:44 sop"; //auth   sop   base
     private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private int retryCount;
-    private CarHelper mCarHelper;
     private UsbHostController mUsbHostController;
     private AppController mAppController;
     private Context mContext;
@@ -131,14 +130,6 @@ public class DeviceManagerService extends Service {
 
     public static List<Device> filteredAliveDeviceList() {
         List<Device> filteredDeviceList = new ArrayList<>();
-//        aliveDeviceList.add(new Device(1, "Pixel 4", "99041FFAZ006JS", "null", true, false, false, false, true));
-//        aliveDeviceList.add(new Device(1, "Pixel 4", "99041FFAZ006JS", "F0:5C:77:D8:37:0A", false, true, false, false, true));
-//        aliveDeviceList.add(new Device(1, "Pixel 4", "null", "F0:5C:77:D8:37:0a", false, true, false, false, true));
-//        aliveDeviceList.add(new Device(1, "Pixel 4", "asdaa", "null", false, true, false, false, true));
-//        List<Device> aliveDeviceList = new ArrayList<>();
-//        aliveDeviceList.add(new Device(2, "Pixel 2 XL", "710KPRW0307710", "B4:F1:DA:27:7E:4F", false, true, false, false, true));
-//        aliveDeviceList.add(new Device(1, "Pixel 4", "98161FFAZ004S9", "null", true, false, false, false, true));
-//        aliveDeviceList.add(new Device(2, "Pixel 4", "98161FFAZ004S9", "F0:5C:77:F4:15:63", false, true, false, false, true));
 
         aliveDeviceList.forEach(item -> Log.d(TAG, "alive     " + item.toString()));
         aliveDeviceList.forEach(d -> {
@@ -169,19 +160,6 @@ public class DeviceManagerService extends Service {
             }
 
         });
-           /* for (Iterator<Device> iterator = filteredDeviceList.iterator(); iterator.hasNext(); ) {
-                Device d = iterator.next();
-                if (TextUtils.isEmpty(d.getMac()) || TextUtils.equals(d.getMac(), "null")) {
-                    String mac = FindMacBySerial.get(d.getSerial());
-                    Log.d(TAG, "mac : " + mac);
-                    boolean repeat = filteredDeviceList.stream().allMatch(it -> TextUtils.equals(it.getMac(), mac) && !TextUtils.isEmpty(it.getMac())
-                            && !TextUtils.equals(it.getMac(), "null"));
-                    if (repeat) {
-                        iterator.remove();
-                    }
-                }
-            }*/
-        //aliveDeviceList.forEach(item -> Log.d(TAG, "aliveDeviceList  " + item.toString()));
         filteredDeviceList.forEach(item -> Log.d(TAG, "filtered  " + item.toString()));
         return filteredDeviceList;
     }
@@ -213,17 +191,16 @@ public class DeviceManagerService extends Service {
             Log.d(TAG, "mContext is already init");
         }
 
-        mCarHelper = new CarHelper(mContext);
+        CarHelper.INSTANCE.initCar(mContext);
 
         new UsbHelper();
 
-        mAppController = new AppController(mContext, mCarHelper);
+        mAppController = new AppController(mContext);
         mAppController.setOnConnectListener(mOnConnectListeners);
         mAppController.setDeviceList(aliveDeviceList);
         mAppController.setHistoryDeviceList(historyDeviceList);
 
         mUsbHostController = new UsbHostController(mContext, mAppController, mOnConnectListeners);
-        mUsbHostController.setCarHelper(mCarHelper);
         mUsbHostController.setDeviceList(aliveDeviceList);
 
         mAppController.setUsbHostController(mUsbHostController);
@@ -252,7 +229,7 @@ public class DeviceManagerService extends Service {
         super.onDestroy();
         Log.d(TAG, "onDestroy() called");
         isStarted = false;
-        mCarHelper.release();
+        CarHelper.INSTANCE.release();
         mUsbHostController.unRegisterReceiver();
         mAppController.release();
     }
