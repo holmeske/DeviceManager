@@ -1,5 +1,7 @@
 package com.yfve.t19c.projection.devicemanager;
 
+import static com.yfve.t19c.projection.devicemanager.AppController.CURRENT_SESSION_TYPE;
+
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -43,18 +45,20 @@ public class AapBinderClient implements IBinder.DeathRecipient {
             }
         }
     };
+    private final AppController mAppController;
     private IAapReceiverService mAapClient = null;
     private HandlerThread mHandlerThread = null;
     private OnBindIAapReceiverServiceListener listener;
 
-    public AapBinderClient() {
+    public AapBinderClient(AppController appController) {
+        this.mAppController = appController;
         if (mHandlerThread == null) mHandlerThread = new HandlerThread(TAG);
     }
 
-    public boolean registerListener(AapListener listener) {
-        if (listener == null) return false;
+    public void registerListener(AapListener listener) {
+        if (listener == null) return;
         if (!mCallbackList.contains(listener)) mCallbackList.add(listener);
-        return connectService();
+        connectService();
     }
 
     public void unregisterListener(AapListener listener) {
@@ -112,23 +116,29 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         }
     }
 
-    private boolean connectService() {
+    private void connectService() {
         Log.d(TAG, "connectService() called");
         if (mAapClient != null) {
             Log.i(TAG, "already bind");
-            return true;
+            return;
         }
         if (!mHandlerThread.isAlive()) {
             mHandlerThread.start();
         }
         new Handler().post(this::getBinderClient);
-        return true;
     }
 
     @Override
     public void binderDied() {
         Log.i(TAG, "binderDied");
         mAapClient = null;
+        if (CURRENT_SESSION_TYPE == AppController.TYPE_USB_ANDROID_AUTO || CURRENT_SESSION_TYPE == AppController.TYPE_WIFI_ANDROID_AUTO) {
+            if (mAppController != null) {
+                mAppController.updateIdleState();
+            } else {
+                Log.d(TAG, "binderDied, mAppController == null");
+            }
+        }
         getBinderClient();
     }
 

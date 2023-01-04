@@ -28,6 +28,7 @@ import com.yfve.t19c.projection.devicelist.OnConnectListener;
 import com.yfve.t19c.projection.devicemanager.constant.CommonUtilsKt;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -190,8 +191,13 @@ public class UsbHostController {
         for (int i = 0; i < mAliveDeviceList.size(); i++) {
             Log.d(TAG, "alive device " + i + " : " + mAliveDeviceList.get(i));
         }
-        for (OnConnectListener listener : mOnConnectListeners) {
-            Log.d(TAG, "onDeviceUpdate " + System.identityHashCode(listener));
+
+        Log.d(TAG, "OnConnectListener size == " + mOnConnectListeners.size());
+        Iterator<OnConnectListener> it = mOnConnectListeners.iterator();
+        while (it.hasNext()) {
+            OnConnectListener listener = it.next();
+            int id = System.identityHashCode(listener);
+            Log.d(TAG, "onDeviceUpdate " + id);
             try {
                 if (listener != null) {
                     listener.onDeviceUpdate(device);
@@ -199,7 +205,9 @@ public class UsbHostController {
                     Log.d(TAG, "onDeviceUpdate listener == null");
                 }
             } catch (RemoteException e) {
-                Log.e(TAG, "onDeviceUpdate: ", e);
+                Log.e(TAG, "", e);
+                Log.e(TAG, id + " is died, will be removed");
+                it.remove();
             }
         }
         Log.d(TAG, "onDeviceUpdate end");
@@ -269,9 +277,23 @@ public class UsbHostController {
             if (!CarHelper.isOpenCarPlay()) return;
             if (!mDeviceHandlerResolver.isDeviceCarPlayPossible(device)) return;
             Log.d(TAG, "isStartingCarPlay == " + isStartingCarPlay);
-            if (mAppController.isIdleState() && mAppController.isNotSwitchingSession() && !isStartingCarPlay) {
-                if (mDeviceHandlerResolver.roleSwitch(device)) {
-                    mAppController.roleSwitchComplete(device.getSerialNumber());
+            if (mAppController.isIdleState()) {
+                if (mAppController.isNotSwitchingSession()) {
+                    if (!isStartingCarPlay) {
+                        if (mDeviceHandlerResolver.roleSwitch(device)) {
+                            mAppController.roleSwitchComplete(device.getSerialNumber());
+                        }
+                    }
+                } else {
+                    if (Objects.equals(mAppController.switchingPhone.getSerial(), device.getSerialNumber())) {
+                        if (mDeviceHandlerResolver.roleSwitch(device)) {
+                            mAppController.roleSwitchComplete(device.getSerialNumber());
+                        }
+                    }
+                }
+            } else {
+                if (AppController.currentSessionIsAndroidAuto()) {
+                    //mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 3);
                 }
             }
         } else {

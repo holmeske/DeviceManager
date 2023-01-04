@@ -52,25 +52,25 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 public final class AppController {
+    public static final int TYPE_USB_ANDROID_AUTO = 1;
+    public static final int TYPE_WIFI_ANDROID_AUTO = 2;
     private static final String TAG = "AppController";
     private static final int STATE_IDLE = 0;
     private static final int STATE_CONNECTED = 2;
     private static final int STATE_PREPARING = 3;
     private static final int STATE_AOA_SWITCHING = 4;
     private static final int TYPE_NO_SESSION = 0;
-    private static final int TYPE_USB_ANDROID_AUTO = 1;
-    private static final int TYPE_WIFI_ANDROID_AUTO = 2;
     private static final int TYPE_USB_CAR_PLAY = 3;
     private static final int TYPE_WIFI_CAR_PLAY = 4;
     public static boolean isResettingUsb = false;
     public static boolean isCanConnectingCPWifi = false;
     public static boolean isStartingCarPlay = false;
     public static boolean isCertifiedVersion = false;   //certify version
-    public static boolean isSOPVersion = true;         //sop version
+    public static boolean isSOPVersion = false;         //sop version
     public static boolean isReplugged = true;
+    public static int CURRENT_SESSION_TYPE = 0;
     private static int isReplugged_id;
     private static int CURRENT_CONNECT_STATE = 0;
-    private static int CURRENT_SESSION_TYPE = 0;
     private final CarPlayClient mCarPlayClient;
     private final AapBinderClient mAapProxy;
     private final AndroidAutoDeviceClient mAndroidAutoDeviceClient;
@@ -459,7 +459,7 @@ public final class AppController {
             }
         });
 
-        mAapProxy = new AapBinderClient();
+        mAapProxy = new AapBinderClient(this);
         mAapProxy.registerListener(mAapListener);
 
         mCarPlayClient = new CarPlayClient();
@@ -591,6 +591,9 @@ public final class AppController {
         mCarPlayClient.registerListener(carPlayListener);
     }
 
+    public static boolean currentSessionIsAndroidAuto() {
+        return CURRENT_SESSION_TYPE == TYPE_WIFI_ANDROID_AUTO;
+    }
 
     public boolean isNotSwitchingSession() {
         Log.d(TAG, "isSwitchingSession == " + isSwitchingSession);
