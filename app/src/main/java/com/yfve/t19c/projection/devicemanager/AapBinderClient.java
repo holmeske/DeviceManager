@@ -1,6 +1,6 @@
 package com.yfve.t19c.projection.devicemanager;
 
-import static com.yfve.t19c.projection.devicemanager.AppController.CURRENT_SESSION_TYPE;
+import static com.yfve.t19c.projection.devicemanager.AppController.CURRENT_SESSION;
 
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -132,7 +132,7 @@ public class AapBinderClient implements IBinder.DeathRecipient {
     public void binderDied() {
         Log.i(TAG, "binderDied");
         mAapClient = null;
-        if (CURRENT_SESSION_TYPE == AppController.TYPE_USB_ANDROID_AUTO || CURRENT_SESSION_TYPE == AppController.TYPE_WIFI_ANDROID_AUTO) {
+        if (CURRENT_SESSION == AppController.USB_ANDROID_AUTO || CURRENT_SESSION == AppController.WIFI_ANDROID_AUTO) {
             if (mAppController != null) {
                 mAppController.updateIdleState();
             } else {

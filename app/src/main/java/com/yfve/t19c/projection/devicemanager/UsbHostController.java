@@ -1,9 +1,10 @@
 package com.yfve.t19c.projection.devicemanager;
 
 import static com.yfve.t19c.projection.devicemanager.AppController.isCertifiedVersion;
+import static com.yfve.t19c.projection.devicemanager.AppController.isConnectingCarPlay;
+import static com.yfve.t19c.projection.devicemanager.AppController.isConnectingWiFiAndroidAuto;
 import static com.yfve.t19c.projection.devicemanager.AppController.isReplugged;
 import static com.yfve.t19c.projection.devicemanager.AppController.isResettingUsb;
-import static com.yfve.t19c.projection.devicemanager.AppController.isStartingCarPlay;
 import static com.yfve.t19c.projection.devicemanager.constant.CacheHelperKt.getLastConnectDeviceInfo;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_ANDROID_AUTO_DEVICE_SERIAL;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_REASON;
@@ -276,10 +277,10 @@ public class UsbHostController {
         if (ios) {
             if (!CarHelper.isOpenCarPlay()) return;
             if (!mDeviceHandlerResolver.isDeviceCarPlayPossible(device)) return;
-            Log.d(TAG, "isStartingCarPlay == " + isStartingCarPlay);
+            Log.d(TAG, "isConnectingCarPlay == " + isConnectingCarPlay);
             if (mAppController.isIdleState()) {
                 if (mAppController.isNotSwitchingSession()) {
-                    if (!isStartingCarPlay) {
+                    if (!isConnectingCarPlay ) {
                         if (mDeviceHandlerResolver.roleSwitch(device)) {
                             mAppController.roleSwitchComplete(device.getSerialNumber());
                         }
@@ -292,8 +293,12 @@ public class UsbHostController {
                     }
                 }
             } else {
-                if (AppController.currentSessionIsAndroidAuto()) {
-                    //mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 3);
+                if (AppController.currentSessionIsWifiAndroidAuto()) {
+                    mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 3);
+                    return;
+                }
+                if (AppController.currentSessionIsWifiCarPlay() && !Objects.equals(mAppController.currentDevice.SerialNumber, device.getSerialNumber())) {
+                    mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 3);
                 }
             }
         } else {

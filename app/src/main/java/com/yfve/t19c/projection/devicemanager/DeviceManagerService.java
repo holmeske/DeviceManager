@@ -32,7 +32,7 @@ public class DeviceManagerService extends Service {
     public static final List<Device> aliveDeviceList = new ArrayList<>();
     private static final String TAG = "DeviceManagerService";
     public static boolean isStarted = false;
-    private final String Data = "2023-01-04 10:25 base"; //auth   sop   base
+    private final String Data = "2023-01-06 15:00 sop"; //auth   sop   base
     private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private int retryCount;
     private UsbHostController mUsbHostController;
@@ -57,10 +57,14 @@ public class DeviceManagerService extends Service {
         @Override
         public void startSession(String serial, String mac, int connectType) {
             Log.d(TAG, "startSession() called with: serial = [" + serial + "], mac = [" + mac + "], connectType = [" + connectType + "]");
+            if (AppController.isConnectingCarPlay) {
+                Log.d(TAG, "carplay is connecting, not allow switch session");
+                return;
+            }
             if (mAppController != null) {
                 if (connectType > 4 || connectType < 1) {
                     retryCount = 3;
-                    mAppController.switchSession(serial, mac);//bluetooth connectType params only transport zero
+                    mAppController.switchSession(serial, mac); // bluetooth connectType params only transport zero
                 } else {
                     mAppController.switchSession(connectType, serial, mac);
                 }
@@ -168,7 +172,7 @@ public class DeviceManagerService extends Service {
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "onBind() called " + Data);
         if (mContext == null) {
-            mContext = App.INSTANCE;
+            mContext = DeviceManagerApplication.INSTANCE;
         } else {
             Log.d(TAG, "mContext is already init");
         }
@@ -186,7 +190,7 @@ public class DeviceManagerService extends Service {
         Log.d(TAG, "onCreate() called " + Data);
         isStarted = true;
         if (mContext == null) {
-            mContext = App.INSTANCE;
+            mContext = DeviceManagerApplication.INSTANCE;
         } else {
             Log.d(TAG, "mContext is already init");
         }
@@ -210,7 +214,7 @@ public class DeviceManagerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand() called " + Data);
         if (mContext == null) {
-            mContext = App.INSTANCE;
+            mContext = DeviceManagerApplication.INSTANCE;
         } else {
             Log.d(TAG, "mContext is already init");
         }

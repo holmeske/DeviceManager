@@ -66,20 +66,19 @@ public enum CarHelper {
 
     public static boolean isOpenAndroidAuto() {
         if ("1".equals(AndroidAutoSwitch)) {
-            Log.d(TAG, "AndroidAuto Switch is open");
+            Log.d(TAG, "android auto  switch is open");
             return true;
         } else {
-            Log.d(TAG, "AndroidAuto Switch is close");
+            Log.d(TAG, "android auto switch is close");
             return false;
         }
     }
 
     public static boolean isOpenCarPlay() {
         if ("1".equals(CarPlaySwitch)) {
-            //Log.d(TAG, "CarPlay Switch is open");
             return true;
         } else {
-            Log.d(TAG, "CarPlay Switch is close");
+            Log.e(TAG, "carplay switch is close");
             return false;
         }
     }
