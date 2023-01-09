@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         DeviceListHelper(this).test(this)
 
         //DeviceManagerService.filteredAliveDeviceList()
-        //toHexString("btMac")
+        Log.d(TAG, "onCreate: " + toHexString("156:227:63:124:4:126"))
         //stopService(Intent(this, DeviceManagerService::class.java))
 //        startForegroundService(Intent(this, DeviceManagerService::class.java))
 

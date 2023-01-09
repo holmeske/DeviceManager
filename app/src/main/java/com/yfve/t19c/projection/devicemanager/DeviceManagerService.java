@@ -32,7 +32,7 @@ public class DeviceManagerService extends Service {
     public static final List<Device> aliveDeviceList = new ArrayList<>();
     private static final String TAG = "DeviceManagerService";
     public static boolean isStarted = false;
-    private final String Data = "2023-01-06 15:00 sop"; //auth   sop   base
+    private final String Data = "2023-01-09 15:00 sop"; //auth   sop   base
     private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private int retryCount;
     private UsbHostController mUsbHostController;
