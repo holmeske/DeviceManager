@@ -24,6 +24,7 @@ public enum CarHelper {
     private CarInfoManager mCarInfoManager;
     private byte[] property;
     private OnGetValidValueListener onGetValidValueListener;
+    private boolean bPropertiesUpdate = false;
     private final Runnable runnable = new Runnable() {
         @Override
         public void run() {
@@ -36,6 +37,14 @@ public enum CarHelper {
                 } else {
                     processValidValue();
                 }
+            }
+        }
+    };
+    private final Runnable notifyPropertiesUpdate = new Runnable() {
+        @Override
+        public void run() {
+            if (onGetValidValueListener != null) {
+                onGetValidValueListener.callback();
             }
         }
     };
@@ -107,6 +116,9 @@ public enum CarHelper {
 
     public void setOnGetValidValueListener(OnGetValidValueListener onGetValidValueListener) {
         this.onGetValidValueListener = onGetValidValueListener;
+        if (isUpdateProperties()) {
+            mHandler.post(notifyPropertiesUpdate);
+        }
     }
 
     public void initCar(Context context) {
@@ -231,11 +243,19 @@ public enum CarHelper {
             if (onGetValidValueListener != null) {
                 onGetValidValueListener.callback();
             }
+            updateproperties(true);
         } else {
             Log.e(TAG, "CarService returned value is invalid");
         }
     }
 
+    private void updateproperties(boolean value) {
+        bPropertiesUpdate = value;
+    }
+
+    private boolean isUpdateProperties() {
+        return bPropertiesUpdate;
+    }
     /**
      * CarService got value from MCU
      */

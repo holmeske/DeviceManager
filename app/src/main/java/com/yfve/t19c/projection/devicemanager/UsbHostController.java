@@ -2,7 +2,6 @@ package com.yfve.t19c.projection.devicemanager;
 
 import static com.yfve.t19c.projection.devicemanager.AppController.isCertifiedVersion;
 import static com.yfve.t19c.projection.devicemanager.AppController.isConnectingCarPlay;
-import static com.yfve.t19c.projection.devicemanager.AppController.isConnectingWiFiAndroidAuto;
 import static com.yfve.t19c.projection.devicemanager.AppController.isReplugged;
 import static com.yfve.t19c.projection.devicemanager.AppController.isResettingUsb;
 import static com.yfve.t19c.projection.devicemanager.constant.CacheHelperKt.getLastConnectDeviceInfo;
@@ -96,7 +95,7 @@ public class UsbHostController {
         USBKt.usbDeviceList(mContext).values().forEach(d -> Log.d(TAG, "attached " + d.getSerialNumber() + ", " + d.getProductName()));
 
         if (mAppController.getAapBinderClient() != null) {
-            Log.e(TAG, "Wait for the callback that binds the Android Auto service successfully");
+            Log.e(TAG, "Waiting for the callback that binds the Android Auto service successfully");
             mAppController.getAapBinderClient().setOnBindIAapReceiverServiceListener(() -> {
                 Log.d(TAG, "bind IAapReceiverService success");
                 isBoundIAapReceiverService = true;
@@ -105,16 +104,16 @@ public class UsbHostController {
         } else {
             Log.e(TAG, "AapBinderClient is null");
         }
-        Log.e(TAG, "Wait for the callback that binds the CarPlay service successfully");
+        Log.e(TAG, "Waiting for the callback that binds the CarPlay service successfully");
         mAppController.setOnUpdateClientStsListener(() -> {
             Log.e(TAG, "bind CarPlay service success");
             isBoundCarPlayService = true;
             connectProjectionUsbDevice();
         });
 
-        Log.e(TAG, "Wait for the callback that binds the Car service successfully");
+        Log.e(TAG, "Waiting for the callback that binds the Car service successfully");
         CarHelper.INSTANCE.setOnGetValidValueListener(() -> {
-            Log.d(TAG, "Car Service returned valid value");
+            Log.d(TAG, "CarService returned valid value");
             isGetCarServiceValue = true;
             connectProjectionUsbDevice();
         });
@@ -126,7 +125,10 @@ public class UsbHostController {
         if (isGetCarServiceValue && (isBoundIAapReceiverService || isBoundCarPlayService)) {
             UsbDevice d = USBKt.getProjectionDevice(mContext);
             Log.d(TAG, "getProjectionDevice = " + new Gson().toJson(d));
-            if (d == null) Log.d(TAG, "no projective usb device");
+            if (d == null) {
+                Log.d(TAG, "no projective usb device");
+                return;
+            }
             if (AppSupport.isIOSDevice(d)) {
                 if (isBoundCarPlayService) {
                     attach(d);
@@ -180,7 +182,7 @@ public class UsbHostController {
 
         if (attached) {
             if (mAliveDeviceList.stream().anyMatch(d -> d.getType() == 1 && Objects.equals(d.getSerial(), device.getSerial()))) {
-                Log.d(TAG, "already contained  device " + device.getSerial());
+                Log.d(TAG, "already contained device " + device.getSerial());
             } else {
                 Log.d(TAG, "add usb alive " + device);
                 mAliveDeviceList.add(device);
@@ -193,7 +195,7 @@ public class UsbHostController {
             Log.d(TAG, "alive device " + i + " : " + mAliveDeviceList.get(i));
         }
 
-        Log.d(TAG, "OnConnectListener size == " + mOnConnectListeners.size());
+        Log.d(TAG, "onDeviceUpdate begin");
         Iterator<OnConnectListener> it = mOnConnectListeners.iterator();
         while (it.hasNext()) {
             OnConnectListener listener = it.next();
@@ -280,7 +282,7 @@ public class UsbHostController {
             Log.d(TAG, "isConnectingCarPlay == " + isConnectingCarPlay);
             if (mAppController.isIdleState()) {
                 if (mAppController.isNotSwitchingSession()) {
-                    if (!isConnectingCarPlay ) {
+                    if (!isConnectingCarPlay) {
                         if (mDeviceHandlerResolver.roleSwitch(device)) {
                             mAppController.roleSwitchComplete(device.getSerialNumber());
                         }

@@ -1,5 +1,7 @@
 package com.yfve.t19c.projection.devicemanager.constant;
 
+import com.yfve.t19c.projection.devicelist.Device;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +43,8 @@ public final class LocalData {
      */
     public final static HashMap<String, Boolean> FindCurrentAvailableByMac = new HashMap<>();
 
+    public static final List<Device> HistoryDeviceList = new ArrayList<>();
+
     /**
      * android auto session terminated type
      */
@@ -52,4 +56,5 @@ public final class LocalData {
     public static String LAST_ANDROID_AUTO_DEVICE_SERIAL;
 
     public static List<String> availableDeviceBtMacList = new ArrayList<>();
+
 }

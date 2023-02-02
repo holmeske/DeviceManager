@@ -22,17 +22,17 @@ import com.android.internal.R;
 import com.yfve.t19c.projection.devicelist.Device;
 import com.yfve.t19c.projection.devicelist.DeviceListManager;
 import com.yfve.t19c.projection.devicelist.OnConnectListener;
+import com.yfve.t19c.projection.devicemanager.constant.LocalData;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class DeviceManagerService extends Service {
-    public static final List<Device> historyDeviceList = new ArrayList<>();
     public static final List<Device> aliveDeviceList = new ArrayList<>();
     private static final String TAG = "DeviceManagerService";
     public static boolean isStarted = false;
-    private final String Data = "2023-01-09 15:00 sop"; //auth   sop   base
+    private final String Data = "2023-02-02 14:04 sop"; //auth   sop   base
     private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private int retryCount;
     private UsbHostController mUsbHostController;
@@ -80,8 +80,8 @@ public class DeviceManagerService extends Service {
         @Override
         public List<Device> getHistoryDevices() {
             Log.d(TAG, "getHistoryDevices() called " + Data);
-            historyDeviceList.forEach(d -> Log.d(TAG, "history   " + d));
-            return historyDeviceList;
+            LocalData.HistoryDeviceList.forEach(d -> Log.d(TAG, "history   " + d));
+            return LocalData.HistoryDeviceList;
         }
 
         @Override
@@ -202,7 +202,6 @@ public class DeviceManagerService extends Service {
         mAppController = new AppController(mContext);
         mAppController.setOnConnectListener(mOnConnectListeners);
         mAppController.setDeviceList(aliveDeviceList);
-        mAppController.setHistoryDeviceList(historyDeviceList);
 
         mUsbHostController = new UsbHostController(mContext, mAppController, mOnConnectListeners);
         mUsbHostController.setDeviceList(aliveDeviceList);
