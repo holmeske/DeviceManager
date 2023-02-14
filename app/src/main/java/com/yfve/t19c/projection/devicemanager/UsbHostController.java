@@ -147,65 +147,44 @@ public class UsbHostController {
 
     /**
      * usb device connect state changed notice
-     *
-     * @param usbDevice usb device
-     * @param attached  usb attached
-     * @param ios       true: ios device
      */
-    private void onDeviceUpdate(UsbDevice usbDevice, boolean attached, boolean ios) {
+    private void onDeviceUpdate(UsbDevice usbDevice, boolean attached, boolean ios, boolean isSupportAOAP) {
         Log.d(TAG, "onDeviceUpdate() called with: serial = [" + usbDevice.getSerialNumber() + "], attached = [" + attached + "], ios = [" + ios + "]");
         Device device = new Device();
-        device.setType(1);//1:usb , 2:wireless
+        device.setType(1); //1:usb , 2:wireless
         device.setName(usbDevice.getProductName());
         device.setSerial(usbDevice.getSerialNumber());
         device.setAvailable(attached);
-
-        if (ios) {
-            if (attached) {
-                device.setUsbAA(false);
-            } else {
-                return;
-            }
-            if (!CarHelper.isOpenCarPlay()) {
-                Log.d(TAG, "carplay is close , do not notice external");
-                return;
-            }
-        } else {
-            if (!CarHelper.isOpenAndroidAuto()) {
-                Log.d(TAG, "android auto is close , do not notice external");
-                return;
-            }
-            if (attached) {
-                device.setUsbAA(mDeviceHandlerResolver.isSupportedAOAP(usbDevice));
-            }
-        }
+        device.setUsbCP(ios);
+        device.setWirelessCP(ios);
+        device.setUsbAA(isSupportAOAP);
+        device.setWirelessAA(isSupportAOAP);
 
         if (attached) {
             if (mAliveDeviceList.stream().anyMatch(d -> d.getType() == 1 && Objects.equals(d.getSerial(), device.getSerial()))) {
-                Log.d(TAG, "already contained device " + device.getSerial());
+                Log.d(TAG, "already contained, not add");
             } else {
-                Log.d(TAG, "add usb alive " + device);
+                Log.d(TAG, "add usb alive device " + device.getSerial());
                 mAliveDeviceList.add(device);
             }
         } else {
-            Log.d(TAG, "remove usb alive device  " + device.getSerial());
+            Log.d(TAG, "remove usb alive device " + device.getSerial());
             mAliveDeviceList.removeIf(d -> ObjectsCompat.equals(d.getSerial(), device.getSerial()) && d.getType() == 1);
         }
-        for (int i = 0; i < mAliveDeviceList.size(); i++) {
-            Log.d(TAG, "alive device " + i + " : " + mAliveDeviceList.get(i));
-        }
+
+        mAliveDeviceList.forEach(item -> Log.d(TAG, "alive  ————  " + item.toString()));
 
         Log.d(TAG, "onDeviceUpdate begin");
         Iterator<OnConnectListener> it = mOnConnectListeners.iterator();
         while (it.hasNext()) {
             OnConnectListener listener = it.next();
             int id = System.identityHashCode(listener);
-            Log.d(TAG, "onDeviceUpdate " + id);
+            Log.d(TAG, "listener " + id);
             try {
                 if (listener != null) {
                     listener.onDeviceUpdate(device);
                 } else {
-                    Log.d(TAG, "onDeviceUpdate listener == null");
+                    Log.d(TAG, "listener == null");
                 }
             } catch (RemoteException e) {
                 Log.e(TAG, "", e);
@@ -227,7 +206,9 @@ public class UsbHostController {
         }
         Log.d(TAG, "attach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
         boolean ios = AppSupport.isIOSDevice(device);
+        boolean isSupportAOAP = mDeviceHandlerResolver.isSupportAOAP(device);
         if (ios) {
+            if (!CarHelper.isOpenCarPlay()) return;
             if (isCertifiedVersion) {
                 Log.d(TAG, "certified version not attach usb carplay");
                 return;
@@ -236,22 +217,20 @@ public class UsbHostController {
                 Log.e(TAG, "cp wifi connecting, not connect usb carplay");
                 return;
             }
-            if (!mAppController.canConnectUsbCarPlay()) {
-                return;
-            }
+            if (!mAppController.canConnectUsbCarPlay()) return;
         } else {
             if (mClass == 8) {
                 Log.d(TAG, "the device is a usb storage");
                 return;
             }
             if (CarHelper.isOpenQDLink() || !CarHelper.isOpenAndroidAuto()) return;
-            if (!mDeviceHandlerResolver.isSupportedAOAP(device)) {
+            if (!isSupportAOAP) {
                 Log.d(TAG, "isSupportedAOAP is false");
                 return;
             }
         }
         if (!mAppController.isSwitchingAOAState()) {
-            onDeviceUpdate(device, true, ios);
+            onDeviceUpdate(device, true, ios, isSupportAOAP);
             if (!mAppController.isIdleState()) {
                 if (!ios) {
                     Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(mAppController.currentDevice));
@@ -299,14 +278,14 @@ public class UsbHostController {
                     mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 3);
                     return;
                 }
-                if (AppController.currentSessionIsWifiCarPlay() && !Objects.equals(mAppController.currentDevice.SerialNumber, device.getSerialNumber())) {
+                String trimSerialNumber = device.getSerialNumber().substring(0, mAppController.currentDevice.SerialNumber.length());
+                if (AppController.currentSessionIsWifiCarPlay() && !Objects.equals(mAppController.currentDevice.SerialNumber, trimSerialNumber)) {
                     mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 3);
                 }
             }
         } else {
             if (!CarHelper.isOpenAndroidAuto()) return;
             if (!mAppController.isAutoConnectUsbAndroidAuto()) return;
-            if (!mDeviceHandlerResolver.isSupportedAOAP(device)) return;
             if (AppSupport.isDeviceInAOAMode(device)) {
                 if (LAST_REASON == 0) {
                     try {
@@ -326,31 +305,25 @@ public class UsbHostController {
 
     public void detach(UsbDevice device) {
         if (device == null) {
-            Log.d(TAG, "detach device is null");
+            Log.d(TAG, "detach() called, device == null");
             return;
         }
-        Log.d(TAG, "detach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
-        boolean ios = AppSupport.isIOSDevice(device);
-        if (ios) {
-            if (isCertifiedVersion) {
-                Log.d(TAG, "certified version not detach usb carplay");
-                return;
-            }
-        } else {
-            if (CarHelper.isOpenQDLink()) return;
-        }
+        Log.d(TAG, "detach() called with: serial = [" + device.getSerialNumber() + "], name = [" + device.getProductName() + "]");
         if (mAppController.isPreParingState()) {
             mAppController.updateSwitchingAOAState();
         } else {
-            if (!ios) {
-                Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(mAppController.currentDevice));
-                if (TextUtils.equals(mAppController.currentDevice.SerialNumber, device.getSerialNumber()) && mAppController.currentDevice.ConnectionType == 1) {
-                    mAppController.stopAndroidAuto();//sometimes android auto surface not exit, must invoke this method
+            boolean ios = AppSupport.isIOSDevice(device);
+            if (ios) {
+                if (isCertifiedVersion) {
+                    Log.d(TAG, "certified version not detach usb carplay");
+                    return;
                 }
             } else {
-                mAppController.stopUsbAndroidAuto();
+                if (TextUtils.equals(mAppController.currentDevice.SerialNumber, device.getSerialNumber()) && mAppController.currentDevice.ConnectionType == 1) {
+                    mAppController.stopUsbAndroidAuto(); //sometimes android auto surface not exit, must invoke this method
+                }
             }
-            onDeviceUpdate(device, false, ios);
+            onDeviceUpdate(device, false, false, false);
         }
     }
 

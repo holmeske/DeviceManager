@@ -1,5 +1,6 @@
 package com.yfve.t19c.projection.devicemanager;
 
+import static com.yfve.t19c.projection.devicemanager.constant.LocalData.AvailableDeviceBtMacList;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindCurrentAvailableByMac;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindInstanceIdByMac;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindInstanceIdBySerial;
@@ -9,7 +10,6 @@ import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindPreA
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.FindSerialByInstanceId;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.HistoryDeviceList;
 import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_REASON;
-import static com.yfve.t19c.projection.devicemanager.constant.LocalData.availableDeviceBtMacList;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
@@ -421,11 +421,11 @@ public final class AppController {
                 String id = device.getInstanceID();
                 Log.d(TAG, "instanceId: " + id);
                 if (device.getAvailable()) {
-                    availableDeviceBtMacList.add(device.getMacAddress());
+                    AvailableDeviceBtMacList.add(device.getMacAddress());
                 } else {
-                    availableDeviceBtMacList.remove(device.getMacAddress());
+                    AvailableDeviceBtMacList.remove(device.getMacAddress());
                 }
-                Log.d(TAG, "availableDeviceBtMacList = " + CommonUtilsKt.toJson(availableDeviceBtMacList));
+                Log.d(TAG, "AvailableDeviceBtMacList = " + CommonUtilsKt.toJson(AvailableDeviceBtMacList));
                 if (TextUtils.isEmpty(id) || TextUtils.equals("null", id)) {
                     Log.d(TAG, "instanceId is invalid value");
                 } else {
@@ -822,7 +822,6 @@ public final class AppController {
         if (isSwitchingSession) {
             if (TextUtils.equals(serial, switchingPhone.getSerial()) || TextUtils.equals(mac, switchingPhone.getMac())) {
                 onSessionStateUpdate(serial, mac, -1, "switching");
-                onNotification(-6);
             } else {
                 onSessionStateUpdate(serial, mac, -2, "busy");
             }
@@ -913,7 +912,7 @@ public final class AppController {
 
         aliveDeviceList.removeIf(d -> Objects.equals(d.getSerial(), serialNumber) && d.getType() == 1);
 
-        aliveDeviceList.forEach(item -> Log.d(TAG, "alive  ——  " + item.toString()));
+        aliveDeviceList.forEach(item -> Log.d(TAG, "alive  ————  " + item.toString()));
     }
 
     /**
@@ -944,35 +943,29 @@ public final class AppController {
             Log.d(TAG, "remove wifi alive device  " + device.getMac());
             aliveDeviceList.removeIf(d -> Objects.equals(d.getMac(), device.getMac()) && d.getType() == 2);
         }
-        aliveDeviceList.forEach(item -> Log.d(TAG, "alive  ——  " + item.toString()));
+        aliveDeviceList.forEach(item -> Log.d(TAG, "alive  ————  " + item.toString()));
         onDeviceUpdate(device);
     }
 
+    /**
+     * @param mac    bluetooth address
+     * @param reason USER_REQUEST_VALUE = 0 (user select) ; AUTO_LAUNCH_VALUE = 1 (boot auto reconnect old device) ; AUTOMATIC_RESTART_VALUE = 2 (no identify exception disconnect, auto reconnect)
+     */
     public void startWirelessAndroidAuto(String mac, int reason) {
-        //USER_REQUEST_VALUE = 0;  user select
-        //AUTO_LAUNCH_VALUE = 1;   boot auto reconnect old device
-        //AUTOMATIC_RESTART_VALUE = 2; no identify exception disconnect, auto reconnect
         Log.i(TAG, "startWirelessAndroidAuto() called with: mac = [" + mac + "], reason = [" + reason + "]");
         if (isConnectingCarPlay) {
             Log.d(TAG, "isStartingCarPlay is true, not allow start android auto");
             return;
         }
         if (TextUtils.isEmpty(mac)) return;
-        if (!availableDeviceBtMacList.contains(mac)) {
-            Log.i(TAG, "is not available device");
-            return;
-        }
-        if (aliveDeviceList.stream().anyMatch(device -> Objects.equals(device.getMac(), mac))) {
-            Log.i(TAG, "AndroidAutoDeviceClient ConnectWirelessDevice");
+        if (AvailableDeviceBtMacList.contains(mac)) {
             isConnectingWiFiAndroidAuto = true;
+            Log.i(TAG, "AndroidAutoDeviceClient ConnectWirelessDevice");
             mAndroidAutoDeviceClient.ConnectWirelessDevice(mac, reason);
-            Log.d(TAG, "ConnectWirelessDevice set flag.");
             updateSwitchingSessionState("", mac);
         } else {
-            Log.i(TAG, mac + " is not alive device , not connect wifi android auto");
-            if (reason == 0) {
-                resetSwitchingSessionState();
-            }
+            Log.i(TAG, "device not available, can not connect wifi android auto");
+            if (reason == 0) resetSwitchingSessionState();
         }
     }
 
@@ -1058,9 +1051,9 @@ public final class AppController {
     public boolean isIdleState() {
         boolean idle = (CURRENT_CONNECT_STATE == STATE_IDLE && CURRENT_SESSION == NULL) && !isConnectingCarPlay;
         if (!idle) {
-            Log.d(TAG, "current connect state is " + CURRENT_CONNECT_STATE);
-            Log.d(TAG, "current session state is " + CURRENT_SESSION);
-            Log.d(TAG, "isConnectingCarPlay == " + isConnectingCarPlay);
+            Log.e(TAG, "current connect state is " + CURRENT_CONNECT_STATE);
+            Log.e(TAG, "current session state is " + CURRENT_SESSION);
+            Log.e(TAG, "isConnectingCarPlay == " + isConnectingCarPlay);
         }
         return idle;
     }
@@ -1216,14 +1209,13 @@ public final class AppController {
                             //Log.d(TAG, "BluetoothHeadsetClient.ACTION_CONNECTION_STATE_CHANGED    " + device.getName() + "    " + device.getAddress());
                             if (intent.getIntExtra(BluetoothProfile.EXTRA_STATE, -1) == BluetoothProfile.STATE_CONNECTED) {
                                 Log.d(TAG, "HFP STATE CONNECTED " + device.getName() + " connected with address:" + device.getAddress());
-                                if (CarHelper.isOpenAndroidAuto() && isIdleState() && aliveDeviceList.stream().anyMatch(d -> Objects.equals(d.getMac(), device.getAddress()))) {
-                                    Log.d(TAG, "AndroidAutoDeviceClient ConnectWirelessDevice 0 ");
-                                    if (isConnectingCarPlay) {
-                                        Log.d(TAG, "carplay is connecting, not allow start android auto");
-                                        return;
+                                if (!CarHelper.isOpenAndroidAuto() || !isIdleState()) return;
+                                if (isSwitchingSession) {
+                                    if (TextUtils.equals(switchingPhone.getMac(), device.getAddress())) {
+                                        startWirelessAndroidAuto(device.getAddress(), 0);
                                     }
-                                    isConnectingWiFiAndroidAuto = true;
-                                    mAndroidAutoDeviceClient.ConnectWirelessDevice(device.getAddress(), 0);
+                                } else {
+                                    startWirelessAndroidAuto(device.getAddress(), 0);
                                 }
                             } else if (intent.getIntExtra(BluetoothProfile.EXTRA_STATE, -1) == BluetoothProfile.STATE_DISCONNECTED) {
                                 Log.d(TAG, "HFP STATE DISCONNECTED " + device.getName() + " disconnect with address:" + device.getAddress());

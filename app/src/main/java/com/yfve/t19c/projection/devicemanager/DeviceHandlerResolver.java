@@ -31,7 +31,8 @@ public class DeviceHandlerResolver {
         }
     }
 
-    public boolean isSupportedAOAP(UsbDevice device) {
+    public boolean isSupportAOAP(UsbDevice device) {
+        Log.d(TAG, "isSupportAOAP() called with: device = [" + device.getSerialNumber() + "]");
         if (AppSupport.isDeviceInAOAMode(device)) {
             return true;
         }
@@ -84,7 +85,7 @@ public class DeviceHandlerResolver {
         } else {
             Log.d(TAG, "isDeviceCarPlayPossible: UsbDeviceConnection is null");
         }
-        Log.d(TAG, device.getSerialNumber() +" support carplay is " + carplaySupported);
+        Log.d(TAG, device.getSerialNumber() + " support carplay is " + carplaySupported);
         return carplaySupported;
     }
 

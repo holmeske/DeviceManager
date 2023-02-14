@@ -12,6 +12,13 @@ public class Test {
         /*for (int i = 0; i < 3; i++) {
             a(i);
         }*/
+
+        String a = "00008030001508490C42402E";
+        String b = "00008030001508490C42402E��������������������������������";
+        System.out.println("test: " + a);
+        System.out.println("test: " + b.substring(0, a.length() - 1));
+
+
         System.out.println("xhci-hcd.1.auto".contains("."));
         try {
             String mac = "160:59:227:164:74:196";

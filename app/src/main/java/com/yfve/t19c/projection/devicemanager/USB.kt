@@ -29,7 +29,7 @@ fun Context.getProjectionDevice(): UsbDevice? {
         .filter { device ->
             device?.serialNumber?.contains(".") == false
                     && device.serialNumber?.contains("-") == false
-                    && (deviceHandlerResolver.isSupportedAOAP(device)
+                    && (deviceHandlerResolver.isSupportAOAP(device)
                     || deviceHandlerResolver.isDeviceCarPlayPossible(device)
                     )
         }.findAny().orElse(null)

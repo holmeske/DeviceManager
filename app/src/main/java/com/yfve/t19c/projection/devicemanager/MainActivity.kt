@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity() {
 
         //DeviceManagerService.filteredAliveDeviceList()
         Log.d(TAG, "onCreate: " + toHexString("156:227:63:124:4:126"))
+
         //stopService(Intent(this, DeviceManagerService::class.java))
 //        startForegroundService(Intent(this, DeviceManagerService::class.java))
 

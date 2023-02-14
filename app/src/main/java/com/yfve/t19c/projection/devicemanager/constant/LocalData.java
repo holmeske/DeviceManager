@@ -55,6 +55,6 @@ public final class LocalData {
      */
     public static String LAST_ANDROID_AUTO_DEVICE_SERIAL;
 
-    public static List<String> availableDeviceBtMacList = new ArrayList<>();
+    public static List<String> AvailableDeviceBtMacList = new ArrayList<>();
 
 }
