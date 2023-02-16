@@ -1,58 +1,24 @@
 package com.yfve.t19c.projection.devicemanager;
 
-import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 public class DeviceInfo {
-    public static final int ConnectType_None = 0;
-    public static final int ConnectType_USB = 1;
-    public static final int ConnectType_WIFI = 2;
-    public static final int ConnectType_Both = 3;
-    public static final int Connectivity_AppType_CarPlay = 0;
-    public static final int Connectivity_AppType_AndroidAuto = 1;
-    public static final int Connectivity_AppType_CarLife = 2;
-    public static final int Connectivity_AppType_HiCar = 3;
-    public static final int Connectivity_AppType_MAX = 4;
     private static final String TAG = "DeviceInfo";
-    public String SerialNumber = "";
-    public String BluetoothMac = "";
-    public String DeviceName;
-    public int ConnectionType;
-    public boolean[] AppAvailable = new boolean[Connectivity_AppType_MAX];
-    private int lastConnectType;
+    private static final int ConnectType_None = 0;
+    private static final int ConnectType_USB = 1;
+    private static final int ConnectType_WIFI = 2;
+    private String SerialNumber = "";
+    private String BluetoothMac = "";
+    private String DeviceName = "";
+    private int ConnectionType;
     private boolean isAttached;
     private String instanceId;
 
     public DeviceInfo() {
-    }
-
-    public DeviceInfo(String serial, String name, int conType, boolean isSupCp, boolean isSupAA) {
-        if (conType == ConnectType_USB) {
-            SerialNumber = serial;
-        } else if (conType == ConnectType_WIFI) {
-            BluetoothMac = serial;
-        }
-
-        DeviceName = name;
-        ConnectionType = conType;
-        AppAvailable[Connectivity_AppType_CarPlay] = isSupCp;
-        AppAvailable[Connectivity_AppType_AndroidAuto] = isSupAA;
-    }
-
-    public DeviceInfo(String serial, String btMac, String name, int conType, boolean isSupCp, boolean isSupAA, boolean isSupCL, boolean isSupHC) {
-        SerialNumber = serial;
-        BluetoothMac = btMac;
-        DeviceName = name;
-        ConnectionType = conType;
-        AppAvailable[Connectivity_AppType_CarPlay] = isSupCp;
-        AppAvailable[Connectivity_AppType_AndroidAuto] = isSupAA;
-        AppAvailable[Connectivity_AppType_CarLife] = isSupCL;
-        AppAvailable[Connectivity_AppType_HiCar] = isSupHC;
     }
 
     public String getSerialNumber() {
@@ -61,10 +27,6 @@ public class DeviceInfo {
 
     public void setSerialNumber(String serialNumber) {
         SerialNumber = serialNumber;
-    }
-
-    public String getDeviceName() {
-        return DeviceName;
     }
 
     public void setDeviceName(String deviceName) {
@@ -110,26 +72,12 @@ public class DeviceInfo {
         ConnectionType = conType;
     }
 
-    public boolean isEmpty() {
-        return TextUtils.isEmpty(SerialNumber) && TextUtils.isEmpty(BluetoothMac);
-    }
-
     public void reset() {
         SerialNumber = "";
         BluetoothMac = "";
         DeviceName = "";
         ConnectionType = 0;
-        AppAvailable = new boolean[]{false, false, false, false};
-        lastConnectType = 0;
         instanceId = "";
-    }
-
-    public int getLastConnectType() {
-        return lastConnectType;
-    }
-
-    public void setLastConnectType(int lastConnectType) {
-        this.lastConnectType = lastConnectType;
     }
 
     public boolean match(String inputData, int conType) {
@@ -164,8 +112,6 @@ public class DeviceInfo {
                 ", BluetoothMac='" + BluetoothMac + '\'' +
                 ", DeviceName='" + DeviceName + '\'' +
                 ", ConnectionType=" + ConnectionType +
-                ", AppAvailable=" + Arrays.toString(AppAvailable) +
-                ", lastConnectType=" + lastConnectType +
                 ", isAttached=" + isAttached +
                 ", instanceId='" + instanceId + '\'' +
                 '}';

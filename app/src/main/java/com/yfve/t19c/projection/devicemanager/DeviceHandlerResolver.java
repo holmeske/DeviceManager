@@ -32,23 +32,24 @@ public class DeviceHandlerResolver {
     }
 
     public boolean isSupportAOAP(UsbDevice device) {
-        Log.d(TAG, "isSupportAOAP() called with: device = [" + device.getSerialNumber() + "]");
         if (AppSupport.isDeviceInAOAMode(device)) {
+            Log.d(TAG, "isSupportAOAP == true, in AOA mode");
             return true;
         }
         UsbManager usbManager = mContext.getSystemService(UsbManager.class);
         UsbDeviceConnection connection = UsbUtil.openConnection(usbManager, device);
         if (connection == null) {
-            Log.d(TAG, "isDeviceAoapPossible: UsbDeviceConnection is null");
+            Log.d(TAG, "isSupportAOAP == false, connection == null");
             return false;
         }
-        boolean aoapSupported = AppSupport.isAOASupported(mContext, device, connection);
+        boolean Supported = AppSupport.isAOASupported(mContext, device, connection);
         connection.close();
-        return aoapSupported;
+        Log.d(TAG, "isSupportAOAP == " + Supported);
+        return Supported;
     }
 
-    public void requestAoapSwitch(UsbDevice device) {
-        Log.d(TAG, "requestAoapSwitch() called");
+    public void requestAOAPSwitch(UsbDevice device) {
+        Log.d(TAG, "requestAOAPSwitch() called");
         if (device == null) {
             Log.e(TAG, "invalid device");
             return;

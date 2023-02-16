@@ -5,8 +5,10 @@ import static com.yfve.t19c.projection.devicemanager.AppController.isConnectingC
 import static com.yfve.t19c.projection.devicemanager.AppController.isReplugged;
 import static com.yfve.t19c.projection.devicemanager.AppController.isResettingUsb;
 import static com.yfve.t19c.projection.devicemanager.constant.CacheHelperKt.getLastConnectDeviceInfo;
-import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_ANDROID_AUTO_DEVICE_SERIAL;
-import static com.yfve.t19c.projection.devicemanager.constant.LocalData.LAST_REASON;
+import static com.yfve.t19c.projection.devicemanager.constant.DM.AliveDeviceList;
+import static com.yfve.t19c.projection.devicemanager.constant.DM.LAST_ANDROID_AUTO_DEVICE_SERIAL;
+import static com.yfve.t19c.projection.devicemanager.constant.DM.LAST_REASON;
+import static com.yfve.t19c.projection.devicemanager.constant.DM.OnConnectListenerList;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -27,9 +29,7 @@ import com.yfve.t19c.projection.devicelist.Device;
 import com.yfve.t19c.projection.devicelist.OnConnectListener;
 import com.yfve.t19c.projection.devicemanager.constant.CommonUtilsKt;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Objects;
 
 public class UsbHostController {
@@ -37,8 +37,6 @@ public class UsbHostController {
     private final Context mContext;
     private final AppController mAppController;
     private final DeviceHandlerResolver mDeviceHandlerResolver;
-    private final List<OnConnectListener> mOnConnectListeners;
-    private List<Device> mAliveDeviceList = new ArrayList<>();
     private int mClass;
 
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
@@ -49,7 +47,7 @@ public class UsbHostController {
             if (UsbHelper.Companion.isBluePort()) return;
 
             UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-            Log.d(TAG, "onReceive: " + CommonUtilsKt.toJson(device));
+            //Log.d(TAG, "onReceive: " + CommonUtilsKt.toJson(device));
             if (device != null) {
                 if (TextUtils.isEmpty(device.getSerialNumber())) return;
                 if (device.getSerialNumber().contains(".")) return;
@@ -82,12 +80,11 @@ public class UsbHostController {
     private boolean isBoundCarPlayService = false;
     private boolean isGetCarServiceValue = false;
 
-    public UsbHostController(Context mContext, AppController mAppController, List<OnConnectListener> mOnConnectListeners) {
+    public UsbHostController(Context mContext, AppController mAppController) {
         Log.d(TAG, "UsbHostController() called");
 
         this.mContext = mContext;
         this.mAppController = mAppController;
-        this.mOnConnectListeners = mOnConnectListeners;
 
         mDeviceHandlerResolver = new DeviceHandlerResolver(mContext);
         registerReceiver();
@@ -113,7 +110,7 @@ public class UsbHostController {
 
         Log.e(TAG, "Waiting for the callback that binds the Car service successfully");
         CarHelper.INSTANCE.setOnGetValidValueListener(() -> {
-            Log.d(TAG, "CarService returned valid value");
+            Log.d(TAG, "get valid value from CarService");
             isGetCarServiceValue = true;
             connectProjectionUsbDevice();
         });
@@ -124,11 +121,8 @@ public class UsbHostController {
                 + ", isGetCarServiceValue = " + isGetCarServiceValue);
         if (isGetCarServiceValue && (isBoundIAapReceiverService || isBoundCarPlayService)) {
             UsbDevice d = USBKt.getProjectionDevice(mContext);
-            Log.d(TAG, "getProjectionDevice = " + new Gson().toJson(d));
-            if (d == null) {
-                Log.d(TAG, "no projective usb device");
-                return;
-            }
+            Log.d(TAG, "attached available device = " + new Gson().toJson(d));
+            if (d == null) return;
             if (AppSupport.isIOSDevice(d)) {
                 if (isBoundCarPlayService) {
                     attach(d);
@@ -141,15 +135,11 @@ public class UsbHostController {
         }
     }
 
-    public void setDeviceList(List<Device> deviceList) {
-        this.mAliveDeviceList = deviceList;
-    }
-
     /**
      * usb device connect state changed notice
      */
     private void onDeviceUpdate(UsbDevice usbDevice, boolean attached, boolean ios, boolean isSupportAOAP) {
-        Log.d(TAG, "onDeviceUpdate() called with: serial = [" + usbDevice.getSerialNumber() + "], attached = [" + attached + "], ios = [" + ios + "]");
+        Log.d(TAG, "onDeviceUpdate() called with: usbDevice = [" + usbDevice.getSerialNumber() + "], attached = [" + attached + "], ios = [" + ios + "], isSupportAOAP = [" + isSupportAOAP + "]");
         Device device = new Device();
         device.setType(1); //1:usb , 2:wireless
         device.setName(usbDevice.getProductName());
@@ -161,21 +151,22 @@ public class UsbHostController {
         device.setWirelessAA(isSupportAOAP);
 
         if (attached) {
-            if (mAliveDeviceList.stream().anyMatch(d -> d.getType() == 1 && Objects.equals(d.getSerial(), device.getSerial()))) {
+            if (AliveDeviceList.stream().anyMatch(d -> d.getType() == 1 && Objects.equals(d.getSerial(), device.getSerial()))) {
                 Log.d(TAG, "already contained, not add");
             } else {
                 Log.d(TAG, "add usb alive device " + device.getSerial());
-                mAliveDeviceList.add(device);
+                AliveDeviceList.add(device);
             }
         } else {
+            device.setUsbAA(false);//app popup need modify
             Log.d(TAG, "remove usb alive device " + device.getSerial());
-            mAliveDeviceList.removeIf(d -> ObjectsCompat.equals(d.getSerial(), device.getSerial()) && d.getType() == 1);
+            AliveDeviceList.removeIf(d -> ObjectsCompat.equals(d.getSerial(), device.getSerial()) && d.getType() == 1);
         }
 
-        mAliveDeviceList.forEach(item -> Log.d(TAG, "alive  ————  " + item.toString()));
+        AliveDeviceList.forEach(item -> Log.d(TAG, "alive  ————  " + item.toString()));
 
         Log.d(TAG, "onDeviceUpdate begin");
-        Iterator<OnConnectListener> it = mOnConnectListeners.iterator();
+        Iterator<OnConnectListener> it = OnConnectListenerList.iterator();
         while (it.hasNext()) {
             OnConnectListener listener = it.next();
             int id = System.identityHashCode(listener);
@@ -233,9 +224,9 @@ public class UsbHostController {
             onDeviceUpdate(device, true, ios, isSupportAOAP);
             if (!mAppController.isIdleState()) {
                 if (!ios) {
-                    Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(mAppController.currentDevice));
-                    Log.d(TAG, "currentDevice.SerialNumber = " + mAppController.currentDevice.SerialNumber);
-                    if (TextUtils.equals(mAppController.currentDevice.SerialNumber, device.getSerialNumber())) {
+                    Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(mAppController.mCurrentDevice));
+                    Log.d(TAG, "currentDevice.getSerialNumber() = " + mAppController.mCurrentDevice.getSerialNumber());
+                    if (TextUtils.equals(mAppController.mCurrentDevice.getSerialNumber(), device.getSerialNumber())) {
                         Log.d(TAG, "usb device serial number same as current device serial");
                         return;
                     }
@@ -258,7 +249,6 @@ public class UsbHostController {
         if (ios) {
             if (!CarHelper.isOpenCarPlay()) return;
             if (!mDeviceHandlerResolver.isDeviceCarPlayPossible(device)) return;
-            Log.d(TAG, "isConnectingCarPlay == " + isConnectingCarPlay);
             if (mAppController.isIdleState()) {
                 if (mAppController.isNotSwitchingSession()) {
                     if (!isConnectingCarPlay) {
@@ -278,8 +268,9 @@ public class UsbHostController {
                     mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 3);
                     return;
                 }
-                String trimSerialNumber = device.getSerialNumber().substring(0, mAppController.currentDevice.SerialNumber.length());
-                if (AppController.currentSessionIsWifiCarPlay() && !Objects.equals(mAppController.currentDevice.SerialNumber, trimSerialNumber)) {
+                String trimSerialNumber = device.getSerialNumber().substring(0, mAppController.mCurrentDevice.getSerialNumber().length());
+                Log.d(TAG, "trimSerialNumber == " + trimSerialNumber);
+                if (AppController.currentSessionIsWifiCarPlay() && !Objects.equals(mAppController.mCurrentDevice.getSerialNumber(), trimSerialNumber)) {
                     mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 3);
                 }
             }
@@ -298,7 +289,7 @@ public class UsbHostController {
                 mAppController.startUsbAndroidAuto(device.getDeviceName(), device.getSerialNumber());
             } else {
                 mAppController.updatePreparingState();
-                mDeviceHandlerResolver.requestAoapSwitch(device);
+                mDeviceHandlerResolver.requestAOAPSwitch(device);
             }
         }
     }
@@ -313,17 +304,20 @@ public class UsbHostController {
             mAppController.updateSwitchingAOAState();
         } else {
             boolean ios = AppSupport.isIOSDevice(device);
+            boolean isSupportAOAP = mDeviceHandlerResolver.isSupportAOAP(device);
             if (ios) {
                 if (isCertifiedVersion) {
                     Log.d(TAG, "certified version not detach usb carplay");
-                    return;
+                }
+                if (!mAppController.isIdleState()) {
+                    onDeviceUpdate(device, false, false, isSupportAOAP);
                 }
             } else {
-                if (TextUtils.equals(mAppController.currentDevice.SerialNumber, device.getSerialNumber()) && mAppController.currentDevice.ConnectionType == 1) {
+                if (TextUtils.equals(mAppController.mCurrentDevice.getSerialNumber(), device.getSerialNumber()) && mAppController.mCurrentDevice.getConnectionType() == 1) {
                     mAppController.stopUsbAndroidAuto(); //sometimes android auto surface not exit, must invoke this method
                 }
+                onDeviceUpdate(device, false, false, isSupportAOAP);
             }
-            onDeviceUpdate(device, false, false, false);
         }
     }
 

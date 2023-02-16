@@ -17,13 +17,21 @@ public enum CarHelper {
     private static String AndroidAutoSwitch = "";
     private static String CarPlaySwitch = "";
     private static String QDLinkSwitch = "";
-    private static boolean standby;
+    private static boolean StandbyMode;
     private final Handler mHandler = new Handler();
     private Car mCar;
     private CarPowerManager mCarPowerManager;
     private CarInfoManager mCarInfoManager;
     private byte[] property;
     private OnGetValidValueListener onGetValidValueListener;
+    private final Runnable notifyPropertiesUpdate = new Runnable() {
+        @Override
+        public void run() {
+            if (onGetValidValueListener != null) {
+                onGetValidValueListener.callback();
+            }
+        }
+    };
     private boolean bPropertiesUpdate = false;
     private final Runnable runnable = new Runnable() {
         @Override
@@ -40,18 +48,11 @@ public enum CarHelper {
             }
         }
     };
-    private final Runnable notifyPropertiesUpdate = new Runnable() {
-        @Override
-        public void run() {
-            if (onGetValidValueListener != null) {
-                onGetValidValueListener.callback();
-            }
-        }
-    };
     private OnCarPowerStateListener onCarPowerStateListener;
 
-    public static boolean isStandby() {
-        return standby;
+    public static boolean isStandbyMode() {
+        Log.d(TAG, "StandbyMode = " + StandbyMode);
+        return StandbyMode;
     }
 
     public static String byteToBit(byte b) {
@@ -171,21 +172,21 @@ public enum CarHelper {
                     //sometime will receive twice pwr_mode_standy without pwr_run
                     if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_STANDBY) {
                         Log.d(TAG, "onStateChanged() called with: PWR_MODE_STANDBY");
-                        standby = true;
+                        StandbyMode = true;
                         Log.d(TAG, "standby == true");
                         if (onCarPowerStateListener != null) {
                             onCarPowerStateListener.standby();
                         }
                     } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_RUN) {
                         Log.d(TAG, "onStateChanged() called with: PWR_MODE_RUN");
-                        standby = false;
+                        StandbyMode = false;
                         Log.d(TAG, "standby == false");
                         if (onCarPowerStateListener != null) {
                             onCarPowerStateListener.run();
                         }
                     } else if (state == CarPowerManager.CarPowerStateListener.PWR_MODE_TEMP_ON) {
                         Log.d(TAG, "onStateChanged() called with: PWR_MODE_TEMP_ON");
-                        standby = false;
+                        StandbyMode = false;
                         Log.d(TAG, "standby == false");
                         if (onCarPowerStateListener != null) {
                             onCarPowerStateListener.run();
@@ -243,19 +244,20 @@ public enum CarHelper {
             if (onGetValidValueListener != null) {
                 onGetValidValueListener.callback();
             }
-            updateproperties(true);
+            updateProperties(true);
         } else {
             Log.e(TAG, "CarService returned value is invalid");
         }
     }
 
-    private void updateproperties(boolean value) {
+    private void updateProperties(boolean value) {
         bPropertiesUpdate = value;
     }
 
     private boolean isUpdateProperties() {
         return bPropertiesUpdate;
     }
+
     /**
      * CarService got value from MCU
      */

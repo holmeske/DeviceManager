@@ -2,6 +2,9 @@ package com.yfve.t19c.projection.devicemanager;
 
 import static androidx.core.app.NotificationCompat.PRIORITY_MIN;
 import static com.yfve.t19c.projection.devicemanager.BuildConfig.APPLICATION_ID;
+import static com.yfve.t19c.projection.devicemanager.constant.DM.AliveDeviceList;
+import static com.yfve.t19c.projection.devicemanager.constant.DM.HistoryDeviceList;
+import static com.yfve.t19c.projection.devicemanager.constant.DM.OnConnectListenerList;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -22,36 +25,34 @@ import com.android.internal.R;
 import com.yfve.t19c.projection.devicelist.Device;
 import com.yfve.t19c.projection.devicelist.DeviceListManager;
 import com.yfve.t19c.projection.devicelist.OnConnectListener;
-import com.yfve.t19c.projection.devicemanager.constant.LocalData;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class DeviceManagerService extends Service {
-    public static final List<Device> aliveDeviceList = new ArrayList<>();
     private static final String TAG = "DeviceManagerService";
+    private static final String Data = "2023-02-16 16:46 sop"; //  auth  sop  base
     public static boolean isStarted = false;
-    private final String Data = "2023-02-13 16:51 sop"; //auth   sop   base
-    private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private int retryCount;
     private UsbHostController mUsbHostController;
     private AppController mAppController;
     private Context mContext;
+
     private final IBinder binder = new DeviceListManager.Stub() {
 
         @Override
         public void registerListener(OnConnectListener listener) {
             Log.d(TAG, "registerListener() called");
-            mOnConnectListeners.add(listener);
-            Log.d(TAG, "OnConnectListener size = " + mOnConnectListeners.size());
+            OnConnectListenerList.add(listener);
+            Log.d(TAG, "OnConnectListener size = " + OnConnectListenerList.size());
         }
 
         @Override
         public void unregisterListener(OnConnectListener listener) {
             Log.d(TAG, "unregisterListener() called");
-            mOnConnectListeners.remove(listener);
-            Log.d(TAG, "OnConnectListener size = " + mOnConnectListeners.size());
+            OnConnectListenerList.remove(listener);
+            Log.d(TAG, "OnConnectListener size = " + OnConnectListenerList.size());
         }
 
         @Override
@@ -80,8 +81,8 @@ public class DeviceManagerService extends Service {
         @Override
         public List<Device> getHistoryDevices() {
             Log.d(TAG, "getHistoryDevices() called " + Data);
-            LocalData.HistoryDeviceList.forEach(d -> Log.d(TAG, "history   " + d));
-            return LocalData.HistoryDeviceList;
+            HistoryDeviceList.forEach(d -> Log.d(TAG, "history   " + d));
+            return HistoryDeviceList;
         }
 
         @Override
@@ -89,7 +90,7 @@ public class DeviceManagerService extends Service {
             Log.d(TAG, "onBluetoothPairResult() called with: mac = [" + mac + "], result = [" + result + "]");
             if (TextUtils.isEmpty(mac)) return;
             //0:success  -1:scan not  -2:connect failed(retry three)
-            for (OnConnectListener l : mOnConnectListeners) {
+            for (OnConnectListener l : OnConnectListenerList) {
                 if (l != null) {
                     try {
                         if (result == 0) {
@@ -135,8 +136,9 @@ public class DeviceManagerService extends Service {
     public static List<Device> filteredAliveDeviceList() {
         List<Device> filteredDeviceList = new ArrayList<>();
 
-        aliveDeviceList.forEach(item -> Log.d(TAG, "alive     " + item.toString()));
-        aliveDeviceList.forEach(d -> {
+        AliveDeviceList.forEach(item -> Log.d(TAG, "alive     " + item.toString()));
+
+        AliveDeviceList.forEach(d -> {
             boolean repeat = filteredDeviceList.stream().anyMatch(it -> anyMatch(it.getSerial(), d.getSerial(), it.getMac(), d.getMac()));
 
             if (repeat) {
@@ -200,11 +202,8 @@ public class DeviceManagerService extends Service {
         new UsbHelper();
 
         mAppController = new AppController(mContext);
-        mAppController.setOnConnectListener(mOnConnectListeners);
-        mAppController.setDeviceList(aliveDeviceList);
 
-        mUsbHostController = new UsbHostController(mContext, mAppController, mOnConnectListeners);
-        mUsbHostController.setDeviceList(aliveDeviceList);
+        mUsbHostController = new UsbHostController(mContext, mAppController);
 
         mAppController.setUsbHostController(mUsbHostController);
     }
