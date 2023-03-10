@@ -191,13 +191,16 @@ public class UsbHostController {
             Log.e(TAG, "attach device is null");
             return;
         }
-        if (ObjectsCompat.equals(device.getSerialNumber(), null)) {
+        if (device.getSerialNumber() == null) {
             Log.e(TAG, "attach device serialnumber is null");
             return;
         }
         Log.d(TAG, "attach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
         boolean ios = AppSupport.isIOSDevice(device);
         boolean isSupportAOAP = mDeviceHandlerResolver.isSupportAOAP(device);
+        if (!AppSupport.isDeviceInAOAMode(device)) {
+            onDeviceUpdate(device, true, ios, isSupportAOAP);
+        }
         if (ios) {
             if (!CarHelper.isOpenCarPlay()) return;
             if (isCertifiedVersion) {
@@ -209,44 +212,6 @@ public class UsbHostController {
                 return;
             }
             if (!mAppController.canConnectUsbCarPlay()) return;
-        } else {
-            if (mClass == 8) {
-                Log.d(TAG, "the device is a usb storage");
-                return;
-            }
-            if (CarHelper.isOpenQDLink() || !CarHelper.isOpenAndroidAuto()) return;
-            if (!isSupportAOAP) {
-                Log.d(TAG, "isSupportedAOAP is false");
-                return;
-            }
-        }
-        if (!mAppController.isSwitchingAOAState()) {
-            onDeviceUpdate(device, true, ios, isSupportAOAP);
-            if (!mAppController.isIdleState()) {
-                if (!ios) {
-                    Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(mAppController.mCurrentDevice));
-                    Log.d(TAG, "currentDevice.getSerialNumber() = " + mAppController.mCurrentDevice.getSerialNumber());
-                    if (TextUtils.equals(mAppController.mCurrentDevice.getSerialNumber(), device.getSerialNumber())) {
-                        Log.d(TAG, "usb device serial number same as current device serial");
-                        return;
-                    }
-                    //when session not null ,  attach android auto device , need notify users
-                    if (mAppController.isNotSwitchingSession()) {
-                        Log.d(TAG, "isResettingUsb = " + isResettingUsb);
-                        Log.d(TAG, "LAST_ANDROID_AUTO_DEVICE_SERIAL = " + LAST_ANDROID_AUTO_DEVICE_SERIAL);
-                        if (isResettingUsb && TextUtils.equals(LAST_ANDROID_AUTO_DEVICE_SERIAL, device.getSerialNumber())) {
-                            isResettingUsb = false;
-                            mAppController.removeResetUsbMessages();
-                            Log.d(TAG, "usb reset end");
-                            return;
-                        }
-                        mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 1);
-                        return;
-                    }
-                }
-            }
-        }
-        if (ios) {
             if (!CarHelper.isOpenCarPlay()) return;
             if (!mDeviceHandlerResolver.isDeviceCarPlayPossible(device)) return;
             if (mAppController.isIdleState()) {
@@ -275,21 +240,56 @@ public class UsbHostController {
                 }
             }
         } else {
-            if (!CarHelper.isOpenAndroidAuto()) return;
-            if (!mAppController.isAutoConnectUsbAndroidAuto()) return;
-            if (AppSupport.isDeviceInAOAMode(device)) {
-                if (LAST_REASON == 0) {
-                    try {
-                        Log.d(TAG, "attach: last reason = 0 , delay 2 second");
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+            if (mClass == 8) {
+                Log.d(TAG, "the device is a usb storage");
+                return;
+            }
+            if (CarHelper.isOpenQDLink() || !CarHelper.isOpenAndroidAuto()) return;
+            if (!isSupportAOAP) {
+                Log.d(TAG, "isSupportAOAP == false");
+                return;
+            }
+            if (mAppController.isIdleState()) {
+                if (!mAppController.isAutoConnectUsbAndroidAuto()) return;
+                if (AppSupport.isDeviceInAOAMode(device)) {
+                    if (LAST_REASON == 0) {
+                        try {
+                            Log.d(TAG, "attach() last reason = 0, delay 2 second");
+                            Thread.sleep(2000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    mAppController.startUsbAndroidAuto(device.getDeviceName(), device.getSerialNumber());
+                } else {
+                    mDeviceHandlerResolver.requestAOAPSwitch(device);
+                }
+            } else {
+                Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(mAppController.mCurrentDevice));
+                Log.d(TAG, "currentDevice.getSerialNumber() = " + mAppController.mCurrentDevice.getSerialNumber());
+                if (TextUtils.equals(mAppController.mCurrentDevice.getSerialNumber(), device.getSerialNumber())) {
+                    Log.d(TAG, "usb device serial number same as current device serial");
+                    return;
+                }
+                if (mAppController.isNotSwitchingSession()) {
+                    Log.d(TAG, "isResettingUsb = " + isResettingUsb);
+                    Log.d(TAG, "LAST_ANDROID_AUTO_DEVICE_SERIAL = " + LAST_ANDROID_AUTO_DEVICE_SERIAL);
+                    if (isResettingUsb && TextUtils.equals(LAST_ANDROID_AUTO_DEVICE_SERIAL, device.getSerialNumber())) {
+                        isResettingUsb = false;
+                        mAppController.removeResetUsbMessages();
+                        Log.d(TAG, "usb reset end");
+                        return;
+                    }
+                    if (AppSupport.isDeviceInAOAMode(device)) {
+                        mAppController.attachedAndroidAutoDevice.setAttached(true);
+                        mAppController.attachedAndroidAutoDevice.setProductName(device.getProductName());
+                        mAppController.attachedAndroidAutoDevice.setSerialNumber(device.getSerialNumber());
+                        mAppController.getAapBinderClient().startProbe(device.getSerialNumber(), device.getDeviceName());
+                        //mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 1);
+                    } else {
+                        mDeviceHandlerResolver.requestAOAPSwitch(device);
                     }
                 }
-                mAppController.startUsbAndroidAuto(device.getDeviceName(), device.getSerialNumber());
-            } else {
-                mAppController.updatePreparingState();
-                mDeviceHandlerResolver.requestAOAPSwitch(device);
             }
         }
     }
@@ -300,22 +300,20 @@ public class UsbHostController {
             return;
         }
         Log.d(TAG, "detach() called with: serial = [" + device.getSerialNumber() + "], name = [" + device.getProductName() + "]");
-        if (mAppController.isPreParingState()) {
-            mAppController.updateSwitchingAOAState();
+        boolean ios = AppSupport.isIOSDevice(device);
+        boolean isSupportAOAP = mDeviceHandlerResolver.isSupportAOAP(device);
+        if (ios) {
+            if (isCertifiedVersion) {
+                Log.d(TAG, "certified version not detach usb carplay");
+            }
+            if (!mAppController.isIdleState()) {
+                onDeviceUpdate(device, false, false, isSupportAOAP);
+            }
         } else {
-            boolean ios = AppSupport.isIOSDevice(device);
-            boolean isSupportAOAP = mDeviceHandlerResolver.isSupportAOAP(device);
-            if (ios) {
-                if (isCertifiedVersion) {
-                    Log.d(TAG, "certified version not detach usb carplay");
-                }
-                if (!mAppController.isIdleState()) {
-                    onDeviceUpdate(device, false, false, isSupportAOAP);
-                }
-            } else {
-                if (TextUtils.equals(mAppController.mCurrentDevice.getSerialNumber(), device.getSerialNumber()) && mAppController.mCurrentDevice.getConnectionType() == 1) {
-                    mAppController.stopUsbAndroidAuto(); //sometimes android auto surface not exit, must invoke this method
-                }
+            if (TextUtils.equals(mAppController.mCurrentDevice.getSerialNumber(), device.getSerialNumber()) && mAppController.mCurrentDevice.getConnectionType() == 1) {
+                mAppController.stopUsbAndroidAuto(); //sometimes android auto surface not exit, must invoke this method
+            }
+            if (!USBKt.contains(mContext, device.getSerialNumber())) {
                 onDeviceUpdate(device, false, false, isSupportAOAP);
             }
         }

@@ -51,7 +51,7 @@ public class DeviceHandlerResolver {
     public void requestAOAPSwitch(UsbDevice device) {
         Log.d(TAG, "requestAOAPSwitch() called");
         if (device == null) {
-            Log.e(TAG, "invalid device");
+            Log.e(TAG, "device == null");
             return;
         }
         UsbDeviceConnection connection = UsbUtil.openConnection(mUsbManager, device);

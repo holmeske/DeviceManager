@@ -63,3 +63,10 @@ fun Context.queryUsbDevice(serial: String?): UsbDevice? {
     return null
 }
 
+fun Context.contains(serial: String?): Boolean {
+    usbDeviceList().values.forEach {
+        if (Objects.equals(it.serialNumber, serial)) return true
+    }
+    return false
+}
+

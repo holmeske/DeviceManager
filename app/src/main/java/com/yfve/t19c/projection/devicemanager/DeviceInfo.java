@@ -11,10 +11,10 @@ public class DeviceInfo {
     private static final int ConnectType_None = 0;
     private static final int ConnectType_USB = 1;
     private static final int ConnectType_WIFI = 2;
-    private String SerialNumber = "";
-    private String BluetoothMac = "";
-    private String DeviceName = "";
-    private int ConnectionType;
+    private String serialNumber = "";
+    private String bluetoothMac = "";
+    private String productName = "";
+    private int connectionType;
     private boolean isAttached;
     private String instanceId;
 
@@ -22,31 +22,35 @@ public class DeviceInfo {
     }
 
     public String getSerialNumber() {
-        return SerialNumber;
+        return serialNumber;
     }
 
     public void setSerialNumber(String serialNumber) {
-        SerialNumber = serialNumber;
+        this.serialNumber = serialNumber;
     }
 
-    public void setDeviceName(String deviceName) {
-        DeviceName = deviceName;
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String deviceName) {
+        productName = deviceName;
     }
 
     public int getConnectionType() {
-        return ConnectionType;
+        return connectionType;
     }
 
     public void setConnectionType(int connectionType) {
-        ConnectionType = connectionType;
+        this.connectionType = connectionType;
     }
 
     public String getBluetoothMac() {
-        return BluetoothMac;
+        return bluetoothMac;
     }
 
     public void setBluetoothMac(String bluetoothMac) {
-        BluetoothMac = bluetoothMac;
+        this.bluetoothMac = bluetoothMac;
     }
 
     public String getInstanceId() {
@@ -66,27 +70,27 @@ public class DeviceInfo {
     }
 
     public void update(String serial, String mac, String name, int conType) {
-        SerialNumber = serial;
-        BluetoothMac = mac;
-        DeviceName = name;
-        ConnectionType = conType;
+        serialNumber = serial;
+        bluetoothMac = mac;
+        productName = name;
+        connectionType = conType;
     }
 
     public void reset() {
-        SerialNumber = "";
-        BluetoothMac = "";
-        DeviceName = "";
-        ConnectionType = 0;
+        serialNumber = "";
+        bluetoothMac = "";
+        productName = "";
+        connectionType = 0;
         instanceId = "";
     }
 
     public boolean match(String inputData, int conType) {
         Log.d(TAG, "match() called with: inputData = [" + inputData + "], conType = [" + conType + "]");
-        if (SerialNumber == null || inputData == null) return false;
+        if (serialNumber == null || inputData == null) return false;
         if ((conType & ConnectType_USB) > ConnectType_None) {
-            return Objects.equals(SerialNumber, inputData);
+            return Objects.equals(serialNumber, inputData);
         } else if ((conType & ConnectType_WIFI) > ConnectType_None) {
-            return Objects.equals(BluetoothMac, inputData);
+            return Objects.equals(bluetoothMac, inputData);
         } else {
             // discard this device if connect type is error
             return true;
@@ -94,10 +98,10 @@ public class DeviceInfo {
     }
 
     public boolean match(DeviceInfo info) {
-        if ((info.ConnectionType & ConnectType_USB) > ConnectType_None) {
-            return Objects.equals(SerialNumber, info.SerialNumber);
-        } else if ((info.ConnectionType & ConnectType_WIFI) > 0) {
-            return Objects.equals(BluetoothMac, info.BluetoothMac);
+        if ((info.connectionType & ConnectType_USB) > ConnectType_None) {
+            return Objects.equals(serialNumber, info.serialNumber);
+        } else if ((info.connectionType & ConnectType_WIFI) > 0) {
+            return Objects.equals(bluetoothMac, info.bluetoothMac);
         } else {
             // discard this device if connect type is error
             return true;
@@ -108,10 +112,10 @@ public class DeviceInfo {
     @Override
     public String toString() {
         return "DeviceInfo{" +
-                "SerialNumber='" + SerialNumber + '\'' +
-                ", BluetoothMac='" + BluetoothMac + '\'' +
-                ", DeviceName='" + DeviceName + '\'' +
-                ", ConnectionType=" + ConnectionType +
+                "serialNumber='" + serialNumber + '\'' +
+                ", bluetoothMac='" + bluetoothMac + '\'' +
+                ", productName='" + productName + '\'' +
+                ", connectionType=" + connectionType +
                 ", isAttached=" + isAttached +
                 ", instanceId='" + instanceId + '\'' +
                 '}';

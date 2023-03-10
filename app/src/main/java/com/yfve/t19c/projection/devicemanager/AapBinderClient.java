@@ -27,7 +27,7 @@ public class AapBinderClient implements IBinder.DeathRecipient {
                 if (l != null) {
                     l.sessionStarted(b, smallIcon, mediumIcon, largeIcon, label, deviceName, instanceId);
                 } else {
-                    Log.e(TAG, "sessionStarted: AapListener is null");
+                    Log.e(TAG, "sessionStarted() AapListener is null");
                 }
             }
         }
@@ -38,7 +38,18 @@ public class AapBinderClient implements IBinder.DeathRecipient {
                 if (l != null) {
                     l.sessionTerminated(b, reason);
                 } else {
-                    Log.e(TAG, "sessionTerminated: AapListener is null");
+                    Log.e(TAG, "sessionTerminated() AapListener is null");
+                }
+            }
+        }
+
+        @Override
+        public void resultOfProbe(String s, int i) {
+            for (AapListener l : mCallbackList) {
+                if (l != null) {
+                    l.resultOfProbe(s, i);
+                } else {
+                    Log.e(TAG, "resultOfProbe() AapListener is null");
                 }
             }
         }
@@ -59,8 +70,18 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         connectService();
     }
 
+    public void startProbe(String serialNumber, String deviceName) {
+        Log.d(TAG, "startProbe() called with: serialNumber = [" + serialNumber + "], deviceName = [" + deviceName + "]");
+        try {
+            mAapClient.startProbe(serialNumber, deviceName);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void unregisterListener(AapListener listener) {
         mCallbackList.remove(listener);
+
         if (mAapClient != null) {
             try {
                 mAapClient.unregisterStatusListener(mAapSessionStsListener);

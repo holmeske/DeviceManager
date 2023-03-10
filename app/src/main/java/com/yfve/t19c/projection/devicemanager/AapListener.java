@@ -9,4 +9,7 @@ public class AapListener {
 
     public void sessionTerminated(boolean isUsb, int reason) {
     }
+
+    public void resultOfProbe(String s, int i) {
+    }
 }
