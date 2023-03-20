@@ -116,6 +116,11 @@ public class DeviceListHelper {
         mStorageHelper.clear();
     }
 
+    public boolean isAndroidAutoDevice(String serial, String mac) {
+        Device device = query(serial, mac);
+        return device.getAbility() == 1 || device.getAbility() == 2 || device.getAbility() == 3;
+    }
+
     public void test(Context c) {
 //        delete("name", "serial", "mac", 2);
 //        write("1", "1", "1", 1);

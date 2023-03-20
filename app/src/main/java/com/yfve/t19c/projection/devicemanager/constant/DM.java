@@ -5,10 +5,10 @@ import com.yfve.t19c.projection.devicelist.OnConnectListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public final class DM {
-
     /**
      * key: mac , value: instanceId
      */
@@ -53,14 +53,24 @@ public final class DM {
     /**
      * android auto session terminated type
      */
-    public static int LAST_REASON = -1;
+    public static int LAST_ANDROID_AUTO_SESSION_TERMINATED_REASON = -1;
 
     /**
      * last connect successfully android auto device serial number
      */
-
     public static String LAST_ANDROID_AUTO_DEVICE_SERIAL;
 
-    public static List<String> AvailableDeviceBtMacList = new ArrayList<>();
+    public static HashSet<String> AvailableAndroidAutoWirelessDeviceBtMacSet = new HashSet<>();
 
+    public static HashSet<String> ProbedAndroidAutoUsbDeviceSet = new HashSet<>();
+    /**
+     * key: serialNumber , value: productName
+     */
+    public static HashMap<String, String> AttachedAndroidAutoUsbDeviceMap = new HashMap<>();
+
+    public static HashSet<String> AttachedUsbDeviceSerialNumberSet = new HashSet<>();
+
+    public static HashSet<String> AttachedIOSUsbDeviceSerialNumberSet = new HashSet<>();
+
+    public static HashSet<String> AttachedAOAPSerialNumberSet = new HashSet<>();
 }

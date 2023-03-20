@@ -32,9 +32,9 @@ import java.util.stream.Collectors;
 
 public class DeviceManagerService extends Service {
     private static final String TAG = "DeviceManagerService";
-    private static final String Data = "2023-03-10 15:57 sop"; //  auth  sop  base
+    private static final String Data = "2023-03-20 15:03 sop"; //  auth  sop  base
     public static boolean isStarted = false;
-    private int retryCount;
+    private int mRetryCount;
     private UsbHostController mUsbHostController;
     private AppController mAppController;
     private Context mContext;
@@ -64,7 +64,7 @@ public class DeviceManagerService extends Service {
             }
             if (mAppController != null) {
                 if (connectType > 4 || connectType < 1) {
-                    retryCount = 3;
+                    mRetryCount = 3;
                     mAppController.switchSession(serial, mac); // bluetooth connectType params only transport zero
                 } else {
                     mAppController.switchSession(connectType, serial, mac);
@@ -94,7 +94,9 @@ public class DeviceManagerService extends Service {
                 if (l != null) {
                     try {
                         if (result == 0) {
-                            retryCount = 0;
+                            mRetryCount = 0;
+                            mAppController.connectSession(mAppController.switchingPhone.getConnectType(), mAppController.switchingPhone.getSerial(), mAppController.switchingPhone.getMac());
+                            mAppController.switchingPhone.setConnectType(0);
                         } else if (result == -1) {
                             Log.d(TAG, "onNotification -1 , not scanned");
                             mAppController.resetSwitchingSessionState();
@@ -107,8 +109,8 @@ public class DeviceManagerService extends Service {
                                 Log.d(TAG, "no find attached usb device");
                             }
                         } else if (result == -2) {
-                            if (retryCount > 0) {
-                                retryCount--;
+                            if (mRetryCount > 0) {
+                                mRetryCount--;
                                 Log.d(TAG, "onRequestBluetoothPair " + mac);
                                 l.onRequestBluetoothPair(mac);
                             } else {
@@ -118,7 +120,7 @@ public class DeviceManagerService extends Service {
                             }
                         }
                     } catch (RemoteException e) {
-                        Log.e(TAG, e.toString());
+                        e.printStackTrace();
                     }
                 } else {
                     Log.d(TAG, "listener == null ");

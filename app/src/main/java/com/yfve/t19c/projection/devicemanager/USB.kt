@@ -63,10 +63,12 @@ fun Context.queryUsbDevice(serial: String?): UsbDevice? {
     return null
 }
 
-fun Context.contains(serial: String?): Boolean {
+fun Context.containsInAttachedUsbDeviceList(serial: String?): Boolean {
+    var isAttached = false
     usbDeviceList().values.forEach {
-        if (Objects.equals(it.serialNumber, serial)) return true
+        if (Objects.equals(it.serialNumber, serial)) isAttached = true
     }
-    return false
+    if (!isAttached) Log.d(TAG, "$serial, not contains in attached UsbDevice list")
+    return isAttached
 }
 

@@ -55,7 +55,7 @@ public class AapBinderClient implements IBinder.DeathRecipient {
         }
     };
     private final AppController mAppController;
-    private IAapReceiverService mAapClient = null;
+    private IAapReceiverService mIAapReceiverService = null;
     private HandlerThread mHandlerThread = null;
     private OnBindIAapReceiverServiceListener listener;
 
@@ -73,7 +73,11 @@ public class AapBinderClient implements IBinder.DeathRecipient {
     public void startProbe(String serialNumber, String deviceName) {
         Log.d(TAG, "startProbe() called with: serialNumber = [" + serialNumber + "], deviceName = [" + deviceName + "]");
         try {
-            mAapClient.startProbe(serialNumber, deviceName);
+            if (mIAapReceiverService == null) {
+                Log.d(TAG, "mIAapReceiverService == null");
+            } else {
+                mIAapReceiverService.startProbe(serialNumber, deviceName);
+            }
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -82,9 +86,9 @@ public class AapBinderClient implements IBinder.DeathRecipient {
     public void unregisterListener(AapListener listener) {
         mCallbackList.remove(listener);
 
-        if (mAapClient != null) {
+        if (mIAapReceiverService != null) {
             try {
-                mAapClient.unregisterStatusListener(mAapSessionStsListener);
+                mIAapReceiverService.unregisterStatusListener(mAapSessionStsListener);
             } catch (RemoteException e) {
                 Log.e(TAG, "RemoteException:" + e);
             }
@@ -120,16 +124,16 @@ public class AapBinderClient implements IBinder.DeathRecipient {
             Log.e(TAG, e.toString());
         }
 
-        mAapClient = IAapReceiverService.Stub.asInterface(binder);
+        mIAapReceiverService = IAapReceiverService.Stub.asInterface(binder);
         if (listener != null) listener.success();
 
-        if (null == mAapClient) {
+        if (null == mIAapReceiverService) {
             Log.e(TAG, "Service is null");
             return;
         }
 
         try {
-            mAapClient.registerStatusListener(mAapSessionStsListener);
+            mIAapReceiverService.registerStatusListener(mAapSessionStsListener);
         } catch (RemoteException e) {
             Log.e(TAG, e.toString());
         }
@@ -137,7 +141,7 @@ public class AapBinderClient implements IBinder.DeathRecipient {
 
     private void connectService() {
         Log.d(TAG, "connectService() called");
-        if (mAapClient != null) {
+        if (mIAapReceiverService != null) {
             Log.i(TAG, "already bind");
             return;
         }
@@ -150,7 +154,7 @@ public class AapBinderClient implements IBinder.DeathRecipient {
     @Override
     public void binderDied() {
         Log.i(TAG, "binderDied");
-        mAapClient = null;
+        mIAapReceiverService = null;
         if (mAppController != null && mAppController.currentSessionIsAndroidAuto()) {
             mAppController.updateIdleState();
         } else {
@@ -161,9 +165,9 @@ public class AapBinderClient implements IBinder.DeathRecipient {
 
     public void startAndroidAuto(String deviceName) {
         Log.d(TAG, "startAndroidAuto() called with: deviceName = [" + deviceName + "]");
-        if (mAapClient != null) {
+        if (mIAapReceiverService != null) {
             try {
-                mAapClient.startSession(true, deviceName);
+                mIAapReceiverService.startSession(true, deviceName);
             } catch (RemoteException e) {
                 Log.e(TAG, e.toString());
             }
@@ -174,9 +178,9 @@ public class AapBinderClient implements IBinder.DeathRecipient {
 
     public void stopAndroidAuto() {
         Log.d(TAG, "stopAndroidAuto() called");
-        if (mAapClient != null) {
+        if (mIAapReceiverService != null) {
             try {
-                mAapClient.stopSession(true);
+                mIAapReceiverService.stopSession(true);
             } catch (RemoteException e) {
                 Log.e(TAG, e.toString());
             }

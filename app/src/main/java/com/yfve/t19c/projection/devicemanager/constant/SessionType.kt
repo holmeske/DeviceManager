@@ -7,14 +7,16 @@ object SessionType {
     const val WIFI_CARPLAY = 4
 }
 
-data class Phone(var serial: String? = "", var mac: String? = "") {
+data class Phone(var serial: String? = "", var mac: String? = "", var connectType: Int = 0) {
     fun clear() {
         serial = ""
         mac = ""
+        connectType = 0
     }
 
-    fun update(serial: String? = "", mac: String? = "") {
+    fun update(serial: String? = "", mac: String? = "", connectType: Int = 0) {
         this.serial = serial
         this.mac = mac
+        this.connectType = connectType
     }
 }
