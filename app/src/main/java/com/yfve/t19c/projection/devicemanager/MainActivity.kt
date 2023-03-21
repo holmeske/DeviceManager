@@ -3,11 +3,7 @@ package com.yfve.t19c.projection.devicemanager
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.room.Room
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.yfve.t19c.projection.devicemanager.constant.toHexString
-import com.yfve.t19c.projection.devicemanager.database.DeviceDatabase
 
 
 private const val TAG = "MainActivity"
@@ -54,46 +50,6 @@ class MainActivity : AppCompatActivity() {
 //        }
 
         //db()
-    }
-
-
-    private fun db() {
-
-        val migration: Migration = object : Migration(2, 3) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE Device ADD COLUMN supportUsbAA Boolean")
-            }
-        }
-
-        val db =
-            Room.databaseBuilder(applicationContext, DeviceDatabase::class.java, "database-device")
-                .addMigrations(migration)
-                .build()
-
-        Thread {
-
-            db.deviceDao()?.let {
-                //it.update(Device("0", "0", "0", true))
-
-                /*it.all?.forEachIndexed { index, device ->
-                    Log.d(TAG, "onCreate: $index , $device")
-                    if (1==index){
-                        it.delete(device)
-                    }
-                }*/
-
-                it.all?.forEachIndexed { index, device ->
-                    Log.d(TAG, "onCreate: $index , $device")
-                }
-
-            }
-
-//            val list: MutableList<Device> = ArrayList()
-//            list.add(Device("1", "1", "1"))
-//            list.add(Device("2", "2", "2"))
-
-        }.start()
-
     }
 
     fun onClick(view: android.view.View) {
