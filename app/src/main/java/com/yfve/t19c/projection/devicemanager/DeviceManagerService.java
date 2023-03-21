@@ -38,6 +38,7 @@ public class DeviceManagerService extends Service {
     private UsbHostController mUsbHostController;
     private AppController mAppController;
     private Context mContext;
+    public static int BluetoothPairResult = -1;
 
     private final IBinder binder = new DeviceListManager.Stub() {
 
@@ -90,11 +91,13 @@ public class DeviceManagerService extends Service {
             Log.d(TAG, "onBluetoothPairResult() called with: mac = [" + mac + "], result = [" + result + "]");
             if (TextUtils.isEmpty(mac)) return;
             //0:success  -1:scan not  -2:connect failed(retry three)
+            BluetoothPairResult = result;
             for (OnConnectListener l : OnConnectListenerList) {
                 if (l != null) {
                     try {
                         if (result == 0) {
                             mRetryCount = 0;
+                            Log.d(TAG, "switching type == " + mAppController.switchingPhone.getConnectType());
                             mAppController.connectSession(mAppController.switchingPhone.getConnectType(), mAppController.switchingPhone.getSerial(), mAppController.switchingPhone.getMac());
                             mAppController.switchingPhone.setConnectType(0);
                         } else if (result == -1) {

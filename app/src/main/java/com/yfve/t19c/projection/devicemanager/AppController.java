@@ -131,6 +131,7 @@ public final class AppController {
         Log.d(TAG, "15s switching session time out, isSwitchingSession == false");
         isSwitchingSession = false;
         switchingPhone.clear();
+        DeviceManagerService.BluetoothPairResult = -1;
     };
     private final AapListener mAapListener = new AapListener() {
         @Override
@@ -859,8 +860,8 @@ public final class AppController {
         } else {
             type = 4;
         }
-        switchingPhone.setConnectType(type);
         Log.d(TAG, "type == " + type);
+        switchingPhone.setConnectType(type);
         Log.d(TAG, "AvailableAndroidAutoWirelessDeviceBtMacSet == " + CommonUtilsKt.toJson(AvailableAndroidAutoWirelessDeviceBtMacSet));
         Log.d(TAG, "AliveDeviceList == " + CommonUtilsKt.toJson(AliveDeviceList));
         if ((AvailableAndroidAutoWirelessDeviceBtMacSet.contains(mac) && type == 2) || (AliveDeviceList.stream().anyMatch(device -> Objects.equals(device.getMac(), mac)) && type == 4)) {
@@ -934,6 +935,11 @@ public final class AppController {
             } else {
                 Log.d(TAG, "add wifi alive " + device);
                 AliveDeviceList.add(device);
+                if (TextUtils.equals(aawDeviceInfo.getMacAddress(), switchingPhone.getMac())) {
+                    if (isSwitchingSession && !isConnectingWiFiAndroidAuto && !isConnectingCarPlay) {
+                        connectSession(type, switchingPhone.getSerial(), switchingPhone.getMac());
+                    }
+                }
             }
         } else {
             Log.d(TAG, "remove wifi alive device  " + device.getMac());
