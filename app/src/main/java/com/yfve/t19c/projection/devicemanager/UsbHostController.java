@@ -53,25 +53,6 @@ public class UsbHostController {
 
             UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
             //Log.d(TAG, "onReceive: " + CommonUtilsKt.toJson(device));
-            if (device != null) {
-                if (TextUtils.isEmpty(device.getSerialNumber())) return;
-                if (device.getSerialNumber().contains(".")) return;
-                UsbInterface usbInterface = device.getInterface(0);
-                if (usbInterface != null) {
-                    mClass = usbInterface.getInterfaceClass();
-                    Log.d(TAG, "mClass = " + mClass + " , mVendorId = " + device.getVendorId() + " , mProductId = " + device.getProductId()
-                            + " , mProductName = " + device.getProductName() + " , mName = " + device.getDeviceName()
-                            + " , mManufacturerName = " + device.getManufacturerName());
-                    if (mClass == UsbConstants.USB_CLASS_PRINTER) {
-                        Log.d(TAG, "USB class for printers");
-                        return;
-                    }
-                    if (mClass == UsbConstants.USB_CLASS_MASS_STORAGE) {
-                        Log.d(TAG, "USB class for mass storage device");
-                        return;
-                    }
-                }
-            }
             if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(intent.getAction())) {
                 attach(device);
             } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(intent.getAction())) {
@@ -200,9 +181,25 @@ public class UsbHostController {
             Log.e(TAG, "attach device is null");
             return;
         }
-        if (device.getSerialNumber() == null) {
-            Log.e(TAG, "attach device serialnumber is null");
+        if (TextUtils.isEmpty(device.getSerialNumber())) {
+            Log.e(TAG, "attach device serialnumber isEmpty");
             return;
+        }
+        if (device.getSerialNumber().contains(".")) return;
+        UsbInterface usbInterface = device.getInterface(0);
+        if (usbInterface != null) {
+            mClass = usbInterface.getInterfaceClass();
+            Log.d(TAG, "mClass = " + mClass + " , mVendorId = " + device.getVendorId() + " , mProductId = " + device.getProductId()
+                    + " , mProductName = " + device.getProductName() + " , mName = " + device.getDeviceName()
+                    + " , mManufacturerName = " + device.getManufacturerName());
+            if (mClass == UsbConstants.USB_CLASS_PRINTER) {
+                Log.d(TAG, "USB class for printers");
+                return;
+            }
+            if (mClass == UsbConstants.USB_CLASS_MASS_STORAGE) {
+                Log.d(TAG, "USB class for mass storage device");
+                return;
+            }
         }
         Log.d(TAG, "attach() called with: name = [" + device.getProductName() + "], serial = [" + device.getSerialNumber() + "]");
         AttachedUsbDeviceSerialNumberSet.add(device.getSerialNumber());
