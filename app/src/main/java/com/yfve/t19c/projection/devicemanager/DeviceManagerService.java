@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 public class DeviceManagerService extends Service {
     private static final String TAG = "DeviceManagerService";
-    private static final String Data = "2023-04-06 15:09 sop"; //  auth  sop  base
+    private static final String Data = "2023-04-06 17:31 sop"; //  auth  sop  base
     public static boolean isStarted = false;
     private int mRetryCount;
     private UsbHostController mUsbHostController;
