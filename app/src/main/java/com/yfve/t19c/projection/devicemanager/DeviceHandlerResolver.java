@@ -71,7 +71,7 @@ public class DeviceHandlerResolver {
                     "http://www.android.com/auto",
                     hashedSerial);
         } catch (IOException e) {
-            Log.e(TAG, e.toString());
+            e.printStackTrace();
         } finally {
             connection.close();
         }

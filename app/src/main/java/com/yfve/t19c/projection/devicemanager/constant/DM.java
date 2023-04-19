@@ -60,13 +60,10 @@ public final class DM {
      * last connect successfully android auto device serial number
      */
     public static String LAST_ANDROID_AUTO_DEVICE_SERIAL;
+
     public static HashSet<String> AvailableAndroidAutoWirelessDeviceBtMacSet = new HashSet<>();
-    public static HashSet<String> ProbedAndroidAutoUsbDeviceSet = new HashSet<>();
-    /**
-     * key: serialNumber , value: productName
-     */
-    public static HashMap<String, String> AttachedAndroidAutoUsbDeviceMap = new HashMap<>();
-    public static HashSet<String> AttachedUsbDeviceSerialNumberSet = new HashSet<>();
-    public static HashSet<String> AttachedIOSUsbDeviceSerialNumberSet = new HashSet<>();
-    public static HashSet<String> AttachedAOAPSerialNumberSet = new HashSet<>();
+
+    public static HashSet<String> ProbedAndroidAutoUsbDeviceSerialNumberSet = new HashSet<>();
+
+    public static HashSet<String> AOAPSwitchTimeoutSerialNumberSet = new HashSet<>();
 }
