@@ -32,8 +32,8 @@ public class DeviceHandlerResolver {
     }
 
     public boolean isSupportAOAP(UsbDevice device) {
-        if (AppSupport.isDeviceInAOAMode(device)) {
-            Log.d(TAG, "isSupportAOAP == true, in AOA mode");
+        if (AppSupport.isInAOAMode(device)) {
+            Log.d(TAG, "isSupportAOAP == true");
             return true;
         }
         UsbManager usbManager = mContext.getSystemService(UsbManager.class);
@@ -42,7 +42,7 @@ public class DeviceHandlerResolver {
             Log.d(TAG, "isSupportAOAP == false, connection == null");
             return false;
         }
-        boolean Supported = AppSupport.isAOASupported(mContext, device, connection);
+        boolean Supported = AppSupport.isSupportAOAP(connection);
         connection.close();
         Log.d(TAG, "isSupportAOAP == " + Supported);
         return Supported;
@@ -62,7 +62,7 @@ public class DeviceHandlerResolver {
         try {
             String hashedSerial;
             hashedSerial = getHashed(Build.getSerial());
-            UsbUtil.sendAoapAccessoryStart(
+            UsbUtil.sendAOAPAccessoryStart(
                     connection,
                     "Android",
                     "Android Auto",
@@ -80,7 +80,7 @@ public class DeviceHandlerResolver {
     public boolean isDeviceCarPlayPossible(UsbDevice device) {
         UsbManager usbManager = mContext.getSystemService(UsbManager.class);
         UsbDeviceConnection connection = UsbUtil.openConnection(usbManager, device);
-        boolean carplaySupported = AppSupport.isCarPlaySupport(mContext, device, connection);
+        boolean carplaySupported = AppSupport.isSupportCarPlay(device, connection);
         if (connection != null) {
             connection.close();
         } else {

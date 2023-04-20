@@ -76,10 +76,9 @@ public enum CarHelper {
 
     public static boolean isOpenAndroidAuto() {
         if ("1".equals(AndroidAutoSwitch)) {
-            Log.d(TAG, "android auto  switch is open");
             return true;
         } else {
-            Log.d(TAG, "android auto switch is close");
+            Log.e(TAG, "android auto switch is close");
             return false;
         }
     }
@@ -95,10 +94,9 @@ public enum CarHelper {
 
     public static boolean isOpenQDLink() {
         if ("1".equals(QDLinkSwitch)) {
-            Log.d(TAG, "QDLink Switch is open");
+            Log.e(TAG, "QDLink Switch is open");
             return true;
         } else {
-            Log.d(TAG, "QDLink Switch is close");
             return false;
         }
     }

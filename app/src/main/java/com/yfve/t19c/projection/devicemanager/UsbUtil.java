@@ -24,10 +24,13 @@ import androidx.annotation.Nullable;
 import java.io.IOException;
 
 class UsbUtil {
-    private static final String TAG = "UsbUtil";
-
-    public static void sendAoapAccessoryStart(UsbDeviceConnection connection, String manufacturer,
-                                              String model, String description, String version, String uri, String serial) throws IOException {
+    public static void sendAOAPAccessoryStart(UsbDeviceConnection connection,
+                                              String manufacturer,
+                                              String model,
+                                              String description,
+                                              String version,
+                                              String uri,
+                                              String serial) throws IOException {
         AppSupport.sendString(connection, AppSupport.ACCESSORY_STRING_MANUFACTURER, manufacturer);
         AppSupport.sendString(connection, AppSupport.ACCESSORY_STRING_MODEL, model);
         AppSupport.sendString(connection, AppSupport.ACCESSORY_STRING_DESCRIPTION, description);

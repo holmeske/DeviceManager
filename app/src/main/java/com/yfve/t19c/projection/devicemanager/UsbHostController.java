@@ -113,6 +113,23 @@ public class UsbHostController {
             Log.e(TAG, "SerialNumber isEmpty");
             return false;
         }
+        /*仪表
+        mProductName : "QNX NCM Network Device"
+        mProductId : 65521
+        mVendorId : 4660
+
+        T BOX 控制器
+        mProductName : "MDM9607-MTP _SN:7BFE1D22"
+        mProductId : 36909
+        mVendorId : 1478*/
+        if (device.getVendorId() == 1478 && device.getProductId() == 36909) {
+            Log.d(TAG, "this device is t box");
+            return false;
+        }
+        if (device.getVendorId() == 4660 && device.getProductId() == 65521) {
+            Log.d(TAG, "this device is instrument");
+            return false;
+        }
         if (device.getInterfaceCount() > 0) {
             UsbInterface usbInterface = device.getInterface(0);
             if (usbInterface != null) {
@@ -124,6 +141,10 @@ public class UsbHostController {
                 }
                 if (mClass == UsbConstants.USB_CLASS_WIRELESS_CONTROLLER) {
                     Log.d(TAG, "USB class for wireless controller devices.");
+                    return false;
+                }
+                if (mClass == UsbConstants.USB_CLASS_COMM) {
+                    Log.d(TAG, "USB class for communication devices.");
                     return false;
                 }
                 if (mClass == UsbConstants.USB_CLASS_MASS_STORAGE) {
@@ -138,6 +159,7 @@ public class UsbHostController {
                     Log.d(TAG, "USB class for printers");
                     return false;
                 }
+
             }
         }
         return true;
@@ -270,7 +292,7 @@ public class UsbHostController {
             if (!mDeviceHandlerResolver.isSupportAOAP(device)) return;
             if (mAppController.isIdleState()) {
                 if (!mAppController.isAutoConnectUsbAndroidAuto()) return;
-                if (AppSupport.isDeviceInAOAMode(device)) {
+                if (AppSupport.isInAOAMode(device)) {
 //                    mAppController.getHandler().removeCallbacks(mAOAPSwitchTimeoutRunnable);
                     if (LAST_ANDROID_AUTO_SESSION_TERMINATED_REASON == 0) {
                         try {
@@ -295,6 +317,7 @@ public class UsbHostController {
                 } else {
 //                    currentAOAPSwitchSerialNumber = device.getSerialNumber();
 //                    mAppController.getHandler().postDelayed(mAOAPSwitchTimeoutRunnable, AOAPSwitchTimeout);
+                    mAppController.startUSBAndroidAutoConnectCountdown();
                     mDeviceHandlerResolver.requestAOAPSwitch(device);
                 }
             } else {
@@ -313,13 +336,14 @@ public class UsbHostController {
                         mAppController.removeResetUsbMessages();
                         return;
                     }
-                    if (AppSupport.isDeviceInAOAMode(device)) {
+                    if (AppSupport.isInAOAMode(device)) {
 //                        mAppController.getHandler().removeCallbacks(mAOAPSwitchTimeoutRunnable);
                         Log.d(TAG, "Probed == " + new Gson().toJson(ProbedAndroidAutoUsbDeviceSerialNumberSet));
                         if (ProbedAndroidAutoUsbDeviceSerialNumberSet.contains(device.getSerialNumber())) {
                             Log.d(TAG, "Probed remove " + device.getSerialNumber() + ", " + ProbedAndroidAutoUsbDeviceSerialNumberSet.remove(device.getSerialNumber()));
                             Log.d(TAG, "Probed == " + new Gson().toJson(ProbedAndroidAutoUsbDeviceSerialNumberSet));
                             if (USBKt.containsInAttachedUsbDeviceList(mContext, device.getSerialNumber())) {
+                                mAppController.resetUSBAndroidAutoConnectState();
                                 mAppController.onNotification(1, device.getProductName(), device.getSerialNumber(), "", 1);
                             }
                         } else {
@@ -332,6 +356,7 @@ public class UsbHostController {
                     } else {
 //                        currentAOAPSwitchSerialNumber = device.getSerialNumber();
 //                        mAppController.getHandler().postDelayed(mAOAPSwitchTimeoutRunnable, AOAPSwitchTimeout);
+                        mAppController.startUSBAndroidAutoConnectCountdown();
                         mDeviceHandlerResolver.requestAOAPSwitch(device);
                     }
                 }

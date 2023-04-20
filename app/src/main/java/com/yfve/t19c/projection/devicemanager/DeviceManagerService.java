@@ -32,26 +32,25 @@ import java.util.stream.Collectors;
 
 public class DeviceManagerService extends Service {
     private static final String TAG = "DeviceManagerService";
-    private static final String Data = "2023-04-19 15:37 sop"; //  auth  sop  base
+    private static final String Data = "2023-04-20 18:02 sop"; //  auth  sop  base
     public static boolean isStarted = false;
+    public static int BluetoothPairResult = -1;
     private int mRetryCount;
     private UsbHostController mUsbHostController;
     private AppController mAppController;
     private Context mContext;
-    public static int BluetoothPairResult = -1;
-
     private final IBinder binder = new DeviceListManager.Stub() {
 
         @Override
         public void registerListener(OnConnectListener listener) {
-            Log.d(TAG, "registerListener() called");
+            Log.d(TAG, "registerListener() called " + Data);
             OnConnectListenerList.add(listener);
             Log.d(TAG, "OnConnectListener size = " + OnConnectListenerList.size());
         }
 
         @Override
         public void unregisterListener(OnConnectListener listener) {
-            Log.d(TAG, "unregisterListener() called");
+            Log.d(TAG, "unregisterListener() called " + Data);
             OnConnectListenerList.remove(listener);
             Log.d(TAG, "OnConnectListener size = " + OnConnectListenerList.size());
         }

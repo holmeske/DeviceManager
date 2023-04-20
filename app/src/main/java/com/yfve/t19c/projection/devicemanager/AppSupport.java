@@ -13,22 +13,18 @@
  */
 package com.yfve.t19c.projection.devicemanager;
 
-import android.content.Context;
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.util.ArraySet;
 import android.util.Log;
-import android.util.Pair;
 
 import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.HashSet;
 import java.util.Locale;
-import java.util.Set;
 
 final class AppSupport {
     /**
@@ -76,16 +72,18 @@ final class AppSupport {
      * data            none
      */
     public static final int ACCESSORY_START = 53;
-    /**
-     * Max payload size for AOAP. Limited by driver.
-     */
-    public static final int MAX_PAYLOAD_SIZE = 16384;
+
+    //public static final int MAX_PAYLOAD_SIZE = 16384; //Max payload size for AOAP. Limited by driver.
+
     /**
      * Accessory write timeout.
      */
-    public static final int AOAP_TIMEOUT_MS = 50;
+    public static final int AOA_TIMEOUT_MS = 50;
+
     public static final int APPLE_DEVICE_VENDOR_ID = 0x05AC;
-    public static final int APPLE_DEVICE_PRODUCT_ID_MASK = 0x1200; // only upper two bytes
+
+    //public static final int APPLE_DEVICE_PRODUCT_ID_MASK = 0x1200; // only upper two bytes
+
     @Direction
     public static final int WRITE = 1;
     @Direction
@@ -93,17 +91,12 @@ final class AppSupport {
     /**
      * Set of all accessory mode vendor IDs
      */
-    private static final ArraySet<Integer> USB_ACCESSORY_VENDOR_ID = new ArraySet<Integer>();
+    private static final ArraySet<Integer> USB_ACCESSORY_VENDOR_ID = new ArraySet<>();
     /**
      * Set of all accessory mode product IDs
      */
     private static final ArraySet<Integer> USB_ACCESSORY_MODE_PRODUCT_ID = new ArraySet<>(4);
     private static final String TAG = AppSupport.class.getSimpleName();
-    /**
-     * Set of VID:PID pairs blacklisted through config_AoapIncompatibleDeviceIds. Only
-     * isDeviceBlacklisted() should ever access this variable.
-     */
-    private static Set<Pair<Integer, Integer>> sBlacklistedVidPidPairs;
 
     static {
         USB_ACCESSORY_VENDOR_ID.add(0x18d1); // Google
@@ -169,21 +162,20 @@ final class AppSupport {
         if (device.getVendorId() == APPLE_DEVICE_VENDOR_ID) {
             return true;
         } else {
-            Log.d(TAG, device.getSerialNumber() + " is not ios device");
             return false;
         }
     }
 
-    public static boolean isAOASupported(Context context, UsbDevice device, UsbDeviceConnection conn) {
-        return !isDeviceBlacklisted(context, device) && getProtocol(conn) >= 1;
+    public static boolean isSupportAOAP(UsbDeviceConnection conn) {
+        return getProtocol(conn) >= 1;
     }
 
-    public static boolean isCarPlaySupport(Context context, UsbDevice device, UsbDeviceConnection conn) {
+    public static boolean isSupportCarPlay(UsbDevice device, UsbDeviceConnection conn) {
         if (conn == null) {
             Log.d(TAG, "isCarPlaySupport: UsbDeviceConnection is null");
             return false;
         }
-        return !isDeviceBlacklisted(context, device) && isIOSDevice(device) && getCarPlaySupport(conn);
+        return isIOSDevice(device) && getCarPlaySupport(conn);
     }
 
     public static void sendString(UsbDeviceConnection conn, int index, String string) throws IOException {
@@ -207,42 +199,11 @@ final class AppSupport {
         }
     }
 
-    public static boolean isDeviceInAOAMode(UsbDevice device) {//Android Open Accessory Protocol
+    public static boolean isInAOAMode(UsbDevice device) {//Android Open Accessory Protocol
         if (device == null) return false;
-        final int vid = device.getVendorId();
-        final int pid = device.getProductId();
-        boolean isDeviceInAOAMode = USB_ACCESSORY_VENDOR_ID.contains(vid) && USB_ACCESSORY_MODE_PRODUCT_ID.contains(pid);
-        Log.d(TAG, device.getSerialNumber() + " isDeviceInAOAMode == " + isDeviceInAOAMode);
+        boolean isDeviceInAOAMode = USB_ACCESSORY_VENDOR_ID.contains(device.getVendorId()) && USB_ACCESSORY_MODE_PRODUCT_ID.contains(device.getProductId());
+        Log.d(TAG, "isInAOAMode == " + isDeviceInAOAMode);
         return isDeviceInAOAMode;
-    }
-
-    public static synchronized boolean isDeviceBlacklisted(Context context, UsbDevice device) {
-        if (sBlacklistedVidPidPairs == null) {
-            sBlacklistedVidPidPairs = new HashSet<>();
-            /*
-            String[] idPairs =
-                context.getResources().getStringArray(R.array.config_AoapIncompatibleDeviceIds);
-            for (String idPair : idPairs) {
-                boolean success = false;
-                String[] tokens = idPair.split(":");
-                if (tokens.length == 2) {
-                    try {
-                        sBlacklistedVidPidPairs.add(Pair.create(Integer.parseInt(tokens[0], 16),
-                                                                Integer.parseInt(tokens[1], 16)));
-                        success = true;
-                    } catch (NumberFormatException e) {
-                    }
-                }
-                if (!success) {
-                    Log.e(TAG, "config_AoapIncompatibleDeviceIds contains malformed value: "
-                            + idPair);
-                }
-            }
-            */
-        }
-        boolean isDeviceBlacklisted = sBlacklistedVidPidPairs.contains(Pair.create(device.getVendorId(), device.getProductId()));
-        Log.d(TAG, device.getSerialNumber() + " isDeviceBlacklisted == " + isDeviceBlacklisted);
-        return isDeviceBlacklisted;
     }
 
     private static int transfer(UsbDeviceConnection conn, @Direction int direction, int string, int index, byte[] buffer, int length) {
@@ -262,8 +223,7 @@ final class AppSupport {
             Log.d(TAG, "transfer: UsbDeviceConnection is null");
             return -1;
         }
-        return conn.controlTransfer(directionConstant | UsbConstants.USB_TYPE_VENDOR, string, 0,
-                index, buffer, length, AOAP_TIMEOUT_MS);
+        return conn.controlTransfer(directionConstant | UsbConstants.USB_TYPE_VENDOR, string, 0, index, buffer, length, AOA_TIMEOUT_MS);
     }
 
     @Retention(RetentionPolicy.SOURCE)
