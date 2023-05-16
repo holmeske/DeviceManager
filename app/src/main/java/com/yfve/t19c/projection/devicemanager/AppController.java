@@ -70,7 +70,7 @@ public final class AppController {
     public static boolean isConnectingWiFiAndroidAuto = false;
     public static boolean isConnectingUSBAndroidAuto = false;
     public static boolean isCertifiedVersion = false;   //certify version
-    public static boolean isSOPVersion = true;          //sop version
+    public static boolean isSOPVersion = false;          //sop version
     public static boolean isReplugged = true;
     private static int CURRENT_SESSION = 0;
     private static int isReplugged_id;
@@ -118,6 +118,7 @@ public final class AppController {
             } else if (what == 4) {
                 stopCarPlay();
             } else if (what == 5) {
+                isConnectingWiFiAndroidAuto = false;
                 if (mAndroidAutoDeviceClient != null) {
                     Log.d(TAG, "15s wifi android auto connecting time out, AndroidAuto DisconnectWirelessDevice() called");
                     mAndroidAutoDeviceClient.DisconnectWirelessDevice();
@@ -468,6 +469,8 @@ public final class AppController {
 
                 handler.removeMessages(3);
                 isConnectingCarPlay = false;
+
+                handler.removeCallbacks(WiFiCarPlayConnectCountdownRunnable);
                 isCanConnectingCPWifi = false;
 
                 if (sts == 0) {
@@ -487,7 +490,7 @@ public final class AppController {
 
                     mLastConnectedCarPlayDevice.update(serial, btMac, deviceName, CURRENT_SESSION);
                 } else if (sts == 1) {
-                    mLastConnectedCarPlayDevice.setAttached(false);
+                    //mLastConnectedCarPlayDevice.setAttached(false); //2023/4/11 14:24 is ok
                     onSessionStateUpdate(mCurrentDevice.getSerialNumber(), mCurrentDevice.getBluetoothMac(), sts, "disconnected");
                     if (isSOPVersion) {
                         USBKt.usbDeviceList(mContext).values().forEach(d -> Log.d(TAG, "attached usb device  " + d.getSerialNumber() + "  " + d.getProductName()));
@@ -508,8 +511,8 @@ public final class AppController {
                 if (!CarHelper.isOpenCarPlay()) return;
                 if (connectType != 1) {
                     Log.d(TAG, "15 seconds carplay connect timeout countdown start");
-                    isCanConnectingCPWifi = true;
                     handler.removeCallbacks(WiFiCarPlayConnectCountdownRunnable);
+                    isCanConnectingCPWifi = true;
                     handler.postDelayed(WiFiCarPlayConnectCountdownRunnable, CarPlayTimeout);
                 }
                 startCarPlay(uniqueInfo, connectType == 1);
