@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 public class DeviceManagerService extends Service {
     private static final String TAG = "DeviceManagerService";
-    private static final String Data = "2023-05-16 16:42 base"; //  auth  sop  base
+    private static final String Data = "2023-05-19 15:43 sop"; //  auth  sop  base
     public static boolean isStarted = false;
     public static int BluetoothPairResult = -1;
     private int mRetryCount;

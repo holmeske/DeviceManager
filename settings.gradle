@@ -1,23 +1,25 @@
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        google()
-        mavenCentral()
+        //google()
+        //mavenCentral()
+
+        maven {
+            allowInsecureProtocol = true;
+            url 'http://10.118.237.10:8081/repository/gradle-plugin-proxy/'
+        }
+
+        maven {
+            allowInsecureProtocol = true;
+            url 'http://10.118.237.10:8081/repository/google-maven-proxy-yfve/'
+        }
+
+        maven {
+            allowInsecureProtocol = true;
+            url 'http://10.118.237.10:8081/repository/maven-central/'
+        }
     }
-//        maven {
-//            allowInsecureProtocol = true;
-//            url 'http://10.118.237.10:8081/repository/gradle-plugin-proxy/'
-//        }
-//
-//        maven {
-//            allowInsecureProtocol = true;
-//            url 'http://10.118.237.10:8081/repository/google-maven-proxy-yfve/'
-//        }
-//
-//        maven {
-//            allowInsecureProtocol = true;
-//            url 'http://10.118.237.10:8081/repository/maven-central/'
-//        }
 }
 rootProject.name = "DeviceManager"
+//rootProject.name = "devicemanager"
 include ':app'

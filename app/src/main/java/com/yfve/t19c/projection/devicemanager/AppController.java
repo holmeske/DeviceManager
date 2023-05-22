@@ -70,7 +70,7 @@ public final class AppController {
     public static boolean isConnectingWiFiAndroidAuto = false;
     public static boolean isConnectingUSBAndroidAuto = false;
     public static boolean isCertifiedVersion = false;   //certify version
-    public static boolean isSOPVersion = false;          //sop version
+    public static boolean isSOPVersion = true;          //sop version
     public static boolean isReplugged = true;
     private static int CURRENT_SESSION = 0;
     private static int isReplugged_id;

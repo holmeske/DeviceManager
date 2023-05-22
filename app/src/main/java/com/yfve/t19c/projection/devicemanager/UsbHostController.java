@@ -285,7 +285,7 @@ public class UsbHostController {
         } else {
 
             if (ProbedAndroidAutoUsbDeviceSerialNumberSet.contains(device.getSerialNumber())) {
-                onDeviceUpdate(device.getSerialNumber(), device.getProductName(), true, true, true);
+                onDeviceUpdate(device.getSerialNumber(), device.getProductName(), true, false, true);
             }
 
             if (CarHelper.isOpenQDLink() || !CarHelper.isOpenAndroidAuto()) return;
