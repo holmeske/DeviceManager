@@ -1,10 +1,10 @@
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        //google()
-        //mavenCentral()
+        google()
+        mavenCentral()
 
-        maven {
+        /*maven {
             allowInsecureProtocol = true;
             url 'http://10.118.237.10:8081/repository/gradle-plugin-proxy/'
         }
@@ -17,9 +17,9 @@ dependencyResolutionManagement {
         maven {
             allowInsecureProtocol = true;
             url 'http://10.118.237.10:8081/repository/maven-central/'
-        }
+        }*/
     }
 }
 rootProject.name = "DeviceManager"
-//rootProject.name = "devicemanager"
+/*rootProject.name = "devicemanager"*/
 include ':app'
