@@ -70,7 +70,7 @@ public final class AppController {
     public static boolean isConnectingWiFiAndroidAuto = false;
     public static boolean isConnectingUSBAndroidAuto = false;
     public static boolean isCertifiedVersion = false;   //certify version
-    public static boolean isSOPVersion = true;          //sop version
+    public static boolean isSOPVersion = false;          //sop version
     public static boolean isReplugged = true;
     private static int CURRENT_SESSION = 0;
     private static int isReplugged_id;
@@ -200,6 +200,7 @@ public final class AppController {
 
             String mac = mCurrentDevice.getBluetoothMac();
             String serial = mCurrentDevice.getSerialNumber();
+            Log.d(TAG, "mac == " + ", serial == " + serial);
             if (b) {
                 mAapProxy.stopAndroidAuto();
                 int attached = USBKt.usbDeviceList(mContext).size();
@@ -231,7 +232,13 @@ public final class AppController {
                 isReplugged = false;
                 isReplugged_id = -4;
             }
-            onSessionStateUpdate(serial, mac, 1, "disconnected");
+            if (TextUtils.isEmpty(serial) && TextUtils.isEmpty(mac)) {
+                if (isSwitchingSession) {
+                    onSessionStateUpdate(switchingPhone.getSerial(), switchingPhone.getMac(), 1, "disconnected");
+                }
+            } else {
+                onSessionStateUpdate(serial, mac, 1, "disconnected");
+            }
             Log.d(TAG, "sessionTerminated() end");
         }
 
@@ -478,7 +485,8 @@ public final class AppController {
                     Log.d(TAG, "btMac toHexString == " + btMac);
                     resetSwitchingSessionState();
                     Log.d(TAG, "LastConnectedCarPlayDevice SerialNumber == " + mLastConnectedCarPlayDevice.getSerialNumber() + ", isAttached == " + mLastConnectedCarPlayDevice.isAttached());
-                    boolean isUsb = TextUtils.equals(mLastConnectedCarPlayDevice.getSerialNumber(), serial) && mLastConnectedCarPlayDevice.isAttached();
+                    String lastSerialNumber = mLastConnectedCarPlayDevice.getSerialNumber();
+                    boolean isUsb = lastSerialNumber.length() > 0 && lastSerialNumber.contains(serial) && mLastConnectedCarPlayDevice.isAttached();
                     Log.d(TAG, "isUsb == " + isUsb);
                     CURRENT_SESSION = isUsb ? USB_CARPLAY : WIFI_CARPLAY;
                     mCurrentDevice.update(serial, btMac, deviceName, CURRENT_SESSION);
@@ -522,6 +530,7 @@ public final class AppController {
             public void onUSBIAP2DeviceStsChanged(boolean isDeviceAttached, String serialNum) {
                 super.onUSBIAP2DeviceStsChanged(isDeviceAttached, serialNum);
                 Log.d(TAG, "onUSBIAP2DeviceStsChanged() called with: isDeviceAttached = [" + isDeviceAttached + "], serialNum = [" + serialNum + "]");
+                //serialNum has Garbled code, for example: 00008020000A7C190C85002E��������������������������������
                 if (!isDeviceAttached) {
                     detachIOSDevice(serialNum);
                     //if (CURRENT_SESSION == USB_CARPLAY) updateIdleState();//sometimes onSessionStsUpdate() more than 20 seconds late

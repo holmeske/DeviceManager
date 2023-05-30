@@ -113,6 +113,7 @@ public class UsbHostController {
             Log.e(TAG, "SerialNumber isEmpty");
             return false;
         }
+        Log.d(TAG, "isAvailableUsbDevice() called with: device = [" + device.getSerialNumber() + "]");
         /*仪表
         mProductName : "QNX NCM Network Device"
         mProductId : 65521
@@ -383,11 +384,13 @@ public class UsbHostController {
             if (TextUtils.equals(mAppController.mCurrentDevice.getSerialNumber(), device.getSerialNumber()) && mAppController.mCurrentDevice.getConnectionType() == 1) {
                 mAppController.stopUsbAndroidAuto(); // sometimes android auto surface not exit, must invoke this method
             }
-            if (!USBKt.containsInAttachedUsbDeviceList(mContext, device.getSerialNumber())) {
-                if (ProbedAndroidAutoUsbDeviceSerialNumberSet.contains(device.getSerialNumber())) {
-                    onDeviceUpdate(device.getSerialNumber(), device.getProductName(), false, false, true);
-                }
+            //if (!USBKt.containsInAttachedUsbDeviceList(mContext, device.getSerialNumber())) {
+            //if (ProbedAndroidAutoUsbDeviceSerialNumberSet.contains(device.getSerialNumber())) {
+            if (AliveDeviceList.stream().anyMatch(it -> Objects.equals(it.getSerial(), device.getSerialNumber()))) {
+                onDeviceUpdate(device.getSerialNumber(), device.getProductName(), false, false, true);
             }
+            //}
+            //}
         }
     }
 
