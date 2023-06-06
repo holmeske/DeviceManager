@@ -5,6 +5,7 @@ import static com.yfve.t19c.projection.devicemanager.AppController.isConnectingC
 import static com.yfve.t19c.projection.devicemanager.AppController.isReplugged;
 import static com.yfve.t19c.projection.devicemanager.AppController.isResettingUsb;
 import static com.yfve.t19c.projection.devicemanager.constant.DM.AliveDeviceList;
+import static com.yfve.t19c.projection.devicemanager.constant.DM.DeviceNameMap;
 import static com.yfve.t19c.projection.devicemanager.constant.DM.LAST_ANDROID_AUTO_DEVICE_SERIAL;
 import static com.yfve.t19c.projection.devicemanager.constant.DM.LAST_ANDROID_AUTO_SESSION_TERMINATED_REASON;
 import static com.yfve.t19c.projection.devicemanager.constant.DM.OnConnectListenerList;
@@ -196,6 +197,7 @@ public class UsbHostController {
                 if (ios) {
                     Log.d(TAG, "add usb alive device " + device.getSerial());
                     AliveDeviceList.add(device);
+                    DeviceNameMap.put(serial, name);
                 } else {
                     if (isSupportAOAP) {
                         Log.d(TAG, "add usb alive device " + device.getSerial());

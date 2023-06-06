@@ -31,6 +31,7 @@ fun Context.queryUsbDevice(serial: String?): UsbDevice? {
     usbDeviceList().values.forEach {
         if (Objects.equals(it.serialNumber, serial)) return it
     }
+    Log.d(TAG, "no find attached usb device")
     return null
 }
 

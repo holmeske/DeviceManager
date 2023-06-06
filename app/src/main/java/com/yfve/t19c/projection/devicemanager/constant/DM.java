@@ -66,4 +66,9 @@ public final class DM {
     public static HashSet<String> ProbedAndroidAutoUsbDeviceSerialNumberSet = new HashSet<>();
 
     public static HashSet<String> AOAPSwitchTimeoutSerialNumberSet = new HashSet<>();
+
+    /**
+     * key: serialNumber , value: name
+     */
+    public final static HashMap<String, String> DeviceNameMap = new HashMap<>();
 }

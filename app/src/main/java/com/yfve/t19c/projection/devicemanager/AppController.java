@@ -2,6 +2,7 @@ package com.yfve.t19c.projection.devicemanager;
 
 import static com.yfve.t19c.projection.devicemanager.constant.DM.AliveDeviceList;
 import static com.yfve.t19c.projection.devicemanager.constant.DM.AvailableAndroidAutoWirelessDeviceBtMacSet;
+import static com.yfve.t19c.projection.devicemanager.constant.DM.DeviceNameMap;
 import static com.yfve.t19c.projection.devicemanager.constant.DM.FindCurrentAvailableByMac;
 import static com.yfve.t19c.projection.devicemanager.constant.DM.FindInstanceIdByMac;
 import static com.yfve.t19c.projection.devicemanager.constant.DM.FindInstanceIdBySerial;
@@ -24,6 +25,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.usb.UsbDevice;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -70,7 +72,7 @@ public final class AppController {
     public static boolean isConnectingWiFiAndroidAuto = false;
     public static boolean isConnectingUSBAndroidAuto = false;
     public static boolean isCertifiedVersion = false;   //certify version
-    public static boolean isSOPVersion = false;          //sop version
+    public static boolean isSOPVersion = true;          //sop version
     public static boolean isReplugged = true;
     private static int CURRENT_SESSION = 0;
     private static int isReplugged_id;
@@ -540,6 +542,7 @@ public final class AppController {
                 isCanConnectingCPWifi = false;
                 mLastConnectedCarPlayDevice.setAttached(isDeviceAttached);
                 mLastConnectedCarPlayDevice.setSerialNumber(serialNum);
+                mUsbHostController.onDeviceUpdate(serialNum, DeviceNameMap.get(serialNum), isDeviceAttached, true, false);
             }
 
             @Override
@@ -1058,7 +1061,10 @@ public final class AppController {
         if (!isIdleState()) return;
         if (type == 1) {
             if (isReplugged) {
-                startUsbAndroidAuto(Objects.requireNonNull(USBKt.queryUsbDevice(mContext, serial)).getDeviceName(), serial);
+                UsbDevice device = USBKt.queryUsbDevice(mContext, serial);
+                if (device != null) {
+                    startUsbAndroidAuto(device.getDeviceName(), serial);
+                }
             } else {
                 Log.d(TAG, "isReplugged == false");
                 onNotification(isReplugged_id);
