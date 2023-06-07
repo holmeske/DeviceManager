@@ -488,6 +488,9 @@ public final class AppController {
                     resetSwitchingSessionState();
                     Log.d(TAG, "LastConnectedCarPlayDevice SerialNumber == " + mLastConnectedCarPlayDevice.getSerialNumber() + ", isAttached == " + mLastConnectedCarPlayDevice.isAttached());
                     String lastSerialNumber = mLastConnectedCarPlayDevice.getSerialNumber();
+                    if (null == lastSerialNumber) {
+                        lastSerialNumber = "";
+                    }
                     boolean isUsb = lastSerialNumber.length() > 0 && lastSerialNumber.contains(serial) && mLastConnectedCarPlayDevice.isAttached();
                     Log.d(TAG, "isUsb == " + isUsb);
                     CURRENT_SESSION = isUsb ? USB_CARPLAY : WIFI_CARPLAY;
