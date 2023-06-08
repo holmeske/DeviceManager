@@ -334,11 +334,11 @@ public final class AppController {
         mAndroidAutoDeviceClient = new AndroidAutoDeviceClient();
         mAndroidAutoDeviceClient.initialise(context);
         mAndroidAutoDeviceClient.registerListener(new AAProxyDeviceListener() {
-
             @Override
-            public void onArbitrationWirelessConnect(String btMac) {
-                super.onArbitrationWirelessConnect(btMac);
-                Log.d(TAG, "onArbitrationWirelessConnect() called with: btMac = [" + btMac + "]");
+            public void onArbitrationWirelessConnect(String type, String btMac) {
+                super.onArbitrationWirelessConnect(type, btMac);
+                Log.d(TAG, "onArbitrationWirelessConnect() called with: type = [" + type + "], btMac = [" + btMac + "]");
+                //type是“phone"是手机请求连接；”probe"是车机主动监测的；
                 if (CarHelper.isOpenAndroidAuto()) {
                     if (isIdleState()) {
                         if (isSwitchingSession) {
@@ -352,12 +352,10 @@ public final class AppController {
                             } else {
                                 Log.d(TAG, "find current " + FindCurrentAvailableByMac.get(btMac));
                                 Log.d(TAG, "find pre     " + FindPreAvailableByMac.get(btMac));
-                                /*if (Boolean.TRUE.equals(FindCurrentAvailableByMac.get(btMac)) && Boolean.FALSE.equals(FindPreAvailableByMac.get(btMac))) {
-                                    onNotification(2, "", "", btMac, 2);//start or not now popup
-                                    return;
-                                }*/
-                                Log.d(TAG, "old device not notification 2 popup, directly connect");
-                                startWirelessAndroidAuto(btMac, 1);
+                                if (TextUtils.equals(type, "phone")) {
+                                    Log.d(TAG, "old device not notification 2 popup, directly connect");
+                                    startWirelessAndroidAuto(btMac, 1);
+                                }
                             }
                         }
                     } else {

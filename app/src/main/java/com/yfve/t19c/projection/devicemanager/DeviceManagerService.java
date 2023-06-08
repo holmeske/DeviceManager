@@ -31,7 +31,7 @@ public class DeviceManagerService extends Service {
     public static final List<Device> aliveDeviceList = new ArrayList<>();
     private static final String TAG = "DeviceManagerService";
     public static boolean isStarted = false;
-    private final String Data = "2022-08-31 17:40 cp aa"; //cp aa   sop    base
+    private final String Data = "2023-06-06 13:53 cp aa"; //cp aa   sop    base
     private final List<OnConnectListener> mOnConnectListeners = new ArrayList<>();
     private int retryCount;
     private CarHelper mCarHelper;
