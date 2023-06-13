@@ -294,7 +294,6 @@ public class UsbHostController {
             if (CarHelper.isOpenQDLink() || !CarHelper.isOpenAndroidAuto()) return;
             if (!mDeviceHandlerResolver.isSupportAOAP(device)) return;
             if (mAppController.isIdleState()) {
-                if (!mAppController.isAutoConnectUsbAndroidAuto()) return;
                 if (AppSupport.isInAOAMode(device)) {
 //                    mAppController.getHandler().removeCallbacks(mAOAPSwitchTimeoutRunnable);
                     if (LAST_ANDROID_AUTO_SESSION_TERMINATED_REASON == 0) {
@@ -309,6 +308,13 @@ public class UsbHostController {
                     if (ProbedAndroidAutoUsbDeviceSerialNumberSet.contains(device.getSerialNumber())) {
                         Log.d(TAG, "Probed remove " + device.getSerialNumber() + ", " + ProbedAndroidAutoUsbDeviceSerialNumberSet.remove(device.getSerialNumber()));
                         Log.d(TAG, "Probed == " + new Gson().toJson(ProbedAndroidAutoUsbDeviceSerialNumberSet));
+                        //if (!mAppController.isAutoConnectUsbAndroidAuto()) return;
+                        Log.d(TAG, "last sessionTerminated reason == " + LAST_ANDROID_AUTO_SESSION_TERMINATED_REASON);
+                        if (LAST_ANDROID_AUTO_SESSION_TERMINATED_REASON == 1) {
+                            LAST_ANDROID_AUTO_SESSION_TERMINATED_REASON = 0;
+                            mAppController.resetUSBAndroidAutoConnectState();
+                            return;
+                        }
                         mAppController.startUsbAndroidAuto(device.getDeviceName(), device.getSerialNumber());
                     } else {
                         mAppController.attachedAndroidAutoDevice.setAttached(true);

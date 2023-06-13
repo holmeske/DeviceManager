@@ -95,19 +95,20 @@ public final class AppController {
     public Phone switchingPhone = new Phone();
     public DeviceInfo attachedAndroidAutoDevice = new DeviceInfo();
     public boolean bindCarPlayServiceSuccess;
-    private boolean autoConnectUsbAndroidAuto = true;
+    //private boolean autoConnectUsbAndroidAuto = true;
     private final Handler handler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
             int what = msg.what;
-            if (what == 0) {
+            /*if (what == 0) {
                 Log.d(TAG, "autoConnectUsbAndroidAuto == false");
                 autoConnectUsbAndroidAuto = false;
             } else if (what == 1) {
                 Log.d(TAG, "autoConnectUsbAndroidAuto == true");
                 autoConnectUsbAndroidAuto = true;
-            } else if (what == 2) {
+            } else*/
+            if (what == 2) {
                 Log.d(TAG, "isResettingUsb == false");
                 isResettingUsb = false;
             } else if (what == 3) {
@@ -690,24 +691,24 @@ public final class AppController {
         Log.d(TAG, "attached usb device size = " + attached);
         USBKt.usbDeviceList(mContext).values().forEach(d -> Log.d(TAG, "attached usb device ------ " + CommonUtilsKt.toJson(d)));
         if (attached > 0) {
-            if (!autoConnect) {
+            /*if (!autoConnect) {
                 handler.sendEmptyMessage(0);
-            }
+            }*/
             isResettingUsb = true;
             Log.d(TAG, "isResettingUsb == true");
             resetUsb();
             handler.sendEmptyMessageDelayed(2, 4000);
             Log.d(TAG, "after 3 second , isResettingUsb value will be reset");
-            if (!autoConnect) {
+            /*if (!autoConnect) {
                 handler.sendEmptyMessageDelayed(1, 3000);
-            }
+            }*/
         }
     }
 
-    public boolean isAutoConnectUsbAndroidAuto() {
+    /*public boolean isAutoConnectUsbAndroidAuto() {
         Log.d(TAG, "autoConnectUsbAndroidAuto == " + autoConnectUsbAndroidAuto);
         return autoConnectUsbAndroidAuto;
-    }
+    }*/
 
     public AapBinderClient getAapBinderClient() {
         return mAapProxy;
