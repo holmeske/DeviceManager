@@ -72,7 +72,7 @@ public final class AppController {
     public static boolean isConnectingWiFiAndroidAuto = false;
     public static boolean isConnectingUSBAndroidAuto = false;
     public static boolean isCertifiedVersion = false;   //certify version
-    public static boolean isSOPVersion = true;          //sop version
+    public static boolean isSOPVersion = false;          //sop version
     public static boolean isReplugged = true;
     private static int CURRENT_SESSION = 0;
     private static int isReplugged_id;
@@ -82,6 +82,7 @@ public final class AppController {
     private final AndroidAutoDeviceClient mAndroidAutoDeviceClient;
     private final Context mContext;
     private final DeviceInfo mLastConnectedCarPlayDevice = new DeviceInfo();
+    private final DeviceInfo mLastConnectedAndroidAutoDevice = new DeviceInfo();
     private final List<String> mACLConnectedList = new ArrayList<>();
     private final Runnable WiFiCarPlayConnectCountdownRunnable = () -> {
         isCanConnectingCPWifi = false;
@@ -170,6 +171,7 @@ public final class AppController {
 
                 onSessionStateUpdate(label, mac, 0, "connected");
             } else {
+
                 mCurrentDevice.setConnectionType(2);
 
                 String mac = FindMacByInstanceId.get(instanceId);
@@ -184,7 +186,10 @@ public final class AppController {
                 }
 
                 Log.d(TAG, "currentDevice = " + CommonUtilsKt.toJson(mCurrentDevice));
-
+                mLastConnectedAndroidAutoDevice.setBluetoothMac(mac);
+                mLastConnectedAndroidAutoDevice.setConnectionType(2);
+                mLastConnectedAndroidAutoDevice.setLastProjectionSuccess(true);
+                mLastConnectedCarPlayDevice.setLastProjectionSuccess(false);
                 CacheHelperKt.saveLastConnectDeviceInfo(mContext, deviceName, serial == null ? "" : serial, mac == null ? "" : mac, 2);
                 mDeviceListHelper.write(deviceName, serial, mac, 2);
 
@@ -295,6 +300,12 @@ public final class AppController {
                     handler.sendEmptyMessageDelayed(4, 20000);
                 } else {
                     stopCarPlay();
+                    if (CURRENT_SESSION == WIFI_ANDROID_AUTO) {
+                        Log.d(TAG, "AndroidAutoDeviceClient.DisconnectWirelessDevice()");
+                        mAndroidAutoDeviceClient.DisconnectWirelessDevice();
+                    } else {
+                        Log.d(TAG, CURRENT_SESSION + " isn't android auto, not need stop");
+                    }
                 }
             }
 
@@ -310,9 +321,21 @@ public final class AppController {
                     handler.removeMessages(4);
                 }
                 Log.d(TAG, "mLastConnectedCarPlayDevice = " + CommonUtilsKt.toJson(mLastConnectedCarPlayDevice));
-                if (mLastConnectedCarPlayDevice.getConnectionType() == USB_CARPLAY) {
+                if (mLastConnectedCarPlayDevice.getConnectionType() == USB_CARPLAY && mLastConnectedCarPlayDevice.isLastProjectionSuccess()) {
                     if (mLastConnectedCarPlayDevice.isAttached()) {
                         startCarPlay(mLastConnectedCarPlayDevice.getSerialNumber(), true);
+                    }
+                }
+                Log.d(TAG, "mLastConnectedAndroidAutoDevice = " + CommonUtilsKt.toJson(mLastConnectedAndroidAutoDevice));
+                if (mLastConnectedAndroidAutoDevice.getConnectionType() == WIFI_ANDROID_AUTO && mLastConnectedAndroidAutoDevice.isLastProjectionSuccess()) {
+                    if (TextUtils.equals(mCurrentDevice.getBluetoothMac(), mLastConnectedAndroidAutoDevice.getBluetoothMac())) {
+                        Log.d(TAG, "current session existed");
+                    } else {
+                        if (isConnectingWiFiAndroidAuto) {
+                            Log.e(TAG, "wifi android auto is connecting");
+                        } else {
+                            startWirelessAndroidAuto(mLastConnectedAndroidAutoDevice.getBluetoothMac(), 1);
+                        }
                     }
                 }
             }
@@ -449,7 +472,9 @@ public final class AppController {
                     }
                 } else {
                     Log.d(TAG, "setBluetoothMac " + btMac);
-                    mCurrentDevice.setBluetoothMac(btMac);
+                    if (currentSessionIsAndroidAuto()) {
+                        mCurrentDevice.setBluetoothMac(btMac);
+                    }
                 }
             }
         });
@@ -503,6 +528,8 @@ public final class AppController {
                     mDeviceListHelper.write(deviceName, serial, btMac, isUsb ? 4 : 8);
 
                     mLastConnectedCarPlayDevice.update(serial, btMac, deviceName, CURRENT_SESSION);
+                    mLastConnectedCarPlayDevice.setLastProjectionSuccess(true);
+                    mLastConnectedAndroidAutoDevice.setLastProjectionSuccess(false);
                 } else if (sts == 1) {
                     //mLastConnectedCarPlayDevice.setAttached(false); //2023/4/11 14:24 is ok
                     onSessionStateUpdate(mCurrentDevice.getSerialNumber(), mCurrentDevice.getBluetoothMac(), sts, "disconnected");

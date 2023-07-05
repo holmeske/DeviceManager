@@ -18,6 +18,16 @@ public class DeviceInfo {
     private boolean isAttached;
     private String instanceId;
 
+    private boolean isLastProjectionSuccess;
+
+    public boolean isLastProjectionSuccess() {
+        return isLastProjectionSuccess;
+    }
+
+    public void setLastProjectionSuccess(boolean lastProjectionSuccess) {
+        isLastProjectionSuccess = lastProjectionSuccess;
+    }
+
     public DeviceInfo() {
     }
 
@@ -108,7 +118,6 @@ public class DeviceInfo {
         }
     }
 
-    @NonNull
     @Override
     public String toString() {
         return "DeviceInfo{" +
@@ -118,6 +127,7 @@ public class DeviceInfo {
                 ", connectionType=" + connectionType +
                 ", isAttached=" + isAttached +
                 ", instanceId='" + instanceId + '\'' +
+                ", isLastProjectionSuccess=" + isLastProjectionSuccess +
                 '}';
     }
 }
