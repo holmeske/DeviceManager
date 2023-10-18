@@ -72,7 +72,7 @@ public final class AppController {
     public static boolean isConnectingWiFiAndroidAuto = false;
     public static boolean isConnectingUSBAndroidAuto = false;
     public static boolean isCertifiedVersion = false;   //certify version
-    public static boolean isSOPVersion = false;          //sop version
+    public static boolean isSOPVersion = true;          //sop version
     public static boolean isReplugged = true;
     private static int CURRENT_SESSION = 0;
     private static int isReplugged_id;
@@ -222,11 +222,22 @@ public final class AppController {
                     }
                 }
             }
+            if (TextUtils.isEmpty(serial) && TextUtils.isEmpty(mac)) {
+                if (isSwitchingSession) {
+                    onSessionStateUpdate(switchingPhone.getSerial(), switchingPhone.getMac(), 1, "disconnected");
+                }
+            } else {
+                onSessionStateUpdate(serial, mac, 1, "disconnected");
+            }
             if (reason == 0) {
                 if (b) {
                     resetUsb(true);
                 } else {
-                    startWirelessAndroidAuto(mac, 2);
+                    if (USBKt.containsInAttachedUsbDeviceList(mContext, serial)) {
+                        mUsbHostController.attach(USBKt.queryUsbDevice(mContext, serial));
+                    } else {
+                        startWirelessAndroidAuto(mac, 2);
+                    }
                 }
             } else if (reason == 1) {
                 if (b) {
@@ -239,13 +250,6 @@ public final class AppController {
             } else if (reason == 4) {
                 isReplugged = false;
                 isReplugged_id = -4;
-            }
-            if (TextUtils.isEmpty(serial) && TextUtils.isEmpty(mac)) {
-                if (isSwitchingSession) {
-                    onSessionStateUpdate(switchingPhone.getSerial(), switchingPhone.getMac(), 1, "disconnected");
-                }
-            } else {
-                onSessionStateUpdate(serial, mac, 1, "disconnected");
             }
             Log.d(TAG, "sessionTerminated() end");
         }
