@@ -73,6 +73,7 @@ public final class AppController {
     public static boolean isConnectingUSBAndroidAuto = false;
     public static boolean isCertifiedVersion = false;   //certify version
     public static boolean isSOPVersion = true;          //sop version
+    public static boolean isChinaVersion = true;         //china version
     public static boolean isReplugged = true;
     private static int CURRENT_SESSION = 0;
     private static int isReplugged_id;
@@ -1155,10 +1156,14 @@ public final class AppController {
         }
         mCarPlayClient.roleSwitchComplete(serialNumber);
 
-        Log.d(TAG, "isConnectingCarPlay == true");
-        isConnectingCarPlay = true;
-        Log.d(TAG, "15s usb carplay connecting protect start");
-        handler.sendEmptyMessageDelayed(3, CarPlayTimeout);
+        if (isChinaVersion) {
+            Log.d(TAG, "isChinaVersion == true");
+        } else {
+            Log.d(TAG, "isConnectingCarPlay == true");
+            isConnectingCarPlay = true;
+            Log.d(TAG, "15s usb carplay connecting protect start");
+            handler.sendEmptyMessageDelayed(3, CarPlayTimeout);
+        }
     }
 
     public void startCarPlay(String uniqueInfo, boolean isUSB) {

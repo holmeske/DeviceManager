@@ -19,9 +19,42 @@ buildscript {
             allowInsecureProtocol = true;
             url 'http://10.118.237.10:8081/repository/maven-central/'
         }*/
+
+        /*maven {
+            credentials {
+                username 'admin'
+                password '123456'
+            }
+            allowInsecureProtocol = true;
+            url 'http://10.118.237.10:8081/repository/google-maven-proxy-yfve/'
+        }
+        maven {
+            credentials {
+                username 'admin'
+                password '123456'
+            }
+            allowInsecureProtocol = true;
+            url 'http://10.118.237.10:8081/repository/maven-central/'
+        }
+        maven {
+            credentials {
+                username 'admin'
+                password '123456'
+            }
+            allowInsecureProtocol = true;
+            url 'http://10.118.237.10:8081/repository/jitpack.io-proxy/'
+        }
+        maven {
+            credentials {
+                username 'admin'
+                password '123456'
+            }
+            allowInsecureProtocol = true;
+            url 'http://10.118.237.10:8081/repository/jcenter-proxy-yfve/'
+        }*/
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.2'
+        classpath 'com.android.tools.build:gradle:8.2.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10"
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -29,7 +62,7 @@ buildscript {
     }
 }
 
-task clean(type: Delete) {
+tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }
 
