@@ -561,7 +561,28 @@ public final class AppController {
                     isCanConnectingCPWifi = true;
                     handler.postDelayed(WiFiCarPlayConnectCountdownRunnable, CarPlayTimeout);
                 }
-                startCarPlay(uniqueInfo, connectType == 1);
+//                startCarPlay(uniqueInfo, connectType == 1);
+                if (TextUtils.isEmpty(uniqueInfo)) return;
+                if (isConnectingUSBAndroidAuto) {
+                    Log.d(TAG, "isConnectingUSBAndroidAuto == true");
+                    return;
+                }
+                if (isIdleState() && bindCarPlayServiceSuccess) {
+                    if (isConnectingCarPlay) {
+                        Log.d(TAG, "isConnectingCarPlay == true, do not again start carplay");
+                    } else {
+                        if (isSwitchingSession && (!Objects.equals(switchingPhone.getSerial(), uniqueInfo) && !Objects.equals(switchingPhone.getMac(), uniqueInfo))) {
+                            Log.d(TAG, "current is switching, not start carplay");
+                            return;
+                        }
+                        Log.d(TAG, "isConnectingCarPlay == true");
+                        isConnectingCarPlay = true;
+//                        Log.d(TAG, "15s carplay connecting protect start");
+//                        handler.sendEmptyMessageDelayed(3, CarPlayTimeout);
+                        Log.w(TAG, "start carplay session");
+                        mCarPlayClient.startSession(uniqueInfo, connectType == 1);
+                    }
+                }
             }
 
             @Override
@@ -1161,9 +1182,9 @@ public final class AppController {
         } else {
             Log.d(TAG, "isConnectingCarPlay == true");
             isConnectingCarPlay = true;
-            Log.d(TAG, "15s usb carplay connecting protect start");
-            handler.sendEmptyMessageDelayed(3, CarPlayTimeout);
         }
+        Log.d(TAG, "15s usb carplay connecting protect start");
+        handler.sendEmptyMessageDelayed(3, CarPlayTimeout);
     }
 
     public void startCarPlay(String uniqueInfo, boolean isUSB) {

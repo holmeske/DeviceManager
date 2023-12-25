@@ -6,21 +6,6 @@ buildscript {
         maven { url 'https://jitpack.io' }
 
         /*maven {
-            allowInsecureProtocol = true;
-            url 'http://10.118.237.10:8081/repository/gradle-plugin-proxy/'
-        }
-
-        maven {
-            allowInsecureProtocol = true;
-            url 'http://10.118.237.10:8081/repository/google-maven-proxy-yfve/'
-        }
-
-        maven {
-            allowInsecureProtocol = true;
-            url 'http://10.118.237.10:8081/repository/maven-central/'
-        }*/
-
-        /*maven {
             credentials {
                 username 'admin'
                 password '123456'
